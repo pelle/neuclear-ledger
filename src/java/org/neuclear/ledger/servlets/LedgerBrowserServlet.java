@@ -41,8 +41,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerBrowserServlet.java,v 1.11 2004/06/15 21:25:25 pelle Exp $
+$Id: LedgerBrowserServlet.java,v 1.12 2004/06/19 21:18:05 pelle Exp $
 $Log: LedgerBrowserServlet.java,v $
+Revision 1.12  2004/06/19 21:18:05  pelle
+Fixes to spanish version
+
 Revision 1.11  2004/06/15 21:25:25  pelle
 Added PortfolioBrowserServlet
 LedgerBrowserServlet now can take an optional ledger id in its path info.
@@ -143,7 +146,7 @@ public class LedgerBrowserServlet extends HttpServlet {
         response.setContentType("text/html; charset=UTF-8");
 //        response.setCharacterEncoding("UTF-8");
         System.setProperty("file.encoding", "UTF-8");
-        ResourceBundle messages = ServletMessages.getMessages(request);
+        ResourceBundle messages = ServletMessages.getMessages("ledgermessages", request);
         NumberFormat numbers = NumberFormat.getNumberInstance(request.getLocale());
         numbers.setMaximumFractionDigits(2);
         numbers.setMinimumFractionDigits(2);

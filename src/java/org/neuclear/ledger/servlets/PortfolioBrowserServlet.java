@@ -73,7 +73,7 @@ public class PortfolioBrowserServlet extends HttpServlet {
         response.setContentType("text/html; charset=UTF-8");
 //        response.setCharacterEncoding("UTF-8");
         System.setProperty("file.encoding", "UTF-8");
-        ResourceBundle messages = ServletMessages.getMessages(request);
+        ResourceBundle messages = ServletMessages.getMessages("ledgermessages", request);
         NumberFormat numbers = NumberFormat.getNumberInstance(request.getLocale());
         numbers.setMaximumFractionDigits(2);
         numbers.setMinimumFractionDigits(2);
