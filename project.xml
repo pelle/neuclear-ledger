@@ -2,7 +2,7 @@
 <project>
     <name>NeuClear Ledger</name>
     <id>neuclear-ledger</id>
-    <currentVersion>0.5-SNAPSHOT</currentVersion>
+    <currentVersion>0.5</currentVersion>
     <inceptionYear>2003</inceptionYear>
     <package>org.neuclear.ledger</package>
     <logo>/images/logo.gif</logo>
@@ -62,7 +62,7 @@
     <dependencies>
         <dependency>
             <id>neuclear-id</id>
-            <version>0.9</version>
+            <version>1.0-beta1</version>
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>
@@ -76,7 +76,7 @@
         </dependency>
         <dependency>
             <id>neuclear-commons</id>
-            <version>0.7</version>
+            <version>1.0-beta2</version>
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>
@@ -130,12 +130,12 @@
                   src/java
                 </directory>
                 <includes>
-                    <include>*.jks</include>
-                    <include>*.xml</include>
-                    <include>*.properties</include>
+                    <include>**/*.jks</include>
+                    <include>**/*.xml</include>
+                    <include>**/*.properties</include>
                 </includes>
                 <excludes>
-                    <exclude>*.java</exclude>
+                    <exclude>**/*.java</exclude>
                 </excludes>
             </resource>
         </resources>
