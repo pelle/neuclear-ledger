@@ -1,7 +1,14 @@
 package org.neuclear.ledger;
+
 /**
- * $Id: Ledger.java,v 1.2 2003/10/01 17:35:53 pelle Exp $
+ * $Id: Ledger.java,v 1.3 2003/10/25 00:39:05 pelle Exp $
  * $Log: Ledger.java,v $
+ * Revision 1.3  2003/10/25 00:39:05  pelle
+ * Fixed SmtpSender it now sends the messages.
+ * Refactored CommandLineSigner. Now it simply signs files read from command line. However new class IdentityCreator
+ * is subclassed and creates new Identities. You can subclass CommandLineSigner to create your own variants.
+ * Several problems with configuration. Trying to solve at the moment. Updated PicoContainer to beta-2
+ *
  * Revision 1.2  2003/10/01 17:35:53  pelle
  * Made as much as possible immutable for security and reliability reasons.
  * The only thing that isnt immutable are the items and balance of the
@@ -69,11 +76,12 @@ package org.neuclear.ledger;
  * Time: 5:31:53 PM
  */
 
-import org.neuclear.commons.configuration.ConfigurationException;
 import org.neuclear.commons.configuration.Configuration;
+import org.neuclear.commons.configuration.ConfigurationException;
 
 import java.util.Date;
 import java.util.Iterator;
+
 /**
  * This is the abstract Ledger class that implementators of the NeuClear Ledger need to implement.
  */
@@ -81,26 +89,30 @@ public abstract class Ledger {
 
     /**
      * The unique id of the ledger
-     * @param id
+     * 
+     * @param id 
      */
-    public Ledger(String id,String name) {
-        this.name=name;
-        this.id=id;
+    public Ledger(String id, String name) {
+        this.name = name;
+        this.id = id;
     }
+
     /**
      * Default implementation allows for new Books to be created on the fly. If you need control over this. Over ride.
-     * @param bookID
-     * @return
+     * 
+     * @param bookID 
+     * @return 
      */
-    public abstract Book getBook(String bookID) throws UnknownBookException,LowlevelLedgerException;
+    public abstract Book getBook(String bookID) throws UnknownBookException, LowlevelLedgerException;
 
     /**
      * Used by implementations to securely create Book Instances
-     * @param bookID
+     * 
+     * @param bookID 
      * @return Valid Book instance
      */
-    protected Book createBookInstance(String bookID,String name) {
-        return new Book(bookID,name,this);
+    protected Book createBookInstance(String bookID, String name) {
+        return new Book(bookID, name, this);
     }
 
     public abstract boolean bookExists(String bookID) throws LowlevelLedgerException;
@@ -108,7 +120,7 @@ public abstract class Ledger {
     public abstract Book createNewBook(String bookID, String title) throws BookExistsException, LowlevelLedgerException;
 
     public Book createNewBook(String bookID) throws BookExistsException, LowlevelLedgerException {
-        return createNewBook(bookID,"Unnamed Account");
+        return createNewBook(bookID, "Unnamed Account");
     }
 
 
@@ -116,25 +128,29 @@ public abstract class Ledger {
      * The basic interface for creating Transactions in the database.
      * The implementing class takes this transacion information and stores it with an automatically generated uniqueid.
      * This id is returned as an identifier of the transaction.
+     * 
      * @param trans Transaction to perform
-      * @return Unique ID
+     * @return Unique ID
      */
     public abstract PostedTransaction performTransaction(UnPostedTransaction trans) throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException;
+
     /**
      * The basic interface for creating Transactions in the database.
      * The implementing class takes this transacion information and stores it with an automatically generated uniqueid.
      * This id is returned as an identifier of the transaction.
+     * 
      * @param trans Transaction to perform
-      * @return Unique ID
+     * @return Unique ID
      */
     public abstract PostedHeldTransaction performHeldTransaction(UnPostedHeldTransaction trans) throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException;
 
     /**
      * Searches for a Transaction based on its Transaction ID
+     * 
      * @param id A valid ID
      * @return The Transaction object
      */
-    public abstract PostedTransaction findTransaction(String id) throws  LowlevelLedgerException, UnknownTransactionException, InvalidTransactionException, UnknownBookException;
+    public abstract PostedTransaction findTransaction(String id) throws LowlevelLedgerException, UnknownTransactionException, InvalidTransactionException, UnknownBookException;
 
     /**
      * Calculate the true accounting balance at a given time. This does not take into account any held transactions, thus may not necessarily
@@ -151,12 +167,14 @@ public abstract class Ledger {
      *          from ledger
      *          where transactiondate <= sysdate and end_date is null and debit= 'neu://bob'
      *       ) d
-     *
+     * <p/>
      * </pre>
-     * @param balancedate
+     * 
+     * @param balancedate 
      * @return the balance as a double
      */
     public abstract double getBalance(Book book, Date balancedate) throws LowlevelLedgerException;
+
     public abstract double getBalance(Book book) throws LowlevelLedgerException;
 
     /**
@@ -173,19 +191,22 @@ public abstract class Ledger {
      *          from ledger
      *          where transactiondate <= sysdate and end_date is null and debit= 'neu://bob'
      *       ) d
-     *
+     * <p/>
      * </pre>
-     * @param balancedate
+     * 
+     * @param balancedate 
      * @return the balance as a double
      */
-    public abstract double getAvailableBalance(Book book, Date balancedate) throws  LowlevelLedgerException;
-    public abstract double getAvailableBalance(Book book) throws  LowlevelLedgerException;
+    public abstract double getAvailableBalance(Book book, Date balancedate) throws LowlevelLedgerException;
+
+    public abstract double getAvailableBalance(Book book) throws LowlevelLedgerException;
 
     /**
      * Use this to indicate to the underlying system that we want to start a database transaction.
      * If implementing ledger supports Transactions in the database layer this implements it.
      */
     public abstract void beginLinkedTransaction();
+
     /**
      * Use this to indicate to the underlying system that we want to end a database transaction.
      * If implementing ledger supports Transactions in the database layer this implements it.
@@ -210,56 +231,62 @@ public abstract class Ledger {
      * Ledger Implementations use this to create Transactions.
      * The reason for this kind of round the way contructions is that we dont want dodgy Implementations to cause security problems for
      * other implementations.
+     * 
      * @param transaction An Unposted Transaction containing the Transaction details
-     * @param xid Unique Transaction ID
+     * @param xid         Unique Transaction ID
      * @return PostedTransaction
      */
-    protected final PostedTransaction createTransaction(UnPostedTransaction transaction,String xid) throws InvalidTransactionException {
-        return new PostedTransaction(transaction,xid);
+    protected final PostedTransaction createTransaction(UnPostedTransaction transaction, String xid) throws InvalidTransactionException {
+        return new PostedTransaction(transaction, xid);
     }
+
     /**
      * Ledger Implementations use this to create Transactions.
      * The reason for this kind of round the way contructions is that we dont want dodgy Implementations to cause security problems for
      * other implementations.
+     * 
      * @param transaction An Unposted Transaction containing the Transaction details
-     * @param xid Unique Transaction ID
+     * @param xid         Unique Transaction ID
      * @return PostedTransaction
      */
-    protected final PostedHeldTransaction createHeldTransaction(UnPostedHeldTransaction transaction,String xid) throws InvalidTransactionException {
-        return new PostedHeldTransaction(transaction,xid);
+    protected final PostedHeldTransaction createHeldTransaction(UnPostedHeldTransaction transaction, String xid) throws InvalidTransactionException {
+        return new PostedHeldTransaction(transaction, xid);
     }
 
-    protected final PostedTransaction createHeldComplete(PostedHeldTransaction hold,double amount, Date time, String comment) throws TransactionExpiredException, InvalidTransactionException, LowlevelLedgerException {
+    protected final PostedTransaction createHeldComplete(PostedHeldTransaction hold, double amount, Date time, String comment) throws TransactionExpiredException, InvalidTransactionException, LowlevelLedgerException {
         //TODO Rework these Exception
-         if (hold.getTransactionTime().after(hold.getExpiryTime()))
-             throw new TransactionExpiredException(this,hold);
-         if (amount<0)
-             throw new InvalidTransactionException(this,"The amount must be positive");
+        if (hold.getTransactionTime().after(hold.getExpiryTime()))
+            throw new TransactionExpiredException(this, hold);
+        if (amount < 0)
+            throw new InvalidTransactionException(this, "The amount must be positive");
 
         try {
             beginLinkedTransaction();
             //PostedTransaction rev=hold.reverse(comment); // We dont need to reverse this
-            UnPostedTransaction tran=new UnPostedTransaction(this,comment,time);
-            Iterator iter=hold.getItems();
-            while (iter.hasNext()){
-                TransactionItem item=(TransactionItem)iter.next();
-                if (item.getAmount()>=0)
-                    tran.addItem(item.getBook(),amount);
+            UnPostedTransaction tran = new UnPostedTransaction(this, comment, time);
+            Iterator iter = hold.getItems();
+            while (iter.hasNext()) {
+                TransactionItem item = (TransactionItem) iter.next();
+                if (item.getAmount() >= 0)
+                    tran.addItem(item.getBook(), amount);
                 else
-                    tran.addItem(item.getBook(),-amount);
+                    tran.addItem(item.getBook(), -amount);
             }
             endLinkedTransactions();
             return tran.post();
         } catch (UnBalancedTransactionException e) {
-           throw new LowlevelLedgerException(this,e);
+            throw new LowlevelLedgerException(this, e);
         }
     }
+
     public String toString() {
         return name;
     }
+
     public String getName() {
         return name;
     }
+
     public String getId() {
         return id;
     }
@@ -268,23 +295,27 @@ public abstract class Ledger {
     private final String id;
 
     /**
-		 * Searches for a Held Transaction based on its Transaction ID
-		 * @param idstring A valid ID
-		 * @return The Transaction object
-		 */
-	public abstract PostedHeldTransaction findHeldTransaction(String idstring) throws  LowlevelLedgerException, UnknownTransactionException;
+     * Searches for a Held Transaction based on its Transaction ID
+     * 
+     * @param idstring A valid ID
+     * @return The Transaction object
+     */
+    public abstract PostedHeldTransaction findHeldTransaction(String idstring) throws LowlevelLedgerException, UnknownTransactionException;
 
     /**
      * Cancels a Held Transaction.
-     * @param hold
+     * 
+     * @param hold 
      * @throws org.neuclear.ledger.LowlevelLedgerException
+     *          
      * @throws org.neuclear.ledger.UnknownTransactionException
+     *          
      */
     public abstract void performCancelHold(PostedHeldTransaction hold) throws LowlevelLedgerException, UnknownTransactionException;
 
-    public abstract PostedTransaction performCompleteHold(PostedHeldTransaction hold,double amount, Date time, String comment) throws InvalidTransactionException, LowlevelLedgerException,  TransactionExpiredException;
+    public abstract PostedTransaction performCompleteHold(PostedHeldTransaction hold, double amount, Date time, String comment) throws InvalidTransactionException, LowlevelLedgerException, TransactionExpiredException;
 
     public static Ledger getInstance() throws ConfigurationException {
-        return (Ledger) Configuration.getContainer().getComponent(Ledger.class);
+        return (Ledger) Configuration.getContainer(Ledger.class).getComponentInstance(Ledger.class);
     }
 }
