@@ -1,11 +1,8 @@
-package org.neuclear.ledger;
+package org.neuclear.ledger.tests;
 
 import junit.framework.TestCase;
-import org.neuclear.commons.NeuClearException;
+import org.neuclear.ledger.*;
 
-import javax.naming.NamingException;
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Date;
 
 /**
@@ -13,11 +10,14 @@ import java.util.Date;
  * User: pelleb
  * Date: Jan 22, 2003
  * Time: 4:18:35 PM
- * $Id: AbstractLedgerTest.java,v 1.2 2004/03/22 21:59:38 pelle Exp $
+ * $Id: AbstractLedgerTest.java,v 1.1 2004/03/22 23:20:51 pelle Exp $
  * $Log: AbstractLedgerTest.java,v $
+ * Revision 1.1  2004/03/22 23:20:51  pelle
+ * Working on Hibernate Implementation.
+ *
  * Revision 1.2  2004/03/22 21:59:38  pelle
  * SimpleLedger now passes all unit tests
- *
+ * <p/>
  * Revision 1.1  2004/03/22 20:08:24  pelle
  * Added simple ledger for unit testing and in memory use
  * <p/>
@@ -136,15 +136,10 @@ public abstract class AbstractLedgerTest extends TestCase {
     static final String ALICE = "alice";
 
 
-    public AbstractLedgerTest(final String s) throws LowlevelLedgerException, UnknownLedgerException, SQLException, NamingException, IOException, NeuClearException {
+    public AbstractLedgerTest(final String s) {
         super(s);
-//        ledger=createLedger();
     }
 
-//    protected void finalize() throws Throwable {
-//        ledger.close();
-//    }
-//
     /**
      * Sets up the fixture, for example, open a network connection.
      * This method is called before a test is executed.

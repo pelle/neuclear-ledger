@@ -1,7 +1,10 @@
-package org.neuclear.ledger;
+package org.neuclear.ledger.simple;
 
 import org.neuclear.commons.NeuClearException;
-import org.neuclear.ledger.simple.SimpleLedger;
+import org.neuclear.ledger.Ledger;
+import org.neuclear.ledger.LowlevelLedgerException;
+import org.neuclear.ledger.UnknownLedgerException;
+import org.neuclear.ledger.tests.AbstractLedgerTest;
 
 import javax.naming.NamingException;
 import java.io.IOException;

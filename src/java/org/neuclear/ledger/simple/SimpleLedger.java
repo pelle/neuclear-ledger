@@ -1,8 +1,11 @@
 package org.neuclear.ledger.simple;
 
 /**
- * $Id: SimpleLedger.java,v 1.2 2004/03/22 21:59:37 pelle Exp $
+ * $Id: SimpleLedger.java,v 1.3 2004/03/22 23:20:50 pelle Exp $
  * $Log: SimpleLedger.java,v $
+ * Revision 1.3  2004/03/22 23:20:50  pelle
+ * Working on Hibernate Implementation.
+ *
  * Revision 1.2  2004/03/22 21:59:37  pelle
  * SimpleLedger now passes all unit tests
  *
@@ -254,7 +257,6 @@ public final class SimpleLedger extends Ledger {
                 }
             }
         }
-        System.out.println("Book: " + book + " has a balance of: " + balance);
         return balance;
     }
 
