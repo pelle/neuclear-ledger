@@ -4,8 +4,14 @@ package org.neuclear.ledger;
  * User: pelleb
  * Date: Jan 25, 2003
  * Time: 12:48:26 PM
- * $Id: PostedTransaction.java,v 1.3 2003/11/11 21:17:32 pelle Exp $
+ * $Id: PostedTransaction.java,v 1.4 2003/11/21 04:43:20 pelle Exp $
  * $Log: PostedTransaction.java,v $
+ * Revision 1.4  2003/11/21 04:43:20  pelle
+ * EncryptedFileStore now works. It uses the PBECipher with DES3 afair.
+ * Otherwise You will Finaliate.
+ * Anything that can be final has been made final throughout everyting. We've used IDEA's Inspector tool to find all instance of variables that could be final.
+ * This should hopefully make everything more stable (and secure).
+ *
  * Revision 1.3  2003/11/11 21:17:32  pelle
  * Further vital reshuffling.
  * org.neudist.crypto.* and org.neudist.utils.* have been moved to respective areas under org.neuclear.commons
@@ -57,7 +63,7 @@ public class PostedTransaction extends Transaction {
      * @param orig
      * @param xid
      */
-    PostedTransaction(UnPostedTransaction orig,String xid) throws InvalidTransactionException {
+    PostedTransaction(final UnPostedTransaction orig,final String xid) throws InvalidTransactionException {
         super(orig.getLedger(),orig.getTransactionTime(),orig.getComment());
         this.xid=xid;
         this.items=orig.getItemArray();
@@ -75,11 +81,11 @@ public class PostedTransaction extends Transaction {
      * @param comment Comment Describing the Reversal
      * @return Unique Transaction ID
       */
-    PostedTransaction reverse(String comment) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
-        UnPostedTransaction reverse=new UnPostedTransaction(getLedger(),"REVERSAL of "+getXid(),getTransactionTime(),false);
-        Iterator iter=getItems();
+    PostedTransaction reverse(final String comment) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
+        final UnPostedTransaction reverse=new UnPostedTransaction(getLedger(),"REVERSAL of "+getXid(),getTransactionTime(),false);
+        final Iterator iter=getItems();
         while (iter.hasNext()){
-            TransactionItem item=(TransactionItem)iter.next();
+            final TransactionItem item=(TransactionItem)iter.next();
             reverse.addItem(item.getBook(),-item.getAmount());
         }
         return reverse.post();
@@ -91,11 +97,11 @@ public class PostedTransaction extends Transaction {
      * @param comment
      * @return
      */
-    PostedTransaction copy(Date transactionTime, String comment) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
-        UnPostedTransaction copy=new UnPostedTransaction(getLedger(),comment,transactionTime);
-        Iterator iter=getItems();
+    final PostedTransaction copy(final Date transactionTime, final String comment) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
+        final UnPostedTransaction copy=new UnPostedTransaction(getLedger(),comment,transactionTime);
+        final Iterator iter=getItems();
         while (iter.hasNext()){
-            TransactionItem item=(TransactionItem)iter.next();
+            final TransactionItem item=(TransactionItem)iter.next();
             copy.addItem(item.getBook(),item.getAmount());
         }
         return copy.post();
@@ -106,13 +112,13 @@ public class PostedTransaction extends Transaction {
      * @param comment
      * @return New Version
      */
-    PostedTransaction revise(Date transactionTime, String comment) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
+    final PostedTransaction revise(final Date transactionTime, final String comment) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
         getLedger().beginLinkedTransaction();
-        PostedTransaction rev=reverse(comment);
-        UnPostedTransaction tran=new UnPostedTransaction(getLedger(),comment,transactionTime,false);
-        Iterator iter=getItems();
+        final PostedTransaction rev=reverse(comment);
+        final UnPostedTransaction tran=new UnPostedTransaction(getLedger(),comment,transactionTime,false);
+        final Iterator iter=getItems();
         while (iter.hasNext()){
-            TransactionItem item=(TransactionItem)iter.next();
+            final TransactionItem item=(TransactionItem)iter.next();
             tran.addItem(item.getBook(),item.getAmount());
         }
         getLedger().endLinkedTransactions();
@@ -124,16 +130,16 @@ public class PostedTransaction extends Transaction {
      * @param revised
      * @return New Version
      */
-    PostedTransaction revise(UnPostedTransaction revised) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
+    final PostedTransaction revise(final UnPostedTransaction revised) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
         getLedger().beginLinkedTransaction();
         reverse("REVERSE"+revised.getComment());
-        PostedTransaction tran=revised.post();
+        final PostedTransaction tran=revised.post();
         getLedger().endLinkedTransactions();
         return tran;
     }
 
 
-    public Iterator getItems() {
+    public final Iterator getItems() {
         return new Iterator() {
             int i=0;
             public boolean hasNext() {
@@ -151,7 +157,7 @@ public class PostedTransaction extends Transaction {
         };
     }
 
-    public String getXid() {
+    public final String getXid() {
         return xid;
     }
     private final TransactionItem[] items;

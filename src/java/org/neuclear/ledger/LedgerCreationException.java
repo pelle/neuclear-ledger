@@ -6,12 +6,12 @@ package org.neuclear.ledger;
  * Date: Jul 23, 2003
  * Time: 2:24:50 PM
  */
-public class LedgerCreationException extends Exception {
-    public LedgerCreationException(String s, Throwable throwable) {
+public final class LedgerCreationException extends Exception {
+    public LedgerCreationException(final String s, final Throwable throwable) {
         super(s, throwable);
     }
 
-    public LedgerCreationException(Throwable throwable) {
+    public LedgerCreationException(final Throwable throwable) {
         super(throwable);
     }
 

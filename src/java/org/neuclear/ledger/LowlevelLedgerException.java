@@ -7,20 +7,20 @@ package org.neuclear.ledger;
  * Time: 2:55:55 PM
  * To change this template use Options | File Templates.
  */
-public class LowlevelLedgerException extends LedgerException{
-    public LowlevelLedgerException( Throwable cause) {
+public final class LowlevelLedgerException extends LedgerException{
+    public LowlevelLedgerException( final Throwable cause) {
         this(null,cause);
     }
 
-    public LowlevelLedgerException(Ledger ledger, Throwable cause) {
+    public LowlevelLedgerException(final Ledger ledger, final Throwable cause) {
         super(ledger, cause);
     }
-    public LowlevelLedgerException(Ledger ledger, String message) {
+    public LowlevelLedgerException(final Ledger ledger, final String message) {
         super(ledger,new Exception(message));
 
     }
 
-    public String getSubMessage() {
+    public final String getSubMessage() {
         return "Low Level Error: "+getCause().getLocalizedMessage();
     }
 

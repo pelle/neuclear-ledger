@@ -15,12 +15,12 @@ import java.io.IOException;
  * Time: 12:58:30 PM
  * To change this template use Options | File Templates.
  */
-public class SQLLedgerTest extends LedgerTest{
-    public SQLLedgerTest(String s) throws LedgerCreationException, LowlevelLedgerException {
+public final class SQLLedgerTest extends LedgerTest{
+    public SQLLedgerTest(final String s) throws LowlevelLedgerException, UnknownLedgerException {
         super(s);
     }
 
-    public Ledger createLedger() {
+    public final Ledger createLedger() {
         return null;  //To change body of implemented methods use Options | File Templates.
     }
 

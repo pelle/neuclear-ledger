@@ -7,18 +7,18 @@ package org.neuclear.ledger;
  * Time: 12:52:50 PM
  * To change this template use Options | File Templates.
  */
-public class UnBalancedTransactionException extends LedgerException {
-    public UnBalancedTransactionException(Ledger ledger,UnPostedTransaction tran) {
+public final class UnBalancedTransactionException extends LedgerException {
+    public UnBalancedTransactionException(final Ledger ledger,final UnPostedTransaction tran) {
         super(ledger);
         transaction=tran;
     }
-    private UnPostedTransaction transaction;
+    private final UnPostedTransaction transaction;
 
-    public UnPostedTransaction getTransaction() {
+    public final UnPostedTransaction getTransaction() {
         return transaction;
     }
 
-    public String getSubMessage() {
+    public final String getSubMessage() {
         return "Transaction was Unbalanced by: "+transaction.getBalance();
     }
 }

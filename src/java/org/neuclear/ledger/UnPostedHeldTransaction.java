@@ -5,8 +5,14 @@ package org.neuclear.ledger;
  * User: pelleb
  * Date: Jan 25, 2003
  * Time: 12:54:28 PM
- * $Id: UnPostedHeldTransaction.java,v 1.3 2003/11/11 21:17:32 pelle Exp $
+ * $Id: UnPostedHeldTransaction.java,v 1.4 2003/11/21 04:43:20 pelle Exp $
  * $Log: UnPostedHeldTransaction.java,v $
+ * Revision 1.4  2003/11/21 04:43:20  pelle
+ * EncryptedFileStore now works. It uses the PBECipher with DES3 afair.
+ * Otherwise You will Finaliate.
+ * Anything that can be final has been made final throughout everyting. We've used IDEA's Inspector tool to find all instance of variables that could be final.
+ * This should hopefully make everything more stable (and secure).
+ *
  * Revision 1.3  2003/11/11 21:17:32  pelle
  * Further vital reshuffling.
  * org.neudist.crypto.* and org.neudist.utils.* have been moved to respective areas under org.neuclear.commons
@@ -50,7 +56,7 @@ import java.util.LinkedList;
 /**
  * Class for building Transactions
  */
-public class UnPostedHeldTransaction extends UnPostedTransaction implements HeldTransaction {
+public final class UnPostedHeldTransaction extends UnPostedTransaction implements HeldTransaction {
    /**
      * Basic rules for creating Transactions:
      * <ul>
@@ -63,21 +69,21 @@ public class UnPostedHeldTransaction extends UnPostedTransaction implements Held
      * @param transactionTime
      * @param expiryTime
      */
-   public UnPostedHeldTransaction(Ledger ledger, String comment, Date transactionTime, Date expiryTime) throws InvalidTransactionException {
+   public UnPostedHeldTransaction(final Ledger ledger, final String comment, final Date transactionTime, final Date expiryTime) throws InvalidTransactionException {
         this(ledger,comment,transactionTime,expiryTime,false);
    }
-    UnPostedHeldTransaction(Ledger ledger, String comment, Date transactionTime, Date expiryTime, boolean posted) throws InvalidTransactionException {
+    UnPostedHeldTransaction(final Ledger ledger, final String comment, final Date transactionTime, final Date expiryTime, final boolean posted) throws InvalidTransactionException {
         super(ledger,comment,transactionTime,posted);
         if (expiryTime!=null&&expiryTime.before(transactionTime))
             throw new InvalidTransactionException(ledger,"Expiration Time must not be before Transaction Time");
         this.expiryTime=expiryTime;
     }
 
-    protected PostedTransaction postTransaction() throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException {
+    protected final PostedTransaction postTransaction() throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException {
         return getLedger().performHeldTransaction(this);
     }
 
-    public Date getExpiryTime() {
+    public final Date getExpiryTime() {
         return expiryTime;
     }
 

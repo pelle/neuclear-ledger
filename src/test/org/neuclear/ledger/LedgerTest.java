@@ -7,13 +7,22 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Random;
 
+import org.neuclear.ledger.implementations.SQLLedger;
+import org.neuclear.commons.sql.DefaultConnectionSource;
+
 /**
  * (C) 2003 Antilles Software Ventures SA
  * User: pelleb
  * Date: Jan 22, 2003
  * Time: 4:18:35 PM
- * $Id: LedgerTest.java,v 1.4 2003/11/11 21:17:32 pelle Exp $
+ * $Id: LedgerTest.java,v 1.5 2003/11/21 04:43:21 pelle Exp $
  * $Log: LedgerTest.java,v $
+ * Revision 1.5  2003/11/21 04:43:21  pelle
+ * EncryptedFileStore now works. It uses the PBECipher with DES3 afair.
+ * Otherwise You will Finaliate.
+ * Anything that can be final has been made final throughout everyting. We've used IDEA's Inspector tool to find all instance of variables that could be final.
+ * This should hopefully make everything more stable (and secure).
+ *
  * Revision 1.4  2003/11/11 21:17:32  pelle
  * Further vital reshuffling.
  * org.neudist.crypto.* and org.neudist.utils.* have been moved to respective areas under org.neuclear.commons
@@ -91,22 +100,22 @@ import java.util.Random;
  * The two new Transaction Classes reflect the state of the Transaction and their methods reflect this.
  */
 public abstract class LedgerTest extends TestCase {
-    protected String account1 = "Bob";
-    protected String account2 = "Alice";
+    protected final String account1 = "Bob";
+    protected final String account2 = "Alice";
 
 
-    public LedgerTest(String s) throws LedgerCreationException, LowlevelLedgerException {
+    public LedgerTest(final String s) throws LowlevelLedgerException, UnknownLedgerException {
         super(s);
-        ledger = LedgerFactory.getInstance().getLedger("neu://superbux/reserve");
+        ledger = new SQLLedger(new DefaultConnectionSource(), "neu://superbux/reserve");
 
     }
 
     public abstract Ledger createLedger();
 
-    public void testPostTransaction() throws LedgerException {
-        Book bob = getNewBobBook();
-        Book alice = getNewAliceBook();
-        Date t1 = new Date();
+    public final void testPostTransaction() throws LedgerException {
+        final Book bob = getNewBobBook();
+        final Book alice = getNewAliceBook();
+        final Date t1 = new Date();
         bob.transfer(alice, 100, "Loan", t1);
     }
 
@@ -118,54 +127,54 @@ public abstract class LedgerTest extends TestCase {
         return createNewBook(account2);
     }
 
-    private Book createNewBook(String name) throws BookExistsException, LowlevelLedgerException {
-        BigInteger id = new BigInteger(168, new Random());
-        String bookID = name + id.toString(36);
+    private Book createNewBook(final String name) throws BookExistsException, LowlevelLedgerException {
+        final BigInteger id = new BigInteger(168, new Random());
+        final String bookID = name + id.toString(36);
         System.out.println("bookid: " + bookID);
         return ledger.createNewBook(bookID, name);
     }
 
-    public void testAccountCreate() throws LedgerException {
-        Book bob = getNewBobBook();
+    public final void testAccountCreate() throws LedgerException {
+        final Book bob = getNewBobBook();
         assertNotNull(bob);
         assertTrue(ledger.bookExists(bob.getBookID()));
     }
 
-    public void testBalance() throws LedgerException {
-        Book alice = getNewAliceBook();
-        Book bob = getNewBobBook();
-        double aliceBalance = alice.getBalance();
-        double bobBalance = bob.getBalance();
+    public final void testBalance() throws LedgerException {
+        final Book alice = getNewAliceBook();
+        final Book bob = getNewBobBook();
+        final double aliceBalance = alice.getBalance();
+        final double bobBalance = bob.getBalance();
         final double amount = 105;
-        Date t1 = new Date();
+        final Date t1 = new Date();
         alice.transfer(bob, amount, "Repayment", t1);
         assertEquals(aliceBalance - amount, alice.getBalance(), 0);
         assertEquals(bobBalance + amount, bob.getBalance(), 0);
     }
 
-    public void testTimeBalance() throws LedgerException {
-        Calendar cal = Calendar.getInstance();
-        Date t1 = cal.getTime();
+    public final void testTimeBalance() throws LedgerException {
+        final Calendar cal = Calendar.getInstance();
+        final Date t1 = cal.getTime();
         cal.add(Calendar.DAY_OF_YEAR, 1);
-        Date t2 = cal.getTime();
+        final Date t2 = cal.getTime();
         cal.add(Calendar.DAY_OF_YEAR, 1);
-        Date t3 = cal.getTime();
+        final Date t3 = cal.getTime();
         cal.add(Calendar.DAY_OF_YEAR, 1);
-        Date t4 = cal.getTime();
+        final Date t4 = cal.getTime();
         cal.add(Calendar.DAY_OF_YEAR, 1);
-        Date t5 = cal.getTime();
+        final Date t5 = cal.getTime();
 
-        Book alice = getNewAliceBook();
-        Book bob = getNewBobBook();
+        final Book alice = getNewAliceBook();
+        final Book bob = getNewBobBook();
 
         final double amount = 105;
-        double payment = amount / 2;
+        final double payment = amount / 2;
 
         alice.transfer(bob, payment, "Repayment", t2);
         alice.transfer(bob, payment, "2nd Repayment", t4);
 
-        double aliceBalance = alice.getBalance(t1);
-        double bobBalance = bob.getBalance(t1);
+        final double aliceBalance = alice.getBalance(t1);
+        final double bobBalance = bob.getBalance(t1);
 
         assertEquals(aliceBalance - payment, alice.getBalance(t2), 0);
         assertEquals(bobBalance + payment, bob.getBalance(t2), 0);
@@ -180,20 +189,20 @@ public abstract class LedgerTest extends TestCase {
         assertEquals(bobBalance + amount, bob.getBalance(t5), 0);
     }
 
-    public void testHold() throws LedgerException {
-        Calendar cal = Calendar.getInstance();
-        Date t1 = cal.getTime();
+    public final void testHold() throws LedgerException {
+        final Calendar cal = Calendar.getInstance();
+        final Date t1 = cal.getTime();
         cal.add(Calendar.DAY_OF_YEAR, 1);
-        Date t2 = cal.getTime();
+        final Date t2 = cal.getTime();
         cal.add(Calendar.DAY_OF_YEAR, 1);
-        Date t3 = cal.getTime();
+        final Date t3 = cal.getTime();
         cal.add(Calendar.DAY_OF_YEAR, 1);
-        Date t4 = cal.getTime();
+        final Date t4 = cal.getTime();
         cal.add(Calendar.DAY_OF_YEAR, 1);
-        Date t5 = cal.getTime();
+        final Date t5 = cal.getTime();
 
-        Book alice = getNewAliceBook();
-        Book bob = getNewBobBook();
+        final Book alice = getNewAliceBook();
+        final Book bob = getNewBobBook();
 
 
         final double amount = 105;
@@ -201,8 +210,8 @@ public abstract class LedgerTest extends TestCase {
         // We are holding 105 from t2 to t4
         alice.hold(bob, amount, "Hold", t2, t4);
 
-        double aliceBalance = alice.getBalance(t1);
-        double bobBalance = bob.getBalance(t1);
+        final double aliceBalance = alice.getBalance(t1);
+        final double bobBalance = bob.getBalance(t1);
         // First lets check it hasnt affected the real balance
         assertEquals(aliceBalance, alice.getBalance(t2), 0);
         assertEquals(bobBalance, bob.getBalance(t2), 0);
@@ -236,44 +245,44 @@ public abstract class LedgerTest extends TestCase {
 
     }
 
-    public void testReversal() throws LedgerException {
-        Book bob = getNewBobBook();
-        Book alice = getNewAliceBook();
+    public final void testReversal() throws LedgerException {
+        final Book bob = getNewBobBook();
+        final Book alice = getNewAliceBook();
 
-        double amount = 123;
-        double balance = bob.getBalance();
+        final double amount = 123;
+        final double balance = bob.getBalance();
 
-        PostedTransaction tran = bob.transfer(alice, amount, "Hello", new Date());
+        final PostedTransaction tran = bob.transfer(alice, amount, "Hello", new Date());
         assertNotNull(tran);
         assertEquals(bob.getBalance(), balance - amount, 0);
-        PostedTransaction reverse = tran.reverse("Reverse it");
+        final PostedTransaction reverse = tran.reverse("Reverse it");
         assertNotNull(reverse);
         assertEquals(bob.getBalance(), balance, 0);
 
     }
 
-    public void testCompleteHeld() throws LedgerException {
-        Calendar cal = Calendar.getInstance();
-        Date t1 = cal.getTime();
+    public final void testCompleteHeld() throws LedgerException {
+        final Calendar cal = Calendar.getInstance();
+        final Date t1 = cal.getTime();
         cal.add(Calendar.DAY_OF_YEAR, 1);
-        Date t2 = cal.getTime();
+        final Date t2 = cal.getTime();
         cal.add(Calendar.DAY_OF_YEAR, 1);
-        Date t3 = cal.getTime();
+        final Date t3 = cal.getTime();
         cal.add(Calendar.DAY_OF_YEAR, 1);
-        Date t4 = cal.getTime();
+        final Date t4 = cal.getTime();
         cal.add(Calendar.DAY_OF_YEAR, 1);
-        Date t5 = cal.getTime();
+        final Date t5 = cal.getTime();
 
 
-        Book ignacio = createNewBook("neu://verax/testusers/Ignacio");
-        Book palacio = createNewBook("neu://verax/testusers/Palacio");
+        final Book ignacio = createNewBook("neu://verax/testusers/Ignacio");
+        final Book palacio = createNewBook("neu://verax/testusers/Palacio");
 
-        double amount = 123;
-        double held = 200;
+        final double amount = 123;
+        final double held = 200;
 
-        double balance = ignacio.getBalance(t1);
+        final double balance = ignacio.getBalance(t1);
 
-        PostedHeldTransaction hold = ignacio.hold(palacio, held, "Hello", t2, t4);
+        final PostedHeldTransaction hold = ignacio.hold(palacio, held, "Hello", t2, t4);
         assertNotNull(hold);
         assertEquals(ignacio.getBalance(t1), balance, 0);
         assertEquals(ignacio.getBalance(t2), balance, 0);
@@ -311,52 +320,52 @@ public abstract class LedgerTest extends TestCase {
 
     }
 
-    public void testFindTransaction() throws LowlevelLedgerException, BookExistsException, UnBalancedTransactionException, InvalidTransactionException, UnknownTransactionException, UnknownBookException {
-        Book bob = getNewBobBook();
-        Book alice = getNewAliceBook();
+    public final void testFindTransaction() throws LowlevelLedgerException, BookExistsException, UnBalancedTransactionException, InvalidTransactionException, UnknownTransactionException, UnknownBookException {
+        final Book bob = getNewBobBook();
+        final Book alice = getNewAliceBook();
 
-        double amount = 123;
-        PostedTransaction tran = bob.transfer(alice, amount, "Can we find this again", new Date());
+        final double amount = 123;
+        final PostedTransaction tran = bob.transfer(alice, amount, "Can we find this again", new Date());
         assertNotNull(tran);
-        PostedTransaction found = ledger.findTransaction(tran.getXid());
+        final PostedTransaction found = ledger.findTransaction(tran.getXid());
         assertNotNull(found);
         assertEquals(found.getXid(), tran.getXid());
     }
 
-    public void testFindHeldTransaction() throws LowlevelLedgerException, BookExistsException, UnBalancedTransactionException, InvalidTransactionException, UnknownTransactionException, UnknownBookException {
-        Book bob = getNewBobBook();
-        Book alice = getNewAliceBook();
+    public final void testFindHeldTransaction() throws LowlevelLedgerException, BookExistsException, UnBalancedTransactionException, InvalidTransactionException, UnknownTransactionException, UnknownBookException {
+        final Book bob = getNewBobBook();
+        final Book alice = getNewAliceBook();
 
-        double amount = 123;
-        PostedHeldTransaction tran = bob.hold(alice, amount, "Can we find this again", new Date(), new Date());
+        final double amount = 123;
+        final PostedHeldTransaction tran = bob.hold(alice, amount, "Can we find this again", new Date(), new Date());
         assertNotNull(tran);
-        PostedHeldTransaction found = ledger.findHeldTransaction(tran.getXid());
+        final PostedHeldTransaction found = ledger.findHeldTransaction(tran.getXid());
         assertNotNull(found);
         assertEquals(found.getXid(), tran.getXid());
     }
 
-    public void testCancelHeld() throws LedgerException {
-        Calendar cal = Calendar.getInstance();
-        Date t1 = cal.getTime();
+    public final void testCancelHeld() throws LedgerException {
+        final Calendar cal = Calendar.getInstance();
+        final Date t1 = cal.getTime();
         cal.add(Calendar.DAY_OF_YEAR, 1);
-        Date t2 = cal.getTime();
+        final Date t2 = cal.getTime();
         cal.add(Calendar.DAY_OF_YEAR, 1);
-        Date t3 = cal.getTime();
+        final Date t3 = cal.getTime();
         cal.add(Calendar.DAY_OF_YEAR, 1);
-        Date t4 = cal.getTime();
+        final Date t4 = cal.getTime();
         cal.add(Calendar.DAY_OF_YEAR, 1);
-        Date t5 = cal.getTime();
+        final Date t5 = cal.getTime();
 
 
-        Book ignacio = createNewBook("neu://verax/testusers/Ignacio");
-        Book palacio = createNewBook("neu://verax/testusers/Palacio");
+        final Book ignacio = createNewBook("neu://verax/testusers/Ignacio");
+        final Book palacio = createNewBook("neu://verax/testusers/Palacio");
 
-        double amount = 123;
-        double held = 200;
+        final double amount = 123;
+        final double held = 200;
 
-        double balance = ignacio.getBalance(t1);
+        final double balance = ignacio.getBalance(t1);
 
-        PostedHeldTransaction hold = ignacio.hold(palacio, held, "Hello", t2, t4);
+        final PostedHeldTransaction hold = ignacio.hold(palacio, held, "Hello", t2, t4);
         assertNotNull(hold);
         hold.cancel();
         try {
@@ -369,5 +378,5 @@ public abstract class LedgerTest extends TestCase {
 
     }
 
-    Ledger ledger;
+    final Ledger ledger;
 }

@@ -1,8 +1,14 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: Ledger.java,v 1.6 2003/11/11 21:17:32 pelle Exp $
+ * $Id: Ledger.java,v 1.7 2003/11/21 04:43:20 pelle Exp $
  * $Log: Ledger.java,v $
+ * Revision 1.7  2003/11/21 04:43:20  pelle
+ * EncryptedFileStore now works. It uses the PBECipher with DES3 afair.
+ * Otherwise You will Finaliate.
+ * Anything that can be final has been made final throughout everyting. We've used IDEA's Inspector tool to find all instance of variables that could be final.
+ * This should hopefully make everything more stable (and secure).
+ *
  * Revision 1.6  2003/11/11 21:17:32  pelle
  * Further vital reshuffling.
  * org.neudist.crypto.* and org.neudist.utils.* have been moved to respective areas under org.neuclear.commons
@@ -109,7 +115,7 @@ public abstract class Ledger {
      * 
      * @param id 
      */
-    public Ledger(String id, String name) {
+    public Ledger(final String id, final String name) {
         this.name = name;
         this.id = id;
     }
@@ -128,7 +134,7 @@ public abstract class Ledger {
      * @param bookID 
      * @return Valid Book instance
      */
-    protected Book createBookInstance(String bookID, String name) {
+    protected final Book createBookInstance(final String bookID, final String name) {
         return new Book(bookID, name, this);
     }
 
@@ -136,7 +142,7 @@ public abstract class Ledger {
 
     public abstract Book createNewBook(String bookID, String title) throws BookExistsException, LowlevelLedgerException;
 
-    public Book createNewBook(String bookID) throws BookExistsException, LowlevelLedgerException {
+    public final Book createNewBook(final String bookID) throws BookExistsException, LowlevelLedgerException {
         return createNewBook(bookID, "Unnamed Account");
     }
 
@@ -253,7 +259,7 @@ public abstract class Ledger {
      * @param xid         Unique Transaction ID
      * @return PostedTransaction
      */
-    protected final PostedTransaction createTransaction(UnPostedTransaction transaction, String xid) throws InvalidTransactionException {
+    protected final PostedTransaction createTransaction(final UnPostedTransaction transaction, final String xid) throws InvalidTransactionException {
         return new PostedTransaction(transaction, xid);
     }
 
@@ -266,11 +272,11 @@ public abstract class Ledger {
      * @param xid         Unique Transaction ID
      * @return PostedTransaction
      */
-    protected final PostedHeldTransaction createHeldTransaction(UnPostedHeldTransaction transaction, String xid) throws InvalidTransactionException {
+    protected final PostedHeldTransaction createHeldTransaction(final UnPostedHeldTransaction transaction, final String xid) throws InvalidTransactionException {
         return new PostedHeldTransaction(transaction, xid);
     }
 
-    protected final PostedTransaction createHeldComplete(PostedHeldTransaction hold, double amount, Date time, String comment) throws TransactionExpiredException, InvalidTransactionException, LowlevelLedgerException {
+    protected final PostedTransaction createHeldComplete(final PostedHeldTransaction hold, final double amount, final Date time, final String comment) throws TransactionExpiredException, InvalidTransactionException, LowlevelLedgerException {
         //TODO Rework these Exception
         if (hold.getTransactionTime().after(hold.getExpiryTime()))
             throw new TransactionExpiredException(this, hold);
@@ -280,10 +286,10 @@ public abstract class Ledger {
         try {
             beginLinkedTransaction();
             //PostedTransaction rev=hold.reverse(comment); // We dont need to reverse this
-            UnPostedTransaction tran = new UnPostedTransaction(this, comment, time);
-            Iterator iter = hold.getItems();
+            final UnPostedTransaction tran = new UnPostedTransaction(this, comment, time);
+            final Iterator iter = hold.getItems();
             while (iter.hasNext()) {
-                TransactionItem item = (TransactionItem) iter.next();
+                final TransactionItem item = (TransactionItem) iter.next();
                 if (item.getAmount() >= 0)
                     tran.addItem(item.getBook(), amount);
                 else
@@ -300,11 +306,11 @@ public abstract class Ledger {
         return name;
     }
 
-    public String getName() {
+    public final String getName() {
         return name;
     }
 
-    public String getId() {
+    public final String getId() {
         return id;
     }
 

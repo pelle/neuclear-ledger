@@ -1,7 +1,13 @@
 package org.neuclear.ledger.implementations;
 /**
- * $Id: SimpleLedger.java,v 1.2 2003/11/11 21:17:31 pelle Exp $
+ * $Id: SimpleLedger.java,v 1.3 2003/11/21 04:43:20 pelle Exp $
  * $Log: SimpleLedger.java,v $
+ * Revision 1.3  2003/11/21 04:43:20  pelle
+ * EncryptedFileStore now works. It uses the PBECipher with DES3 afair.
+ * Otherwise You will Finaliate.
+ * Anything that can be final has been made final throughout everyting. We've used IDEA's Inspector tool to find all instance of variables that could be final.
+ * This should hopefully make everything more stable (and secure).
+ *
  * Revision 1.2  2003/11/11 21:17:31  pelle
  * Further vital reshuffling.
  * org.neudist.crypto.* and org.neudist.utils.* have been moved to respective areas under org.neuclear.commons
@@ -65,13 +71,13 @@ import java.util.*;
  */
 public final class SimpleLedger extends Ledger {
 
-    public SimpleLedger(String name) {
+    public SimpleLedger(final String name) {
         super(name,name);
         ledger=new LinkedHashMap();
         books=new HashMap();
     }
 
-    public boolean bookExists(String bookID) {
+    public boolean bookExists(final String bookID) {
         return books.containsKey(bookID); //Strictly speaking not true
     }
 
@@ -81,10 +87,10 @@ public final class SimpleLedger extends Ledger {
      * @param bookID
      * @return
      */
-    public Book createNewBook(String bookID,String title) throws BookExistsException {
+    public Book createNewBook(final String bookID,final String title) throws BookExistsException {
         if (bookExists(bookID))
             throw new BookExistsException(this,bookID);
-        Book book=createBookInstance(bookID,title);
+        final Book book=createBookInstance(bookID,title);
         books.put(bookID,book);
         return book;
     }
@@ -97,11 +103,11 @@ public final class SimpleLedger extends Ledger {
      * @ If there was a problem with the Transaction
      * @return Unique ID
      */
-    public PostedTransaction performTransaction(UnPostedTransaction trans) throws UnBalancedTransactionException, InvalidTransactionException {
+    public PostedTransaction performTransaction(final UnPostedTransaction trans) throws UnBalancedTransactionException, InvalidTransactionException {
         if (!trans.isBalanced())
             throw new UnBalancedTransactionException(this,trans);
-        String id=getID();
-        PostedTransaction posted=createTransaction(trans,id);
+        final String id=getID();
+        final PostedTransaction posted=createTransaction(trans,id);
         ledger.put(id,posted);
         return posted;
     }
@@ -113,11 +119,11 @@ public final class SimpleLedger extends Ledger {
      * @param trans Transaction to perform
      * @return Unique ID
      */
-    public PostedHeldTransaction performHeldTransaction(UnPostedHeldTransaction trans) throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException {
+    public PostedHeldTransaction performHeldTransaction(final UnPostedHeldTransaction trans) throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException {
         if (!trans.isBalanced())
              throw new UnBalancedTransactionException(this,trans);
-         String id=getID();
-         PostedHeldTransaction posted=createHeldTransaction(trans,id);
+         final String id=getID();
+         final PostedHeldTransaction posted=createHeldTransaction(trans,id);
          ledger.put(id,posted);
          return posted;
      }
@@ -128,7 +134,7 @@ public final class SimpleLedger extends Ledger {
      * @return The Transaction object
      * @  If it couldnt find the Transaction
      */
-    public PostedTransaction findTransaction(String id) throws UnknownTransactionException {
+    public PostedTransaction findTransaction(final String id) throws UnknownTransactionException {
         if (!ledger.containsKey(id))
             throw new UnknownTransactionException(this,id);
 
@@ -145,19 +151,19 @@ public final class SimpleLedger extends Ledger {
      * @param balancedate
      * @return the balance as a double
      */
-    public double getBalance(Book book, Date balancedate)  {
+    public double getBalance(final Book book, final Date balancedate)  {
         double balance=0;
         // Very silly slow and lazy implementation
-        Iterator iter=ledger.keySet().iterator();
-        boolean going=true;
+        final Iterator iter=ledger.keySet().iterator();
+        final boolean going=true;
         while(iter.hasNext()&&going){
-            Transaction tran=(Transaction)ledger.get((String)iter.next());
+            final Transaction tran=(Transaction)ledger.get((String)iter.next());
             // The reason I'm doing !xx.after is because I need this to be <=
             if (!tran.getTransactionTime().after(balancedate)) {
-                Iterator items=tran.getItems();
-                boolean isHold=(tran instanceof HeldTransaction);
+                final Iterator items=tran.getItems();
+                final boolean isHold=(tran instanceof HeldTransaction);
                 while (items.hasNext()) {
-                    TransactionItem item = (TransactionItem) items.next();
+                    final TransactionItem item = (TransactionItem) items.next();
                     if (item.getBook().equals(book)&&!isHold)
                         balance+=item.getAmount();
                 }
@@ -168,7 +174,7 @@ public final class SimpleLedger extends Ledger {
         return balance;
     }
 
-    public double getBalance(Book book)  {
+    public double getBalance(final Book book)  {
         return getBalance(book,new Date());
     }
 
@@ -185,22 +191,22 @@ public final class SimpleLedger extends Ledger {
      * @param balancedate
      * @return the balance as a double
      */
-    public double getAvailableBalance(Book book, Date balancedate)  {
+    public double getAvailableBalance(final Book book, final Date balancedate)  {
         double balance=0;
         // Very silly slow and lazy implementation
-        Iterator iter=ledger.keySet().iterator();
-        boolean going=true;
+        final Iterator iter=ledger.keySet().iterator();
+        final boolean going=true;
         while(iter.hasNext()){
-            Transaction tran=(Transaction)ledger.get((String)iter.next());
+            final Transaction tran=(Transaction)ledger.get((String)iter.next());
             // The reason I'm doing !xx.after is because I need this to be <=
             if (!tran.getTransactionTime().after(balancedate)) {
-                Iterator items=tran.getItems();
+                final Iterator items=tran.getItems();
 
-                boolean isHold=(tran instanceof HeldTransaction);
-                boolean isValidHold=isHold&&(!((HeldTransaction)tran).getExpiryTime().before(balancedate));
+                final boolean isHold=(tran instanceof HeldTransaction);
+                final boolean isValidHold=isHold&&(!((HeldTransaction)tran).getExpiryTime().before(balancedate));
 
                 while (items.hasNext()) {
-                    TransactionItem item = (TransactionItem) items.next();
+                    final TransactionItem item = (TransactionItem) items.next();
                     if (
                             item.getBook().equals(book)&&
                             (
@@ -221,7 +227,7 @@ public final class SimpleLedger extends Ledger {
         return balance;
     }
 
-    public double getAvailableBalance(Book book)  {
+    public double getAvailableBalance(final Book book)  {
      return getAvailableBalance(book,new Date());
     }
 
@@ -250,7 +256,7 @@ public final class SimpleLedger extends Ledger {
      * @param idstring A valid ID
      * @return The Transaction object
      */
-    public PostedHeldTransaction findHeldTransaction(String idstring) throws LowlevelLedgerException, UnknownTransactionException {
+    public PostedHeldTransaction findHeldTransaction(final String idstring) throws LowlevelLedgerException, UnknownTransactionException {
         return null;  //To change body of implemented methods use Options | File Templates.
     }
 
@@ -260,11 +266,11 @@ public final class SimpleLedger extends Ledger {
      * @throws LowlevelLedgerException
      * @throws UnknownTransactionException
      */
-    public void performCancelHold(PostedHeldTransaction hold) throws LowlevelLedgerException, UnknownTransactionException {
+    public void performCancelHold(final PostedHeldTransaction hold) throws LowlevelLedgerException, UnknownTransactionException {
         //To change body of implemented methods use Options | File Templates.
     }
 
-    public PostedTransaction performCompleteHold(PostedHeldTransaction hold, double amount, Date time, String comment) throws InvalidTransactionException, LowlevelLedgerException {
+    public PostedTransaction performCompleteHold(final PostedHeldTransaction hold, final double amount, final Date time, final String comment) throws InvalidTransactionException, LowlevelLedgerException {
         return null;  //To change body of implemented methods use Options | File Templates.
     }
 
@@ -272,10 +278,10 @@ public final class SimpleLedger extends Ledger {
         return Long.toString(idSeq++);
     }
     private long idSeq=0;
-    private LinkedHashMap ledger;
-    private HashMap books;
+    private final LinkedHashMap ledger;
+    private final HashMap books;
 
-    public Book getBook(String bookID) throws UnknownBookException,LowlevelLedgerException {
+    public Book getBook(final String bookID) throws UnknownBookException,LowlevelLedgerException {
         if (bookExists(bookID))
             return (Book)books.get(bookID);
         else

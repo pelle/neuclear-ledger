@@ -1,6 +1,6 @@
 package org.neuclear.ledger.implementations;
 
-import org.ofbiz.core.entity.GenericDelegator;
+//import org.ofbiz.core.entity.GenericDelegator;
 
 /*
 NeuClear Distributed Transaction Clearing Platform
@@ -20,8 +20,14 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: EntityLedger.java,v 1.1 2003/11/20 23:41:12 pelle Exp $
+$Id: EntityLedger.java,v 1.2 2003/11/21 04:43:20 pelle Exp $
 $Log: EntityLedger.java,v $
+Revision 1.2  2003/11/21 04:43:20  pelle
+EncryptedFileStore now works. It uses the PBECipher with DES3 afair.
+Otherwise You will Finaliate.
+Anything that can be final has been made final throughout everyting. We've used IDEA's Inspector tool to find all instance of variables that could be final.
+This should hopefully make everything more stable (and secure).
+
 Revision 1.1  2003/11/20 23:41:12  pelle
 Getting all the tests to work in id
 Removing usage of BC in CryptoTools as it was causing issues.
@@ -35,11 +41,11 @@ writing SQL. (Yipee)
  * Date: Nov 20, 2003
  * Time: 2:16:21 PM
  */
-public class EntityLedger {
-    public static void main(String args[]) {
+public final class EntityLedger {
+    public static void main(final String[] args) {
         System.out.println("Testing Entity Engine");
 
-        GenericDelegator delegator = GenericDelegator.getGenericDelegator("default");
+//        GenericDelegator delegator = GenericDelegator.getGenericDelegator("default");
 
     }
 }

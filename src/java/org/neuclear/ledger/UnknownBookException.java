@@ -7,21 +7,21 @@ package org.neuclear.ledger;
  * Time: 4:46:06 PM
  * To change this template use Options | File Templates.
  */
-public class UnknownBookException extends LedgerException {
-    public UnknownBookException(Ledger ledger,String bookID) {
+public final class UnknownBookException extends LedgerException {
+    public UnknownBookException(final Ledger ledger,final String bookID) {
         super(ledger);
         this.bookID=bookID;
     }
-    public String getBookID() {
+    public final String getBookID() {
         return bookID;
     }
 
-    public Book createBook() throws BookExistsException,LowlevelLedgerException {
+    public final Book createBook() throws BookExistsException,LowlevelLedgerException {
         return getLedger().createNewBook(bookID);
     }
-    private String bookID;
+    private final String bookID;
 
-    public String getSubMessage() {
+    public final String getSubMessage() {
         return "Unknown Book: "+bookID;
     }
 }

@@ -5,8 +5,14 @@ package org.neuclear.ledger;
  * User: pelleb
  * Date: Jan 25, 2003
  * Time: 12:54:28 PM
- * $Id: UnPostedTransaction.java,v 1.5 2003/11/11 21:17:32 pelle Exp $
+ * $Id: UnPostedTransaction.java,v 1.6 2003/11/21 04:43:20 pelle Exp $
  * $Log: UnPostedTransaction.java,v $
+ * Revision 1.6  2003/11/21 04:43:20  pelle
+ * EncryptedFileStore now works. It uses the PBECipher with DES3 afair.
+ * Otherwise You will Finaliate.
+ * Anything that can be final has been made final throughout everyting. We've used IDEA's Inspector tool to find all instance of variables that could be final.
+ * This should hopefully make everything more stable (and secure).
+ *
  * Revision 1.5  2003/11/11 21:17:32  pelle
  * Further vital reshuffling.
  * org.neudist.crypto.* and org.neudist.utils.* have been moved to respective areas under org.neuclear.commons
@@ -75,11 +81,11 @@ public class UnPostedTransaction extends Transaction {
      * @param comment         
      * @param transactionTime 
      */
-    public UnPostedTransaction(Ledger ledger, String comment, Date transactionTime) throws InvalidTransactionException {
+    public UnPostedTransaction(final Ledger ledger, final String comment, final Date transactionTime) throws InvalidTransactionException {
         this(ledger, comment, transactionTime, false);
     }
 
-    UnPostedTransaction(Ledger ledger, String comment, Date transactionTime, boolean posted) throws InvalidTransactionException {
+    UnPostedTransaction(final Ledger ledger, final String comment, final Date transactionTime, final boolean posted) throws InvalidTransactionException {
         super(ledger, transactionTime, comment);
 //        if (amount<0)
 //            throw new TransactionException("Negative Transactions are not allowed");
@@ -96,7 +102,7 @@ public class UnPostedTransaction extends Transaction {
      * 
      * @return A Unique Transaction ID
      */
-    public synchronized PostedTransaction post() throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException {
+    public final synchronized PostedTransaction post() throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException {
         PostedTransaction postTransaction = null;
         if (isBalanced()) {
             getLedger().beginLinkedTransaction();
@@ -116,7 +122,7 @@ public class UnPostedTransaction extends Transaction {
      * 
      * @return 
      */
-    public boolean isBalanced() {
+    public final boolean isBalanced() {
         return (getBalance() == 0);
     }
 
@@ -125,16 +131,16 @@ public class UnPostedTransaction extends Transaction {
      * 
      * @return 
      */
-    public double getBalance() {
+    public final double getBalance() {
         return balance;
     }
 
-    public Iterator getItems() {
+    public final Iterator getItems() {
         return items.iterator();
     }
 
-    TransactionItem[] getItemArray() {
-        TransactionItem itemarray[] = new TransactionItem[items.size()];
+    final TransactionItem[] getItemArray() {
+        final TransactionItem[] itemarray = new TransactionItem[items.size()];
         for (int i = 0; i < items.size(); i++) {
             itemarray[i] = (org.neuclear.ledger.TransactionItem) items.get(i);
 
@@ -156,7 +162,7 @@ public class UnPostedTransaction extends Transaction {
      * @param amount 
      * @return the new balance
      */
-    public synchronized double addItem(Book book, double amount) throws InvalidTransactionException {
+    public final synchronized double addItem(final Book book, final double amount) throws InvalidTransactionException {
         if (book == null)
             throw new InvalidTransactionException(getLedger(), "You must supply a valid Book");
         if (!book.getLedger().equals(getLedger()))

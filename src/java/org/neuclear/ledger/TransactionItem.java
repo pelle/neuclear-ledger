@@ -4,8 +4,14 @@ package org.neuclear.ledger;
  * User: pelleb
  * Date: Jan 17, 2003
  * Time: 5:40:26 PM
- * $Id: TransactionItem.java,v 1.3 2003/11/11 21:17:32 pelle Exp $
+ * $Id: TransactionItem.java,v 1.4 2003/11/21 04:43:20 pelle Exp $
  * $Log: TransactionItem.java,v $
+ * Revision 1.4  2003/11/21 04:43:20  pelle
+ * EncryptedFileStore now works. It uses the PBECipher with DES3 afair.
+ * Otherwise You will Finaliate.
+ * Anything that can be final has been made final throughout everyting. We've used IDEA's Inspector tool to find all instance of variables that could be final.
+ * This should hopefully make everything more stable (and secure).
+ *
  * Revision 1.3  2003/11/11 21:17:32  pelle
  * Further vital reshuffling.
  * org.neudist.crypto.* and org.neudist.utils.* have been moved to respective areas under org.neuclear.commons
@@ -28,7 +34,7 @@ package org.neuclear.ledger;
  *
  */
 public final class TransactionItem {
-    TransactionItem(Book book,double amount) {
+    TransactionItem(final Book book,final double amount) {
         this.amount = amount;
         this.book = book;
     }

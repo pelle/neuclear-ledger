@@ -1,8 +1,14 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: Book.java,v 1.4 2003/11/11 21:17:32 pelle Exp $
+ * $Id: Book.java,v 1.5 2003/11/21 04:43:20 pelle Exp $
  * $Log: Book.java,v $
+ * Revision 1.5  2003/11/21 04:43:20  pelle
+ * EncryptedFileStore now works. It uses the PBECipher with DES3 afair.
+ * Otherwise You will Finaliate.
+ * Anything that can be final has been made final throughout everyting. We've used IDEA's Inspector tool to find all instance of variables that could be final.
+ * This should hopefully make everything more stable (and secure).
+ *
  * Revision 1.4  2003/11/11 21:17:32  pelle
  * Further vital reshuffling.
  * org.neudist.crypto.* and org.neudist.utils.* have been moved to respective areas under org.neuclear.commons
@@ -76,7 +82,7 @@ import java.util.Date;
  * TODO For certain operations we require the current time. This is currently done using new Date(). We need a better way of doing this.
  */
 public final class Book {
-    Book(String book, String name, Ledger ledger) {
+    Book(final String book, final String name, final Ledger ledger) {
         this.book = book;
         this.name = name;
         this.ledger = ledger;
@@ -99,7 +105,7 @@ public final class Book {
         return ledger;
     }
 
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         return (o instanceof Book) && (((Book) o).getLedger().equals(getLedger())) && (((Book) o).getBookID().equals(getBookID()));
     }
 
@@ -128,7 +134,7 @@ public final class Book {
      * @param balancedate 
      * @return the balance as a double
      */
-    public final double getBalance(Date balancedate) throws LowlevelLedgerException {
+    public final double getBalance(final Date balancedate) throws LowlevelLedgerException {
         return getLedger().getBalance(this, balancedate);
     }
 
@@ -156,7 +162,7 @@ public final class Book {
      * @param balancedate 
      * @return the balance as a double
      */
-    public final double getAvailableBalance(Date balancedate) throws LowlevelLedgerException {
+    public final double getAvailableBalance(final Date balancedate) throws LowlevelLedgerException {
         return getLedger().getAvailableBalance(this, balancedate);
     }
 
@@ -194,7 +200,7 @@ public final class Book {
      * @return Unique Transaction ID
      * @ If there was a problem with Transaction.
      */
-    public final PostedTransaction transfer(Book destination, double amount, String comment, Date transactionTime) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
+    public final PostedTransaction transfer(final Book destination, final double amount, final String comment, final Date transactionTime) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
         return Transaction.createTransfer(getLedger(), this, destination, amount, comment, transactionTime);
 
     }
@@ -210,7 +216,7 @@ public final class Book {
      * @return Transaction ID
      * @
      */
-    public final PostedHeldTransaction hold(Book destination, double amount, String comment, Date transactionTime, Date expiryTime) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
+    public final PostedHeldTransaction hold(final Book destination, final double amount, final String comment, final Date transactionTime, final Date expiryTime) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
         return Transaction.createHeldTransfer(getLedger(), this, destination, amount, comment, transactionTime, expiryTime);
     }
 

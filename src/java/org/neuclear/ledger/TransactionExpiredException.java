@@ -7,18 +7,18 @@ package org.neuclear.ledger;
  * Time: 12:52:50 PM
  * To change this template use Options | File Templates.
  */
-public class TransactionExpiredException extends LedgerException {
-    public TransactionExpiredException(Ledger ledger,PostedHeldTransaction tran) {
+public final class TransactionExpiredException extends LedgerException {
+    public TransactionExpiredException(final Ledger ledger,final PostedHeldTransaction tran) {
         super(ledger);
         transaction=tran;
     }
-    private PostedHeldTransaction transaction;
+    private final PostedHeldTransaction transaction;
 
-    public PostedHeldTransaction getTransaction() {
+    public final PostedHeldTransaction getTransaction() {
         return transaction;
     }
 
-    public String getSubMessage() {
+    public final String getSubMessage() {
         return "Transaction: "+transaction.getXid()+" expired: "+transaction.getExpiryTime();
     }
 }

@@ -7,18 +7,18 @@ package org.neuclear.ledger;
  * Time: 4:46:06 PM
  * To change this template use Options | File Templates.
  */
-public class UnknownTransactionException extends LedgerException {
-    public UnknownTransactionException(Ledger ledger,String xid) {
+public final class UnknownTransactionException extends LedgerException {
+    public UnknownTransactionException(final Ledger ledger,final String xid) {
         super(ledger);
         this.xid=xid;
     }
-    public String getTransactionID() {
+    public final String getTransactionID() {
         return xid;
     }
 
-    private String xid;
+    private final String xid;
 
-    public String getSubMessage() {
+    public final String getSubMessage() {
         return "Unknown Transaction: "+xid;
     }
 }

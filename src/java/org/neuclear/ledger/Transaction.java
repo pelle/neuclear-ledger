@@ -1,7 +1,13 @@
 package org.neuclear.ledger;
 /**
- * $Id: Transaction.java,v 1.3 2003/11/11 21:17:32 pelle Exp $
+ * $Id: Transaction.java,v 1.4 2003/11/21 04:43:20 pelle Exp $
  * $Log: Transaction.java,v $
+ * Revision 1.4  2003/11/21 04:43:20  pelle
+ * EncryptedFileStore now works. It uses the PBECipher with DES3 afair.
+ * Otherwise You will Finaliate.
+ * Anything that can be final has been made final throughout everyting. We've used IDEA's Inspector tool to find all instance of variables that could be final.
+ * This should hopefully make everything more stable (and secure).
+ *
  * Revision 1.3  2003/11/11 21:17:32  pelle
  * Further vital reshuffling.
  * org.neudist.crypto.* and org.neudist.utils.* have been moved to respective areas under org.neuclear.commons
@@ -52,7 +58,7 @@ import java.util.Iterator;
  */
 public abstract class Transaction {
 
-    Transaction(Ledger ledger,Date transactionTime,String comment) throws InvalidTransactionException {
+    Transaction(final Ledger ledger,final Date transactionTime,final String comment) throws InvalidTransactionException {
         if (ledger==null)
             throw new InvalidTransactionException(ledger,"Transaction must have an associated ledger");
         this.ledger=ledger;
@@ -71,10 +77,10 @@ public abstract class Transaction {
      * @return
      */
 
-    public static PostedTransaction createTransfer(Ledger ledger, Book debit, Book credit, double amount, String comment, Date transactionTime) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
+    public static PostedTransaction createTransfer(final Ledger ledger, final Book debit, final Book credit, final double amount, final String comment, final Date transactionTime) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
         if (amount<0)
             throw new InvalidTransactionException(ledger,"The amount must be positive in a Transfer");
-        UnPostedTransaction transfer=new UnPostedTransaction(ledger,comment,transactionTime);
+        final UnPostedTransaction transfer=new UnPostedTransaction(ledger,comment,transactionTime);
         transfer.addItem(debit,-amount);
         transfer.addItem(credit,amount);
         return transfer.post();
@@ -91,10 +97,10 @@ public abstract class Transaction {
      * @return
      */
 
-    public static PostedHeldTransaction createHeldTransfer(Ledger ledger, Book debit, Book credit, double amount, String comment, Date transactionTime,Date heldUntil) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
+    public static PostedHeldTransaction createHeldTransfer(final Ledger ledger, final Book debit, final Book credit, final double amount, final String comment, final Date transactionTime,final Date heldUntil) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
         if (amount<0)
             throw new InvalidTransactionException(ledger,"The amount must be positive in a Transfer");
-        UnPostedTransaction transfer=new UnPostedHeldTransaction(ledger,comment,transactionTime,heldUntil);
+        final UnPostedTransaction transfer=new UnPostedHeldTransaction(ledger,comment,transactionTime,heldUntil);
         transfer.addItem(debit,-amount);
         transfer.addItem(credit,amount);
         return (PostedHeldTransaction)transfer.post();
@@ -102,18 +108,18 @@ public abstract class Transaction {
     }
 
 
-    public Date getTransactionTime() {
+    public final Date getTransactionTime() {
         return transactionTime;
     }
 
 
-    public String getComment() {
+    public final String getComment() {
         return comment;
     }
     public abstract Iterator getItems();
 
 
-    protected Ledger getLedger() {
+    protected final Ledger getLedger() {
         return ledger;
     }
 
