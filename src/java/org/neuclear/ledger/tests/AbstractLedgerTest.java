@@ -10,12 +10,15 @@ import java.util.Date;
  * User: pelleb
  * Date: Jan 22, 2003
  * Time: 4:18:35 PM
- * $Id: AbstractLedgerTest.java,v 1.4 2004/03/25 19:03:23 pelle Exp $
+ * $Id: AbstractLedgerTest.java,v 1.5 2004/03/25 21:39:43 pelle Exp $
  * $Log: AbstractLedgerTest.java,v $
+ * Revision 1.5  2004/03/25 21:39:43  pelle
+ * Modified expire tests a bit to eliminate one cause for an error
+ *
  * Revision 1.4  2004/03/25 19:03:23  pelle
  * PostedTransaction and friend now verify the unpostedtransaction is balanced.
  * Updated schema for HHeld to include a cancelled field and a completed field. (The latter doesnt yet work right). Need to read more Hibernate docs to find out why.
- *
+ * <p/>
  * Revision 1.3  2004/03/25 16:44:21  pelle
  * Added getTestBalance() and isBalanced() to Ledger to see if ledger is balanced.
  * The hibernate implementation has changed the comment size to 255 to work with mysql and now
@@ -247,14 +250,14 @@ public abstract class AbstractLedgerTest extends TestCase {
         System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
         System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
 
-        ledger.hold(ALICE, BOB, new Date(System.currentTimeMillis() + 5000), amount, "LOAN");
+        ledger.hold(ALICE, BOB, new Date(System.currentTimeMillis() + 10000), amount, "LOAN");
+        assertEquals("ALICE Available BALANCE", aliceBalance - amount, ledger.getAvailableBalance(ALICE), 0);
+        assertEquals("BOB Available BALANCE", bobBalance, ledger.getAvailableBalance(BOB), 0);
         assertEquals("ALICE BALANCE", aliceBalance, ledger.getBalance(ALICE), 0);
         assertEquals("BOB BALANCE", bobBalance, ledger.getBalance(BOB), 0);
 
-        assertEquals("ALICE Available BALANCE", aliceBalance - amount, ledger.getAvailableBalance(ALICE), 0);
-        assertEquals("BOB Available BALANCE", bobBalance, ledger.getAvailableBalance(BOB), 0);
         try {
-            Thread.currentThread().sleep(5000);
+            Thread.currentThread().sleep(10000);
         } catch (InterruptedException e) {
             ;
         }
