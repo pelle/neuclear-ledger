@@ -21,10 +21,10 @@
 
     <repository>
         <connection>
-         scm:cvs:pserver:anonymous@cvs.neuclear.sourceforge.net:/cvsroot/neuclear:neuclear-ledger
+         scm:cvs:pserver:anonymous@cvs.sourceforge.net:/cvsroot/neuclear:neuclear-ledger
         </connection>
         <url>
-      http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/neuclear/neuclear-ledger/
+      http://cvs.sourceforge.net/viewcvs.py/neuclear/neuclear-ledger/
         </url>
     </repository>
 
