@@ -1,6 +1,7 @@
 package org.neuclear.ledger.servlets;
 
 import org.neuclear.commons.Utility;
+import org.neuclear.commons.servlets.ServletMessages;
 import org.neuclear.commons.servlets.ServletTools;
 import org.neuclear.commons.time.TimeTools;
 import org.neuclear.ledger.Book;
@@ -16,8 +17,11 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.Principal;
+import java.text.DateFormat;
+import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.ResourceBundle;
 
 /*
 NeuClear Distributed Transaction Clearing Platform
@@ -37,8 +41,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerBrowserServlet.java,v 1.8 2004/05/22 20:41:19 pelle Exp $
+$Id: LedgerBrowserServlet.java,v 1.9 2004/06/06 21:26:29 pelle Exp $
 $Log: LedgerBrowserServlet.java,v $
+Revision 1.9  2004/06/06 21:26:29  pelle
+Localized LedgerBrowserServlet to Spanish
+
 Revision 1.8  2004/05/22 20:41:19  pelle
 Fixed LedgerBrowserServlet to handle the new ledgerid.
 Split amount column to payments and received
@@ -114,7 +121,6 @@ public class LedgerBrowserServlet extends HttpServlet {
         serviceid = ServletTools.getInitParam("serviceid", config);
         ledgerid = ServletTools.getInitParam("ledgerid", config);
         title = ServletTools.getInitParam("title", config);
-
         try {
 //            ConfigurableContainer pico=(ConfigurableContainer) getServletContext().getAttribute("pico");
 //            ledger = (LedgerBrowser) pico.getComponentInstance(Ledger.class) ;
@@ -128,11 +134,18 @@ public class LedgerBrowserServlet extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType("text/html");
+        response.setCharacterEncoding("UTF-8");
+        System.setProperty("file.encoding", "UTF-8");
+        ResourceBundle messages = ServletMessages.getMessages(request);
+        NumberFormat numbers = NumberFormat.getNumberInstance(request.getLocale());
+        numbers.setMaximumFractionDigits(2);
+        numbers.setMinimumFractionDigits(2);
+        DateFormat dateformat = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.SHORT, request.getLocale());
         PrintWriter out = response.getWriter();
         Principal user = request.getUserPrincipal();
         Book book = (Book) request.getSession(true).getAttribute("book");
 
-        ServletTools.printHeader(out, request, title, "Account Browser for " + Utility.denullString(book.getNickname()));
+        ServletTools.printHeader(out, request, title, messages.getString("accountmovements") + " " + Utility.denullString(book.getNickname()));
         String url = ServletTools.getAbsoluteURL(request, request.getServletPath());
         try {
             String bookid = user.getName();
@@ -145,7 +158,7 @@ public class LedgerBrowserServlet extends HttpServlet {
             Date to = parseDate(toStr);
 
             BookBrowser stmt = browse(bookid, from, to);
-            out.println("<table><tr><th>Transaction ID</th><th>Time</th><th>Who</th><th>Comment</th><th>Payments</th><th>Received</th></tr>");
+            out.println("<table><tr><th>" + messages.getString("xid") + "</th><th>" + messages.getString("time") + "</th><th>" + messages.getString("who") + "</th><th>" + messages.getString("comments") + "</th><th>" + messages.getString("payments") + "</th><th>" + messages.getString("received") + "</th></tr>");
             int linecount = 0;
             while (stmt.next()) {
                 final double amount = stmt.getAmount();
@@ -163,7 +176,7 @@ public class LedgerBrowserServlet extends HttpServlet {
                 out.print("\">");
                 out.print((stmt.getRequestId().length() > 10) ? stmt.getRequestId().substring(0, 10) : stmt.getRequestId());
                 out.print("</td><td>");
-                out.print(TimeTools.formatTimeStampShort(stmt.getValuetime()));
+                out.print(dateformat.format(stmt.getValuetime()));
                 out.print("</td><td>");
                 Book counterparty = stmt.getCounterparty();
 //                out.println("\">");
@@ -179,21 +192,22 @@ public class LedgerBrowserServlet extends HttpServlet {
                 out.print(stmt.getComment());
                 out.print("</td><td class=\"negative\">");
                 if (amount < 0)
-                    out.print(-amount);
+                    out.print(numbers.format(-amount));
                 out.print("</td><td class=\"positive\">");
                 if (amount >= 0)
-                    out.print(amount);
+                    out.print(numbers.format(amount));
                 out.print("</td></tr>");
 
             }
             out.println("</table><a href=\"");
             out.println(ServletTools.getAbsoluteURL(request, "/"));
-            out.println("\">Return to Main Menu</a>");
+            out.println("\">" + messages.getString("mainmenu") + "</a>");
             out.println("</body></html>");
         } catch (LowlevelLedgerException e) {
             e.printStackTrace();
         }
     }
+
 
     private BookBrowser browse(String book, Date from, Date to) throws LowlevelLedgerException {
         if (from != null) {
