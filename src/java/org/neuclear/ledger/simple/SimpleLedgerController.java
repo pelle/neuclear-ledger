@@ -1,8 +1,12 @@
 package org.neuclear.ledger.simple;
 
 /**
- * $Id: SimpleLedgerController.java,v 1.4 2004/05/04 23:00:39 pelle Exp $
+ * $Id: SimpleLedgerController.java,v 1.5 2004/05/05 20:46:24 pelle Exp $
  * $Log: SimpleLedgerController.java,v $
+ * Revision 1.5  2004/05/05 20:46:24  pelle
+ * BookListBrowser works both in SimpleLedgerController and HibernateLedgerController
+ * Added new interface Browser, which is implemented by both BookBrowser and BookListBrowser
+ *
  * Revision 1.4  2004/05/04 23:00:39  pelle
  * Updated SimpleLedgerController to support multiple ledgers as well.
  *
@@ -132,6 +136,7 @@ package org.neuclear.ledger.simple;
 
 import org.neuclear.ledger.*;
 import org.neuclear.ledger.browser.BookBrowser;
+import org.neuclear.ledger.browser.BookListBrowser;
 import org.neuclear.ledger.browser.LedgerBrowser;
 
 import java.util.Date;
@@ -471,6 +476,10 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
         return new SimpleBookBrowser(book, from, until);
     }
 
+    public BookListBrowser browseBooks(String ledger) throws LowlevelLedgerException {
+        return new SimpleBookListBrowser(ledger);
+    }
+
     private final HashMap ledger;
     private final HashMap held;
     private final String id;
@@ -569,5 +578,46 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
 //        private int i=0;
     }
 
+    private class SimpleBookListBrowser extends BookListBrowser {
+        public SimpleBookListBrowser(final String ledger) {
+            super(ledger);
+            iter = books.keySet().iterator();
+        }
+
+        public boolean next() throws LowlevelLedgerException {
+            if (!iter.hasNext())
+                return false;
+            SimpleBook book = (SimpleBook) books.get(iter.next());
+            if (!isValid(book))
+                return next();
+
+            setRow(book);
+            return true;
+        }
+
+        private boolean isValid(final SimpleBook book) {
+            Iterator iter = book.iterator();
+            while (iter.hasNext()) {
+                Transaction tran = (Transaction) iter.next();
+                if (tran.getLedger().equals(ledger))
+                    return true;
+            }
+            return false;
+        }
+
+        private void setRow(SimpleBook book) {
+            int count = 0;
+            Iterator iter = book.iterator();
+            while (iter.hasNext()) {
+                Transaction tran = (Transaction) iter.next();
+                if (tran.getLedger().equals(ledger))
+                    count++;
+            }
+
+            setRow(book, count, book.getBalance(getLedger()));
+        }
+
+        private final Iterator iter;
+    }
 
 }

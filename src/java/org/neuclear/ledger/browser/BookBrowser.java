@@ -1,7 +1,6 @@
 package org.neuclear.ledger.browser;
 
 import org.neuclear.ledger.Book;
-import org.neuclear.ledger.LowlevelLedgerException;
 
 import java.util.Date;
 
@@ -23,8 +22,12 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: BookBrowser.java,v 1.6 2004/04/19 18:57:25 pelle Exp $
+$Id: BookBrowser.java,v 1.7 2004/05/05 20:46:23 pelle Exp $
 $Log: BookBrowser.java,v $
+Revision 1.7  2004/05/05 20:46:23  pelle
+BookListBrowser works both in SimpleLedgerController and HibernateLedgerController
+Added new interface Browser, which is implemented by both BookBrowser and BookListBrowser
+
 Revision 1.6  2004/04/19 18:57:25  pelle
 Updated Ledger to support more advanced book information.
 You can now create a book or fetch a book by doing getBook(String id) on the ledger.
@@ -60,12 +63,10 @@ Added BookBrowser pattern to ledger, simplifying the statement writing process.
  * Date: Dec 30, 2003
  * Time: 4:26:52 PM
  */
-public abstract class BookBrowser {
+public abstract class BookBrowser implements Browser {
     public BookBrowser(String book) {
         this.book = book;
     }
-
-    public abstract boolean next() throws LowlevelLedgerException;
 
 
     protected final void setRow(String reqid, Book counterparty, String comment, Date valuetime, double amount, Date expirytime, Date cancelled, String completedId) {

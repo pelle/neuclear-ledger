@@ -2,18 +2,25 @@ package org.neuclear.ledger.tests;
 
 import junit.framework.TestCase;
 import org.neuclear.commons.crypto.CryptoTools;
+import org.neuclear.commons.time.TimeTools;
 import org.neuclear.ledger.InvalidTransactionException;
 import org.neuclear.ledger.LedgerController;
 import org.neuclear.ledger.LowlevelLedgerException;
 import org.neuclear.ledger.UnknownBookException;
 import org.neuclear.ledger.browser.BookBrowser;
+import org.neuclear.ledger.browser.BookListBrowser;
+import org.neuclear.ledger.browser.Browser;
 import org.neuclear.ledger.browser.LedgerBrowser;
 
 import java.util.Date;
 
 /*
-$Id: AbstractLedgerBrowserTest.java,v 1.10 2004/05/04 23:00:39 pelle Exp $
+$Id: AbstractLedgerBrowserTest.java,v 1.11 2004/05/05 20:46:24 pelle Exp $
 $Log: AbstractLedgerBrowserTest.java,v $
+Revision 1.11  2004/05/05 20:46:24  pelle
+BookListBrowser works both in SimpleLedgerController and HibernateLedgerController
+Added new interface Browser, which is implemented by both BookBrowser and BookListBrowser
+
 Revision 1.10  2004/05/04 23:00:39  pelle
 Updated SimpleLedgerController to support multiple ledgers as well.
 
@@ -85,6 +92,7 @@ public abstract class AbstractLedgerBrowserTest extends TestCase {
             ;
         }
         final Date t = new Date();
+        System.out.println(TimeTools.formatTimeStamp(t));
         try {
             Thread.currentThread().sleep(1000);
         } catch (InterruptedException e) {
@@ -97,28 +105,28 @@ public abstract class AbstractLedgerBrowserTest extends TestCase {
         final String bob = getBobBook();
         final String alice = getAliceBook();
 
-        assertBookBrowserSize(bob, 0, browser.browse(bob));
-        assertBookBrowserSize(alice, 0, browser.browse(alice));
+        assertBrowserSize(bob, 0, browser.browse(bob));
+        assertBrowserSize(alice, 0, browser.browse(alice));
         int i;
         for (i = 0; i < 10; i++) {
             ledger.transfer(bob, alice, 10, "test" + i);
         }
-        assertBookBrowserSize(bob, i, browser.browse(bob));
-        assertBookBrowserSize(alice, i, browser.browse(alice));
+        assertBrowserSize(bob, i, browser.browse(bob));
+        assertBrowserSize(alice, i, browser.browse(alice));
     }
 
     public void testEntryContent() throws LowlevelLedgerException, InvalidTransactionException, UnknownBookException {
         final String bob = getBobBook();
         final String alice = getAliceBook();
 
-        assertBookBrowserSize(bob, 0, browser.browse(bob));
-        assertBookBrowserSize(alice, 0, browser.browse(alice));
+        assertBrowserSize(bob, 0, browser.browse(bob));
+        assertBrowserSize(alice, 0, browser.browse(alice));
         int i;
         for (i = 0; i < 10; i++) {
             ledger.transfer(bob, alice, 10, "test" + i);
         }
-        assertVerifyBrowserContent(bob, alice, -10, i, browser.browse(bob));
-        assertVerifyBrowserContent(alice, bob, 10, i, browser.browse(alice));
+        assertVerifyBookBrowserContent(bob, alice, -10, i, browser.browse(bob));
+        assertVerifyBookBrowserContent(alice, bob, 10, i, browser.browse(alice));
 
 
     }
@@ -128,14 +136,14 @@ public abstract class AbstractLedgerBrowserTest extends TestCase {
         final String alice = getAliceBook();
 
         Date t1 = getIsolatedTimeStamp();
-        assertBookBrowserSize(bob, 0, browser.browse(bob));
-        assertBookBrowserSize(alice, 0, browser.browse(alice));
+        assertBrowserSize(bob, 0, browser.browse(bob));
+        assertBrowserSize(alice, 0, browser.browse(alice));
         int i;
         for (i = 0; i < 10; i++) {
             ledger.transfer(bob, alice, 10, "test" + i);
         }
-        assertBookBrowserSize(bob, i, browser.browse(bob));
-        assertBookBrowserSize(alice, i, browser.browse(alice));
+        assertBrowserSize(bob, i, browser.browse(bob));
+        assertBrowserSize(alice, i, browser.browse(alice));
 
         Date t2 = getIsolatedTimeStamp();
         assertTrue(t2.after(t1));
@@ -145,17 +153,17 @@ public abstract class AbstractLedgerBrowserTest extends TestCase {
         }
         Date t3 = getIsolatedTimeStamp();
         assertTrue(t3.after(t2));
-        assertBookBrowserSize(bob, 20, browser.browse(bob));
-        assertBookBrowserSize(alice, 20, browser.browse(alice));
+        assertBrowserSize(bob, 20, browser.browse(bob));
+        assertBrowserSize(alice, 20, browser.browse(alice));
 
-        assertBookBrowserSize(bob, 20, browser.browseFrom(bob, t1));
-        assertBookBrowserSize(alice, 20, browser.browseFrom(alice, t1));
+        assertBrowserSize(bob, 20, browser.browseFrom(bob, t1));
+        assertBrowserSize(alice, 20, browser.browseFrom(alice, t1));
 
-        assertBookBrowserSize(bob, 0, browser.browseFrom(bob, t3));
-        assertBookBrowserSize(alice, 0, browser.browseFrom(alice, t3));
+        assertBrowserSize(bob, 0, browser.browseFrom(bob, t3));
+        assertBrowserSize(alice, 0, browser.browseFrom(alice, t3));
 
-        assertBookBrowserSize(bob, i, browser.browseFrom(bob, t2));
-        assertBookBrowserSize(alice, i, browser.browseFrom(alice, t2));
+        assertBrowserSize(bob, i, browser.browseFrom(bob, t2));
+        assertBrowserSize(alice, i, browser.browseFrom(alice, t2));
 
     }
 
@@ -164,50 +172,84 @@ public abstract class AbstractLedgerBrowserTest extends TestCase {
         final String alice = getAliceBook();
 
         Date t1 = getIsolatedTimeStamp();
-        assertBookBrowserSize(bob, 0, browser.browse(bob));
-        assertBookBrowserSize(alice, 0, browser.browse(alice));
+        assertBrowserSize(bob, 0, browser.browse(bob));
+        assertBrowserSize(alice, 0, browser.browse(alice));
         int i;
         for (i = 0; i < 10; i++) {
-            ledger.transfer(bob, alice, 10, "test" + i);
+            ledger.transfer(bob, alice, 10, "t1-t2: " + i);
         }
-        assertBookBrowserSize(bob, i, browser.browse(bob));
-        assertBookBrowserSize(alice, i, browser.browse(alice));
+        assertBrowserSize(bob, i, browser.browse(bob));
+        assertBrowserSize(alice, i, browser.browse(alice));
 
         Date t2 = getIsolatedTimeStamp();
 
         for (i = 0; i < 10; i++) {
-            ledger.transfer(bob, alice, 10, "test" + i);
+            ledger.transfer(bob, alice, 10, "t2-t3: " + i);
         }
-        assertBookBrowserSize(bob, 20, browser.browse(bob));
-        assertBookBrowserSize(alice, 20, browser.browse(alice));
+        assertBrowserSize(bob, 20, browser.browse(bob));
+        assertBrowserSize(alice, 20, browser.browse(alice));
         Date t3 = getIsolatedTimeStamp();
 
         for (i = 0; i < 10; i++) {
-            ledger.transfer(bob, alice, 10, "test" + i);
+            ledger.transfer(bob, alice, 10, "t3-t4: " + i);
         }
         Date t4 = getIsolatedTimeStamp();
-        assertBookBrowserSize(bob, 30, browser.browse(bob));
-        assertBookBrowserSize(alice, 30, browser.browse(alice));
+        assertBrowserSize(bob, 30, browser.browse(bob));
+        assertBrowserSize(alice, 30, browser.browse(alice));
 
-        assertBookBrowserSize(bob, 10, browser.browseRange(bob, t3, t4));
-        assertBookBrowserSize(alice, 10, browser.browseRange(alice, t3, t4));
-        assertBookBrowserSize(bob, 10, browser.browseRange(bob, t2, t3));
-        assertBookBrowserSize(alice, 10, browser.browseRange(alice, t2, t3));
-        assertBookBrowserSize(bob, 10, browser.browseRange(bob, t1, t2));
-        assertBookBrowserSize(alice, 10, browser.browseRange(alice, t1, t2));
+        assertBrowserSize(bob, 10, browser.browseRange(bob, t3, t4));
+        assertBrowserSize(alice, 10, browser.browseRange(alice, t3, t4));
+        assertBrowserSize(bob, 10, browser.browseRange(bob, t2, t3));
+        assertBrowserSize(alice, 10, browser.browseRange(alice, t2, t3));
+        assertBrowserSize(bob, 10, browser.browseRange(bob, t1, t2));
+        assertBrowserSize(alice, 10, browser.browseRange(alice, t1, t2));
 
 
-        assertBookBrowserSize(bob, 20, browser.browseRange(bob, t1, t3));
-        assertBookBrowserSize(alice, 20, browser.browseRange(alice, t1, t3));
-        assertBookBrowserSize(bob, 20, browser.browseRange(bob, t2, t4));
-        assertBookBrowserSize(alice, 20, browser.browseRange(alice, t2, t4));
+        assertBrowserSize(bob, 20, browser.browseRange(bob, t1, t3));
+        assertBrowserSize(alice, 20, browser.browseRange(alice, t1, t3));
+        assertBrowserSize(bob, 20, browser.browseRange(bob, t2, t4));
+        assertBrowserSize(alice, 20, browser.browseRange(alice, t2, t4));
 
-        assertBookBrowserSize(bob, 30, browser.browseRange(bob, t1, t4));
-        assertBookBrowserSize(alice, 30, browser.browseRange(alice, t1, t4));
+        assertBrowserSize(bob, 30, browser.browseRange(bob, t1, t4));
+        assertBrowserSize(alice, 30, browser.browseRange(alice, t1, t4));
 
     }
 
-    public void assertVerifyBrowserContent(final String book, final String counterparty, final double amount, final int count, final BookBrowser bb) throws LowlevelLedgerException {
+    public void testBookList() throws LowlevelLedgerException, UnknownBookException, InvalidTransactionException {
+        final String bob = getBobBook();
+        final String alice = getAliceBook();
+        final String carol = getCarolBook();
+
+        assertBrowserSize("test", 0, browser.browseBooks("test"));
+        ledger.transfer(bob, alice, 10, "test");
+        assertBrowserSize("test", 2, browser.browseBooks("test"));
+        ledger.transfer(bob, alice, 10, "test");
+        assertBrowserSize("test", 2, browser.browseBooks("test"));
+        ledger.transfer(alice, carol, 20, "test");
+        assertBrowserSize("test", 3, browser.browseBooks("test"));
+
+        assertBrowserSize("other", 0, browser.browseBooks("other"));
+        ledger.transfer("other", alice, carol, 20, "test");
+        assertBrowserSize("test", 3, browser.browseBooks("test"));
+        assertBrowserSize("other", 2, browser.browseBooks("other"));
+
+        BookListBrowser bl = browser.browseBooks("other");
+        assertTrue(bl.next());
+        assertNotNull(bl.getBook());
+        assertNotNull(bl.getBook().getNickname());
+        assertEquals("other", bl.getLedger());
+        assertEquals(1, bl.getCount());
+        assertEquals(20, Math.abs(bl.getBalance()), 0);
+        assertTrue(bl.next());
+        assertNotNull(bl.getBook());
+        assertNotNull(bl.getBook().getNickname());
+        assertEquals("other", bl.getLedger());
+        assertEquals(1, bl.getCount());
+        assertEquals(20, Math.abs(bl.getBalance()), 0);
+        assertFalse(bl.next());
+    }
+
+    public void assertVerifyBookBrowserContent(final String book, final String counterparty, final double amount, final int count, final BookBrowser bb) throws LowlevelLedgerException {
         assertNotNull("null book browser for " + book, bb);
         int total = 0;
         while (bb.next()) {
@@ -226,8 +268,8 @@ public abstract class AbstractLedgerBrowserTest extends TestCase {
 
     }
 
-    public void assertBookBrowserSize(final String book, final int count, final BookBrowser bb) throws LowlevelLedgerException {
-        assertNotNull("null book browser for " + book, bb);
+    public void assertBrowserSize(final String book, final int count, final Browser bb) throws LowlevelLedgerException {
+        assertNotNull("null browser for " + book, bb);
         int total = 0;
         while (bb.next()) {
             total++;
@@ -245,6 +287,10 @@ public abstract class AbstractLedgerBrowserTest extends TestCase {
 
     public String getAliceBook() {
         return getNewBook("alicia");
+    }
+
+    public String getCarolBook() {
+        return getNewBook("carol");
     }
 
     protected LedgerController ledger;

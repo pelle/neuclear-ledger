@@ -20,43 +20,31 @@ package org.neuclear.ledger.browser;
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-import org.neuclear.ledger.LowlevelLedgerException;
+import org.neuclear.ledger.Book;
 
 /**
  * User: pelleb
  * Date: Dec 30, 2003
  * Time: 4:26:52 PM
  */
-public abstract class BookListBrowser {
+public abstract class BookListBrowser implements Browser {
     public BookListBrowser(String ledger) {
         this.ledger = ledger;
     }
 
-    public abstract boolean next() throws LowlevelLedgerException;
 
-
-    protected final void setRow(String book, String source, String nickname, int count, double balance) {
+    protected final void setRow(Book book, int count, double balance) {
         this.book = book;
-        this.source = source;
-        this.nickname = nickname;
         this.count = count;
         this.balance = balance;
     }
 
-    public String getBook() {
+    public Book getBook() {
         return book;
     }
 
     public String getLedger() {
         return ledger;
-    }
-
-    public String getSource() {
-        return source;
-    }
-
-    public String getNickname() {
-        return nickname;
     }
 
     public int getCount() {
@@ -67,10 +55,8 @@ public abstract class BookListBrowser {
         return balance;
     }
 
-    private final String ledger;
-    private String book;
-    private String source;
-    private String nickname;
+    protected final String ledger;
+    private Book book;
     private int count;
     private double balance;
 }

@@ -1,8 +1,12 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: LedgerController.java,v 1.6 2004/05/04 17:39:06 pelle Exp $
+ * $Id: LedgerController.java,v 1.7 2004/05/05 20:46:24 pelle Exp $
  * $Log: LedgerController.java,v $
+ * Revision 1.7  2004/05/05 20:46:24  pelle
+ * BookListBrowser works both in SimpleLedgerController and HibernateLedgerController
+ * Added new interface Browser, which is implemented by both BookBrowser and BookListBrowser
+ *
  * Revision 1.6  2004/05/04 17:39:06  pelle
  * Fixed some things with regards to getTestBalance.
  *
@@ -376,7 +380,11 @@ public abstract class LedgerController {
     }
 
     public final PostedTransaction transfer(String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, UnknownBookException {
-        final PostedTransaction tran = transfer(id, CryptoTools.createRandomID(), from, to, amount, comment);
+        return transfer(id, from, to, amount, comment);
+    }
+
+    public final PostedTransaction transfer(String ledger, String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, UnknownBookException {
+        final PostedTransaction tran = transfer(ledger, CryptoTools.createRandomID(), from, to, amount, comment);
         try {
             setReceiptId(tran.getRequestId(), CryptoTools.createRandomID());
         } catch (UnknownTransactionException e) {
