@@ -3,20 +3,17 @@ package org.neuclear.ledger.tests;
 import junit.framework.TestCase;
 import org.neuclear.commons.crypto.CryptoTools;
 import org.neuclear.commons.time.TimeTools;
-import org.neuclear.ledger.InvalidTransactionException;
-import org.neuclear.ledger.LedgerController;
-import org.neuclear.ledger.LowlevelLedgerException;
-import org.neuclear.ledger.UnknownBookException;
-import org.neuclear.ledger.browser.BookBrowser;
-import org.neuclear.ledger.browser.BookListBrowser;
-import org.neuclear.ledger.browser.Browser;
-import org.neuclear.ledger.browser.LedgerBrowser;
+import org.neuclear.ledger.*;
+import org.neuclear.ledger.browser.*;
 
 import java.util.Date;
 
 /*
-$Id: AbstractLedgerBrowserTest.java,v 1.11 2004/05/05 20:46:24 pelle Exp $
+$Id: AbstractLedgerBrowserTest.java,v 1.12 2004/05/14 16:23:58 pelle Exp $
 $Log: AbstractLedgerBrowserTest.java,v $
+Revision 1.12  2004/05/14 16:23:58  pelle
+Added PortfolioBrowser to LedgerController and it's implementations.
+
 Revision 1.11  2004/05/05 20:46:24  pelle
 BookListBrowser works both in SimpleLedgerController and HibernateLedgerController
 Added new interface Browser, which is implemented by both BookBrowser and BookListBrowser
@@ -247,6 +244,40 @@ public abstract class AbstractLedgerBrowserTest extends TestCase {
         assertEquals(1, bl.getCount());
         assertEquals(20, Math.abs(bl.getBalance()), 0);
         assertFalse(bl.next());
+    }
+
+    public void testPortfolio() throws LowlevelLedgerException, UnknownBookException, InvalidTransactionException {
+        final Book bob = ledger.getBook(getBobBook());
+        final Book alice = ledger.getBook(getAliceBook());
+        final Book carol = ledger.getBook(getCarolBook());
+
+        assertBrowserSize("bob", 0, browser.browsePortfolio(bob));
+        assertBrowserSize("alice", 0, browser.browsePortfolio(alice));
+        assertBrowserSize("carol", 0, browser.browsePortfolio(carol));
+        ledger.transfer("bux", bob.getId(), alice.getId(), 10, "test");
+        assertBrowserSize("bob", 1, browser.browsePortfolio(bob));
+        assertBrowserSize("alice", 1, browser.browsePortfolio(alice));
+        assertBrowserSize("carol", 0, browser.browsePortfolio(carol));
+        ledger.transfer("shoes", alice.getId(), carol.getId(), 10, "test");
+        assertBrowserSize("bob", 1, browser.browsePortfolio(bob));
+        assertBrowserSize("alice", 2, browser.browsePortfolio(alice));
+        assertBrowserSize("carol", 1, browser.browsePortfolio(carol));
+
+        PortfolioBrowser portfolio = browser.browsePortfolio(alice);
+        assertTrue(portfolio.next());
+        assertNotNull(portfolio.getBook());
+        assertEquals(alice.getId(), portfolio.getBook().getId());
+        assertNotNull(portfolio.getLedger());
+        assertEquals(1, portfolio.getCount());
+        assertEquals(10, Math.abs(portfolio.getBalance()), 0);
+        assertTrue(portfolio.next());
+        assertNotNull(portfolio.getBook());
+        assertEquals(alice.getId(), portfolio.getBook().getId());
+        assertNotNull(portfolio.getLedger());
+        assertEquals(1, portfolio.getCount());
+        assertEquals(10, Math.abs(portfolio.getBalance()), 0);
+        assertFalse(portfolio.next());
+
     }
 
     public void assertVerifyBookBrowserContent(final String book, final String counterparty, final double amount, final int count, final BookBrowser bb) throws LowlevelLedgerException {

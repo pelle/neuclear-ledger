@@ -72,6 +72,10 @@ public class SimpleBook extends Book {
         return transactions.iterator();
     }
 
+    public Iterator ledgerIterator() {
+        return balances.keySet().iterator();
+    }
+
     private final List transactions;
     private final Map balances;
 //    private double held=0;

@@ -1,5 +1,6 @@
 package org.neuclear.ledger.browser;
 
+import org.neuclear.ledger.Book;
 import org.neuclear.ledger.LowlevelLedgerException;
 
 import java.util.Date;
@@ -22,8 +23,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerBrowser.java,v 1.6 2004/05/05 14:04:50 pelle Exp $
+$Id: LedgerBrowser.java,v 1.7 2004/05/14 16:23:49 pelle Exp $
 $Log: LedgerBrowser.java,v $
+Revision 1.7  2004/05/14 16:23:49  pelle
+Added PortfolioBrowser to LedgerController and it's implementations.
+
 Revision 1.6  2004/05/05 14:04:50  pelle
 Added BookListBrowser
 
@@ -65,4 +69,6 @@ public interface LedgerBrowser {
     public BookBrowser browseRange(String book, Date from, Date until) throws LowlevelLedgerException;
 
     public BookListBrowser browseBooks(String ledger) throws LowlevelLedgerException;
+
+    public PortfolioBrowser browsePortfolio(Book book) throws LowlevelLedgerException;
 }
