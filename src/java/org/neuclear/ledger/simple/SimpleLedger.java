@@ -1,8 +1,11 @@
 package org.neuclear.ledger.simple;
 
 /**
- * $Id: SimpleLedger.java,v 1.11 2004/04/05 22:54:14 pelle Exp $
+ * $Id: SimpleLedger.java,v 1.12 2004/04/06 22:50:14 pelle Exp $
  * $Log: SimpleLedger.java,v $
+ * Revision 1.12  2004/04/06 22:50:14  pelle
+ * Updated Unit Tests
+ *
  * Revision 1.11  2004/04/05 22:54:14  pelle
  * API changes in Ledger to support Auditor and CurrencyController in Pay
  *
@@ -201,6 +204,13 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
      * @return Unique ID
      */
     public PostedHeldTransaction performHeldTransfer(final UnPostedHeldTransaction trans) throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException {
+        Iterator iter = trans.getItems();
+        while (iter.hasNext()) {
+            TransactionItem item = (TransactionItem) iter.next();
+            if (item.getAmount() < 0 && getAvailableBalance(item.getBook()) + item.getAmount() < 0)
+                throw new InsufficientFundsException(this, item.getBook(), item.getAmount());
+        }
+
         final PostedHeldTransaction posted = new PostedHeldTransaction(trans, new Date());
         held.put(posted.getRequestId(), posted);
         postToBook(posted);

@@ -1,6 +1,7 @@
 package org.neuclear.ledger.tests;
 
 import junit.framework.TestCase;
+import org.neuclear.commons.crypto.CryptoTools;
 import org.neuclear.ledger.*;
 
 import java.util.Date;
@@ -10,11 +11,14 @@ import java.util.Date;
  * User: pelleb
  * Date: Jan 22, 2003
  * Time: 4:18:35 PM
- * $Id: AbstractLedgerTest.java,v 1.7 2004/04/05 22:06:46 pelle Exp $
+ * $Id: AbstractLedgerTest.java,v 1.8 2004/04/06 22:50:14 pelle Exp $
  * $Log: AbstractLedgerTest.java,v $
+ * Revision 1.8  2004/04/06 22:50:14  pelle
+ * Updated Unit Tests
+ *
  * Revision 1.7  2004/04/05 22:06:46  pelle
  * added setHeldReceiptId() method to ledger
- *
+ * <p/>
  * Revision 1.6  2004/03/31 23:11:09  pelle
  * Reworked the ID's of the transactions. The primary ID is now the request ID.
  * Receipt ID's are optional and added using a separate set method.
@@ -183,19 +187,40 @@ public abstract class AbstractLedgerTest extends TestCase {
 
     public abstract Ledger createLedger() throws LowlevelLedgerException, UnknownLedgerException;
 
+    private final PostedTransaction transfer(final String from, final String to, final double amount, final String comment) throws InvalidTransactionException, LowlevelLedgerException {
+        PostedTransaction tran = ledger.transfer(CryptoTools.createRandomID(), from, to, amount, comment);
+        try {
+            ledger.setReceiptId(tran.getRequestId(), CryptoTools.createRandomID());
+        } catch (UnknownTransactionException e) {
+            assertTrue(false);
+        }
+        return tran;
+
+    }
+
+    public final PostedHeldTransaction hold(final String from, final String to, final Date expires, final double amount, final String comment) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
+        PostedHeldTransaction tran = ledger.hold(CryptoTools.createRandomID(), from, to, expires, amount, comment);
+        try {
+            ledger.setHeldReceiptId(tran.getRequestId(), CryptoTools.createRandomID());
+        } catch (UnknownTransactionException e) {
+            assertTrue(false);
+        }
+        return tran;
+    }
+
     public final void testTransfer() throws LedgerException {
         final double aliceBalance = ledger.getBalance(ALICE);
         final double bobBalance = ledger.getBalance(BOB);
         final double amount = 100;
 
-        ledger.transfer(ALICE, BOB, amount, "LOAN");
+        transfer(ALICE, BOB, amount, "LOAN");
         assertEquals("ALICE BALANCE", aliceBalance - amount, ledger.getBalance(ALICE), 0);
         assertEquals("BOB BALANCE", bobBalance + amount, ledger.getBalance(BOB), 0);
 
-        ledger.transfer(BOB, ALICE, amount, "Repayment");
+        transfer(BOB, ALICE, amount, "Repayment");
         assertEquals("REPAY ALICE BALANCE", aliceBalance, ledger.getBalance(ALICE), 0);
         assertEquals("REPAY BOB BALANCE", bobBalance, ledger.getBalance(BOB), 0);
-        ledger.transfer(BOB, ALICE, 5, "Interest");
+        transfer(BOB, ALICE, 5, "Interest");
         System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
         System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
 
@@ -205,7 +230,7 @@ public abstract class AbstractLedgerTest extends TestCase {
     public final void testVerifiedTransfer() throws LedgerException {
         // Need a positive amount in alice's account
         if (ledger.getAvailableBalance(ALICE) < 100)
-            ledger.transfer("MONEY PRESS", ALICE, -ledger.getAvailableBalance(ALICE) + 100, "FUND");
+            transfer("MONEY PRESS", ALICE, -ledger.getAvailableBalance(ALICE) + 100, "FUND");
         final double aliceBalance = ledger.getBalance(ALICE);
         final double bobBalance = ledger.getBalance(BOB);
         final double amount = 100;
@@ -230,11 +255,11 @@ public abstract class AbstractLedgerTest extends TestCase {
         assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
-    public final void testMultiTransfer() throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException {
+    public final void testMultiTransfer() throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException, UnknownTransactionException {
         final double bobBalance = ledger.getBalance(CAROL);
         int cumulative = 0;
         for (int i = 0; i < 100; i++) {
-            ledger.transfer("req" + i + System.currentTimeMillis(), "Issuer", CAROL, i, "fund it");
+            transfer("Issuer", CAROL, i, "fund it");
             cumulative += i;
             assertEquals("BOB BALANCE", bobBalance + cumulative, ledger.getBalance(CAROL), 0);
             assertEquals("BOB AVAILABLE BALANCE", ledger.getBalance(CAROL), ledger.getAvailableBalance(CAROL), 0);
@@ -250,15 +275,14 @@ public abstract class AbstractLedgerTest extends TestCase {
     }
 
     public final void testHoldAndExpireTransfer() throws LowlevelLedgerException, UnBalancedTransactionException, InvalidTransactionException {
-        if (ledger.getAvailableBalance(ALICE) < 100)
-            ledger.transfer("MONEY PRESS", ALICE, -ledger.getAvailableBalance(ALICE) + 100, "FUND");
+        ensureBalance(100.0);
         final double aliceBalance = ledger.getBalance(ALICE);
         final double bobBalance = ledger.getBalance(BOB);
         final double amount = 100;
         System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
         System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
 
-        ledger.hold(ALICE, BOB, new Date(System.currentTimeMillis() + 5000), amount, "LOAN");
+        hold(ALICE, BOB, new Date(System.currentTimeMillis() + 5000), amount, "LOAN");
         assertEquals("ALICE Available BALANCE", aliceBalance - amount, ledger.getAvailableBalance(ALICE), 0);
         assertEquals("BOB Available BALANCE", bobBalance, ledger.getAvailableBalance(BOB), 0);
         assertEquals("ALICE BALANCE", aliceBalance, ledger.getBalance(ALICE), 0);
@@ -281,23 +305,31 @@ public abstract class AbstractLedgerTest extends TestCase {
         assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
+    private void ensureBalance(final double target) throws LowlevelLedgerException, InvalidTransactionException {
+        if (ledger.getAvailableBalance(ALICE) < target)
+            transfer("MONEY PRESS", ALICE, -ledger.getAvailableBalance(ALICE) + target, "FUND");
+    }
+
     public final void testHoldAndCancelTransfer() throws LowlevelLedgerException, UnBalancedTransactionException, InvalidTransactionException, UnknownTransactionException {
         if (ledger.getAvailableBalance(ALICE) < 100)
-            ledger.transfer("MONEY PRESS", ALICE, -ledger.getAvailableBalance(ALICE) + 100, "FUND");
+            transfer("MONEY PRESS", ALICE, -ledger.getAvailableBalance(ALICE) + 100, "FUND");
         final double aliceBalance = ledger.getBalance(ALICE);
         final double bobBalance = ledger.getBalance(BOB);
         final double amount = 100;
         System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
         System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
 
-        PostedHeldTransaction tran = ledger.hold(ALICE, BOB, new Date(System.currentTimeMillis() + 5000), amount, "LOAN");
+        PostedHeldTransaction tran = hold(ALICE, BOB, new Date(System.currentTimeMillis() + 5000), amount, "LOAN");
         assertEquals("ALICE BALANCE", aliceBalance, ledger.getBalance(ALICE), 0);
         assertEquals("BOB BALANCE", bobBalance, ledger.getBalance(BOB), 0);
 
         assertEquals("ALICE Available BALANCE", aliceBalance - amount, ledger.getAvailableBalance(ALICE), 0);
         assertEquals("BOB Available BALANCE", bobBalance, ledger.getAvailableBalance(BOB), 0);
 
-        ledger.performCancelHold(tran);
+        final Date before = new Date();
+        final Date date = ledger.performCancelHold(tran);
+        assertNotNull(date);
+        assertTrue(!date.before(before));
         assertEquals("ALICE BALANCE CANCELLED", aliceBalance, ledger.getBalance(ALICE), 0);
         assertEquals("BOB BALANCE CANCELLED", bobBalance, ledger.getBalance(BOB), 0);
 
@@ -312,21 +344,23 @@ public abstract class AbstractLedgerTest extends TestCase {
 
     public final void testHoldAndCompleteTransfer() throws LowlevelLedgerException, UnBalancedTransactionException, InvalidTransactionException, UnknownTransactionException, TransactionExpiredException {
         if (ledger.getAvailableBalance(ALICE) < 100)
-            ledger.transfer("MONEY PRESS", ALICE, -ledger.getAvailableBalance(ALICE) + 100, "FUND");
+            transfer("MONEY PRESS", ALICE, -ledger.getAvailableBalance(ALICE) + 100, "FUND");
         final double aliceBalance = ledger.getBalance(ALICE);
         final double bobBalance = ledger.getBalance(BOB);
         final double amount = 100;
         System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
         System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
 
-        PostedHeldTransaction tran = ledger.hold(ALICE, BOB, new Date(System.currentTimeMillis() + 5000), amount, "LOAN");
+        PostedHeldTransaction tran = hold(ALICE, BOB, new Date(System.currentTimeMillis() + 5000), amount, "LOAN");
         assertEquals("ALICE BALANCE", aliceBalance, ledger.getBalance(ALICE), 0);
         assertEquals("BOB BALANCE", bobBalance, ledger.getBalance(BOB), 0);
 
         assertEquals("ALICE Available BALANCE", aliceBalance - amount, ledger.getAvailableBalance(ALICE), 0);
         assertEquals("BOB Available BALANCE", bobBalance, ledger.getAvailableBalance(BOB), 0);
 
-        ledger.performCompleteHold(tran, 100, "done");
+        PostedTransaction pstd = ledger.performCompleteHold(tran, 100, "done");
+        ledger.setReceiptId(pstd.getRequestId(), CryptoTools.createRandomID());
+
         assertEquals("ALICE BALANCE COMPLETED", aliceBalance - amount, ledger.getBalance(ALICE), 0);
         assertEquals("BOB BALANCE COMPLETED", bobBalance + amount, ledger.getBalance(BOB), 0);
 
@@ -348,7 +382,7 @@ public abstract class AbstractLedgerTest extends TestCase {
 
         // Now check that it throws InsufficientFundsException
         try {
-            ledger.hold(ALICE, BOB, new Date(System.currentTimeMillis() + 5000), ledger.getAvailableBalance(ALICE) + 10, "To much");
+            hold(ALICE, BOB, new Date(System.currentTimeMillis() + 5000), ledger.getAvailableBalance(ALICE) + 10, "To much");
             assertTrue("InssuficientFundsException should have been thrown", false);
         } catch (InsufficientFundsException e) {
             ;
@@ -364,13 +398,64 @@ public abstract class AbstractLedgerTest extends TestCase {
         final double aliceBalance = ledger.getBalance(ALICE);
         final double bobBalance = ledger.getBalance(BOB);
 
-        PostedTransaction tran = ledger.transfer(ALICE, BOB, 100, "LOAN");
+        PostedTransaction tran = ledger.transfer(CryptoTools.createRandomID(), ALICE, BOB, 100, "LOAN");
+
+        assertEquals(aliceBalance, ledger.getBalance(ALICE), 0);
+        assertEquals(aliceBalance, ledger.getAvailableBalance(ALICE), 0);
+        assertEquals(bobBalance, ledger.getBalance(BOB), 0);
+        assertEquals(bobBalance, ledger.getAvailableBalance(BOB), 0);
+
         assertNull(tran.getReceiptId());
         try {
             ledger.setReceiptId(tran.getRequestId(), "1234");
         } catch (UnknownTransactionException e) {
-            assertTrue(true);
+            assertTrue(false);
         }
+        assertEquals(aliceBalance - 100, ledger.getBalance(ALICE), 0);
+        assertEquals(aliceBalance - 100, ledger.getAvailableBalance(ALICE), 0);
+        assertEquals(bobBalance + 100, ledger.getBalance(BOB), 0);
+        assertEquals(bobBalance + 100, ledger.getAvailableBalance(BOB), 0);
+
+
+    }
+
+    public final void testTransactionExists() throws LedgerException {
+        PostedTransaction tran = transfer("bob", "alice", 100, "does this exist?");
+        assertNotNull(tran);
+        assertTrue(ledger.transactionExists(tran.getRequestId()));
+    }
+
+    public final void testHeldTransactionExists() throws LedgerException {
+        ensureBalance(100);
+        PostedHeldTransaction tran = hold(ALICE, BOB, new Date(System.currentTimeMillis() + 1000), 100, "does this exist?");
+        assertNotNull(tran);
+        assertTrue(ledger.heldTransactionExists(tran.getRequestId()));
+
+    }
+
+    public final void testSetHeldReceiptId() throws LedgerException {
+        ensureBalance(100);
+        final double aliceBalance = ledger.getBalance(ALICE);
+        final double bobBalance = ledger.getBalance(BOB);
+
+        PostedHeldTransaction tran = ledger.hold(ALICE, BOB, new Date(System.currentTimeMillis() + 5000), 100, "LOAN");
+        assertNull(tran.getReceiptId());
+        assertEquals(aliceBalance, ledger.getBalance(ALICE), 0);
+        assertEquals(aliceBalance, ledger.getAvailableBalance(ALICE), 0);
+        assertEquals(bobBalance, ledger.getBalance(BOB), 0);
+        assertEquals(bobBalance, ledger.getAvailableBalance(BOB), 0);
+
+        try {
+            ledger.setHeldReceiptId(tran.getRequestId(), "1234");
+        } catch (UnknownTransactionException e) {
+            assertTrue(false);
+        }
+        PostedHeldTransaction t2 = ledger.findHeldTransaction(tran.getRequestId());
+        assertEquals("1234", t2.getReceiptId());
+        assertEquals(aliceBalance, ledger.getBalance(ALICE), 0);
+        assertEquals(aliceBalance - 100, ledger.getAvailableBalance(ALICE), 0);
+        assertEquals(bobBalance, ledger.getBalance(BOB), 0);
+        assertEquals(bobBalance, ledger.getAvailableBalance(BOB), 0);
 
     }
 
@@ -381,7 +466,7 @@ public abstract class AbstractLedgerTest extends TestCase {
         final double fundamount = amount * iterations;
         final String fundbook = "fund-" + System.currentTimeMillis();
         final double fundbalance = ledger.getBalance(fundbook);
-        ledger.transfer(fundbook, book, fundamount, "fund the benchmark");
+        transfer(fundbook, book, fundamount, "fund the benchmark");
         System.out.println("Start Balance: " + ledger.getBalance(book));
         assertEquals(fundamount, ledger.getAvailableBalance(book), 0);
         assertEquals(fundamount, ledger.getBalance(book), 0);
