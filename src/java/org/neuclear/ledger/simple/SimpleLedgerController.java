@@ -1,8 +1,12 @@
 package org.neuclear.ledger.simple;
 
 /**
- * $Id: SimpleLedgerController.java,v 1.2 2004/05/01 00:23:40 pelle Exp $
+ * $Id: SimpleLedgerController.java,v 1.3 2004/05/03 23:54:18 pelle Exp $
  * $Log: SimpleLedgerController.java,v $
+ * Revision 1.3  2004/05/03 23:54:18  pelle
+ * HibernateLedgerController now supports multiple ledgers.
+ * Fixed many unit tests.
+ *
  * Revision 1.2  2004/05/01 00:23:40  pelle
  * Added Ledger field to Transaction as well as to getBalance() and friends.
  *
@@ -440,6 +444,18 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
         //To change body of implemented methods use File | Settings | File Templates.
     }
 
+    public BookBrowser browse(String ledger, String book) throws LowlevelLedgerException {
+        return new SimpleBookBrowser(ledger, book);
+    }
+
+    public BookBrowser browseFrom(String ledger, String book, Date from) throws LowlevelLedgerException {
+        return new SimpleBookBrowser(ledger, book, from);
+    }
+
+    public BookBrowser browseRange(String ledger, String book, Date from, Date until) throws LowlevelLedgerException {
+        return new SimpleBookBrowser(ledger, book, from, until);
+    }
+
     public BookBrowser browse(String book) throws LowlevelLedgerException {
         return new SimpleBookBrowser(book);
     }
@@ -460,15 +476,28 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
 
     private class SimpleBookBrowser extends BookBrowser {
         public SimpleBookBrowser(final String book) {
-            this(book, null, null);
+            this(book, (Date) null);
         }
 
         public SimpleBookBrowser(final String book, final Date from) {
             this(book, from, null);
         }
 
+        public SimpleBookBrowser(final String ledger, final String book) {
+            this(ledger, book, null, null);
+        }
+
+        public SimpleBookBrowser(final String ledger, final String book, final Date from) {
+            this(ledger, book, from, null);
+        }
+
         public SimpleBookBrowser(final String book, final Date from, final Date to) {
+            this(id, book, from, to);
+        }
+
+        public SimpleBookBrowser(final String ledger, final String book, final Date from, final Date to) {
             super(book);
+            this.ledger = ledger;
             this.from = from;
             this.to = to;
             if (books.containsKey(book)) {
@@ -531,6 +560,7 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
         private final Iterator iter;
         private final Date from;
         private final Date to;
+        private final String ledger;
 //        private int i=0;
     }
 

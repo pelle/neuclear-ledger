@@ -1,8 +1,12 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: LedgerController.java,v 1.4 2004/05/01 00:23:40 pelle Exp $
+ * $Id: LedgerController.java,v 1.5 2004/05/03 23:54:19 pelle Exp $
  * $Log: LedgerController.java,v $
+ * Revision 1.5  2004/05/03 23:54:19  pelle
+ * HibernateLedgerController now supports multiple ledgers.
+ * Fixed many unit tests.
+ *
  * Revision 1.4  2004/05/01 00:23:40  pelle
  * Added Ledger field to Transaction as well as to getBalance() and friends.
  *
@@ -375,7 +379,7 @@ public abstract class LedgerController {
     }
 
     public final PostedTransaction verifiedTransfer(String ledger, String req, String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException, UnknownBookException {
-        UnPostedTransaction tran = new UnPostedTransaction(null, req, comment);
+        UnPostedTransaction tran = new UnPostedTransaction(ledger, req, comment);
         tran.addItem(getBook(from), -amount);
         tran.addItem(getBook(to), amount);
         return performVerifiedTransfer(tran);
@@ -392,6 +396,8 @@ public abstract class LedgerController {
     }
 
     public final PostedHeldTransaction hold(String ledger, String req, String from, String to, Date expiry, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException, UnknownBookException {
+        if (getAvailableBalance(id, from) - amount < 0)
+            throw new InsufficientFundsException(this, from, amount);
         UnPostedHeldTransaction tran = new UnPostedHeldTransaction(ledger, req, comment, expiry);
         tran.addItem(getBook(from), -amount);
         tran.addItem(getBook(to), amount);
@@ -399,8 +405,6 @@ public abstract class LedgerController {
     }
 
     public final PostedHeldTransaction hold(String from, String to, Date expiry, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException, UnknownBookException {
-        if (getAvailableBalance(null, from) - amount < 0)
-            throw new InsufficientFundsException(this, from, amount);
         return hold(id, CryptoTools.createRandomID(), from, to, expiry, amount, comment);
     }
 

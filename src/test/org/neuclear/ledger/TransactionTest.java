@@ -22,8 +22,12 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: TransactionTest.java,v 1.3 2004/05/01 00:23:40 pelle Exp $
+$Id: TransactionTest.java,v 1.4 2004/05/03 23:54:19 pelle Exp $
 $Log: TransactionTest.java,v $
+Revision 1.4  2004/05/03 23:54:19  pelle
+HibernateLedgerController now supports multiple ledgers.
+Fixed many unit tests.
+
 Revision 1.3  2004/05/01 00:23:40  pelle
 Added Ledger field to Transaction as well as to getBalance() and friends.
 
@@ -52,12 +56,13 @@ public class TransactionTest extends TestCase {
     }
 
     public void testUnposted() throws InvalidTransactionException {
-        UnPostedTransaction tran = new UnPostedTransaction(null, "1234", "test");
+        UnPostedTransaction tran = new UnPostedTransaction("digbat", "1234", "test");
         assertNotNull(tran);
         assertEquals("1234", tran.getRequestId());
         assertEquals("test", tran.getComment());
         assertNotNull(tran.getItemList());
         assertEquals(0, tran.getItemList().size());
+        assertEquals("digbat", tran.getLedger());
 
         tran.addItem(BOB, 10);
         assertEquals(1, tran.getItemList().size());
@@ -76,7 +81,7 @@ public class TransactionTest extends TestCase {
     }
 
     public void testPostedBalanced() throws InvalidTransactionException {
-        UnPostedTransaction tran = new UnPostedTransaction(null, "1234", "test");
+        UnPostedTransaction tran = new UnPostedTransaction("digbat", "1234", "test");
         assertNotNull(tran);
         assertEquals("1234", tran.getRequestId());
         assertEquals("test", tran.getComment());
@@ -97,6 +102,7 @@ public class TransactionTest extends TestCase {
         assertEquals(2, posted.getItemList().size());
         assertNotNull(posted.getTransactionTime());
         assertEquals(time.getTime(), posted.getTransactionTime().getTime());
+        assertEquals("digbat", posted.getLedger());
 
         assertNull(posted.getReceiptId());
         posted.setReceiptId("2345");
@@ -105,7 +111,7 @@ public class TransactionTest extends TestCase {
     }
 
     public void testPostedUnBalancedDoesFail() throws InvalidTransactionException {
-        UnPostedTransaction tran = new UnPostedTransaction(null, "1234", "test");
+        UnPostedTransaction tran = new UnPostedTransaction("digbat", "1234", "test");
         assertNotNull(tran);
         assertEquals("1234", tran.getRequestId());
         assertEquals("test", tran.getComment());
@@ -130,12 +136,14 @@ public class TransactionTest extends TestCase {
     public void testUnpostedHeld() throws InvalidTransactionException {
 
         final Date time = new Date();
-        UnPostedHeldTransaction tran = new UnPostedHeldTransaction(null, "1234", "test", time);
+        UnPostedHeldTransaction tran = new UnPostedHeldTransaction("digbat", "1234", "test", time);
         assertNotNull(tran);
         assertEquals("1234", tran.getRequestId());
         assertEquals("test", tran.getComment());
 
         assertEquals(time, tran.getExpiryTime());
+        assertEquals("digbat", tran.getLedger());
+
 
         assertNotNull(tran.getItemList());
         assertEquals(0, tran.getItemList().size());
@@ -158,7 +166,7 @@ public class TransactionTest extends TestCase {
 
     public void testPosteHelddBalanced() throws InvalidTransactionException {
         final Date time = new Date();
-        UnPostedHeldTransaction tran = new UnPostedHeldTransaction(null, "1234", "test", time);
+        UnPostedHeldTransaction tran = new UnPostedHeldTransaction("digbat", "1234", "test", time);
         assertNotNull(tran);
         assertEquals("1234", tran.getRequestId());
         assertEquals("test", tran.getComment());
@@ -178,6 +186,8 @@ public class TransactionTest extends TestCase {
         assertEquals("1234", posted.getRequestId());
         assertEquals("test", posted.getComment());
         assertEquals(time, posted.getExpiryTime());
+        assertEquals("digbat", posted.getLedger());
+
         assertNotNull(posted.getItemList());
         assertEquals(2, posted.getItemList().size());
         assertNotNull(posted.getTransactionTime());
@@ -191,7 +201,7 @@ public class TransactionTest extends TestCase {
 
     public void testPostedHeldUnBalancedDoesFail() throws InvalidTransactionException {
         final Date time = new Date();
-        UnPostedHeldTransaction tran = new UnPostedHeldTransaction(null, "1234", "test", time);
+        UnPostedHeldTransaction tran = new UnPostedHeldTransaction("digbat", "1234", "test", time);
         assertNotNull(tran);
         assertEquals("1234", tran.getRequestId());
         assertEquals("test", tran.getComment());
@@ -217,7 +227,7 @@ public class TransactionTest extends TestCase {
 
     public void testPostedHeldCompleted() throws InvalidTransactionException {
         final Date time = new Date();
-        UnPostedHeldTransaction tran = new UnPostedHeldTransaction(null, "1234", "test", time);
+        UnPostedHeldTransaction tran = new UnPostedHeldTransaction("digbat", "1234", "test", time);
         assertNotNull(tran);
         assertEquals("1234", tran.getRequestId());
         assertEquals("test", tran.getComment());
@@ -252,6 +262,8 @@ public class TransactionTest extends TestCase {
         assertNotNull(posted.getTransactionTime());
         assertEquals(time2.getTime(), posted.getTransactionTime().getTime());
         assertEquals(5.0, posted.getAmount(), 0);
+        assertEquals("digbat", posted.getLedger());
+
 
         assertNull(posted.getReceiptId());
         posted.setReceiptId("2345");

@@ -22,8 +22,12 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerBrowser.java,v 1.4 2004/03/26 23:36:34 pelle Exp $
+$Id: LedgerBrowser.java,v 1.5 2004/05/03 23:54:18 pelle Exp $
 $Log: LedgerBrowser.java,v $
+Revision 1.5  2004/05/03 23:54:18  pelle
+HibernateLedgerController now supports multiple ledgers.
+Fixed many unit tests.
+
 Revision 1.4  2004/03/26 23:36:34  pelle
 The simple browse(book) now works on hibernate, I have implemented the other two, which currently don not constrain the query correctly.
 
@@ -47,7 +51,13 @@ Added BookBrowser pattern to ledger, simplifying the statement writing process.
 public interface LedgerBrowser {
     public BookBrowser browse(String book) throws LowlevelLedgerException;
 
+    public BookBrowser browse(String ledger, String book) throws LowlevelLedgerException;
+
+    public BookBrowser browseFrom(String ledger, String book, Date from) throws LowlevelLedgerException;
+
+    public BookBrowser browseRange(String ledger, String book, Date from, Date until) throws LowlevelLedgerException;
+
     public BookBrowser browseFrom(String book, Date from) throws LowlevelLedgerException;
-//    public BookBrowser browseUntil(Book book,Timestamp until);
+
     public BookBrowser browseRange(String book, Date from, Date until) throws LowlevelLedgerException;
 }

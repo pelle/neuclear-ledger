@@ -12,8 +12,12 @@ import org.neuclear.ledger.browser.LedgerBrowser;
 import java.util.Date;
 
 /*
-$Id: AbstractLedgerBrowserTest.java,v 1.8 2004/04/27 15:23:54 pelle Exp $
+$Id: AbstractLedgerBrowserTest.java,v 1.9 2004/05/03 23:54:18 pelle Exp $
 $Log: AbstractLedgerBrowserTest.java,v $
+Revision 1.9  2004/05/03 23:54:18  pelle
+HibernateLedgerController now supports multiple ledgers.
+Fixed many unit tests.
+
 Revision 1.8  2004/04/27 15:23:54  pelle
 Due to a new API change in 0.5 I have changed the name of Ledger and it's implementers to LedgerController.
 
@@ -229,11 +233,11 @@ public abstract class AbstractLedgerBrowserTest extends TestCase {
     }
 
     public String getBobBook() {
-        return getNewBook("Roberto");
+        return getNewBook("roberto");
     }
 
     public String getAliceBook() {
-        return getNewBook("Alicia");
+        return getNewBook("alicia");
     }
 
     protected LedgerController ledger;

@@ -11,11 +11,15 @@ import java.util.Date;
  * User: pelleb
  * Date: Jan 22, 2003
  * Time: 4:18:35 PM
- * $Id: AbstractLedgerTest.java,v 1.13 2004/05/01 00:23:40 pelle Exp $
+ * $Id: AbstractLedgerTest.java,v 1.14 2004/05/03 23:54:18 pelle Exp $
  * $Log: AbstractLedgerTest.java,v $
+ * Revision 1.14  2004/05/03 23:54:18  pelle
+ * HibernateLedgerController now supports multiple ledgers.
+ * Fixed many unit tests.
+ *
  * Revision 1.13  2004/05/01 00:23:40  pelle
  * Added Ledger field to Transaction as well as to getBalance() and friends.
- *
+ * <p/>
  * Revision 1.12  2004/04/27 15:23:54  pelle
  * Due to a new API change in 0.5 I have changed the name of Ledger and it's implementers to LedgerController.
  * <p/>
@@ -207,7 +211,7 @@ public abstract class AbstractLedgerTest extends TestCase {
     public abstract LedgerController createLedger() throws LowlevelLedgerException, UnknownLedgerException;
 
     private final PostedTransaction transfer(final String from, final String to, final double amount, final String comment) throws InvalidTransactionException, LowlevelLedgerException, UnknownBookException {
-        PostedTransaction tran = ledger.transfer("CHANGEME", CryptoTools.createRandomID(), from, to, amount, comment);
+        PostedTransaction tran = ledger.transfer("test", CryptoTools.createRandomID(), from, to, amount, comment);
         try {
             ledger.setReceiptId(tran.getRequestId(), CryptoTools.createRandomID());
         } catch (UnknownTransactionException e) {
@@ -218,7 +222,7 @@ public abstract class AbstractLedgerTest extends TestCase {
     }
 
     public final PostedHeldTransaction hold(final String from, final String to, final Date expires, final double amount, final String comment) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException, UnknownBookException {
-        PostedHeldTransaction tran = ledger.hold("CHANGEME", CryptoTools.createRandomID(), from, to, expires, amount, comment);
+        PostedHeldTransaction tran = ledger.hold("test", CryptoTools.createRandomID(), from, to, expires, amount, comment);
         try {
             ledger.setHeldReceiptId(tran.getRequestId(), CryptoTools.createRandomID());
         } catch (UnknownTransactionException e) {
@@ -228,201 +232,201 @@ public abstract class AbstractLedgerTest extends TestCase {
     }
 
     public final void testTransfer() throws LedgerException {
-        final double aliceBalance = ledger.getBalance(null, ALICE);
-        final double bobBalance = ledger.getBalance(null, BOB);
+        final double aliceBalance = ledger.getBalance(ALICE);
+        final double bobBalance = ledger.getBalance(BOB);
         final double amount = 100;
 
         transfer(ALICE, BOB, amount, "LOAN");
-        assertEquals("ALICE BALANCE", aliceBalance - amount, ledger.getBalance(null, ALICE), 0);
-        assertEquals("BOB BALANCE", bobBalance + amount, ledger.getBalance(null, BOB), 0);
+        assertEquals("ALICE BALANCE", aliceBalance - amount, ledger.getBalance(ALICE), 0);
+        assertEquals("BOB BALANCE", bobBalance + amount, ledger.getBalance(BOB), 0);
 
         transfer(BOB, ALICE, amount, "Repayment");
-        assertEquals("REPAY ALICE BALANCE", aliceBalance, ledger.getBalance(null, ALICE), 0);
-        assertEquals("REPAY BOB BALANCE", bobBalance, ledger.getBalance(null, BOB), 0);
+        assertEquals("REPAY ALICE BALANCE", aliceBalance, ledger.getBalance(ALICE), 0);
+        assertEquals("REPAY BOB BALANCE", bobBalance, ledger.getBalance(BOB), 0);
         transfer(BOB, ALICE, 5, "Interest");
-        System.out.println("Alice's Balance: " + ledger.getBalance(null, ALICE));
-        System.out.println("Bob's Balance: " + ledger.getBalance(null, BOB));
+        System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
+        System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
 
         assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
     public final void testVerifiedTransfer() throws LedgerException {
         // Need a positive amount in alice's account
-        if (ledger.getAvailableBalance(null, ALICE) < 100)
-            transfer("MONEY PRESS", ALICE, -ledger.getAvailableBalance(null, ALICE) + 100, "FUND");
-        final double aliceBalance = ledger.getBalance(null, ALICE);
-        final double bobBalance = ledger.getBalance(null, BOB);
+        if (ledger.getAvailableBalance(ALICE) < 100)
+            transfer("MONEY PRESS", ALICE, -ledger.getAvailableBalance(ALICE) + 100, "FUND");
+        final double aliceBalance = ledger.getBalance(ALICE);
+        final double bobBalance = ledger.getBalance(BOB);
         final double amount = 100;
 
         assertTrue("ALICE has a balance of 100 or more", aliceBalance >= 100);
 
         ledger.verifiedTransfer(ALICE, BOB, amount, "LOAN");
-        assertEquals("ALICE BALANCE", aliceBalance - amount, ledger.getBalance(null, ALICE), 0);
-        assertEquals("BOB BALANCE", bobBalance + amount, ledger.getBalance(null, BOB), 0);
+        assertEquals("ALICE BALANCE", aliceBalance - amount, ledger.getBalance(ALICE), 0);
+        assertEquals("BOB BALANCE", bobBalance + amount, ledger.getBalance(BOB), 0);
 
         // Now check that it throws InsufficientFundsException
         try {
-            ledger.verifiedTransfer(ALICE, BOB, ledger.getAvailableBalance(null, ALICE) + 10, "To much");
-            assertTrue("InssuficientFundsException should have been thrown. Attempted to transfer: " + (ledger.getAvailableBalance(null, ALICE) + 10), false);
+            ledger.verifiedTransfer(ALICE, BOB, ledger.getAvailableBalance(ALICE) + 10, "To much");
+            assertTrue("InssuficientFundsException should have been thrown. Attempted to transfer: " + (ledger.getAvailableBalance(ALICE) + 10), false);
         } catch (InsufficientFundsException e) {
             ;
         }
 
 
-        System.out.println("Alice's Balance: " + ledger.getBalance(null, ALICE));
-        System.out.println("Bob's Balance: " + ledger.getBalance(null, BOB));
+        System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
+        System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
         assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
     public final void testMultiTransfer() throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException, UnknownTransactionException, UnknownBookException {
-        final double bobBalance = ledger.getBalance(null, CAROL);
+        final double bobBalance = ledger.getBalance(CAROL);
         int cumulative = 0;
         for (int i = 0; i < 100; i++) {
             transfer("Issuer", CAROL, i, "fund it");
             cumulative += i;
-            assertEquals("BOB BALANCE", bobBalance + cumulative, ledger.getBalance(null, CAROL), 0);
-            assertEquals("BOB AVAILABLE BALANCE", ledger.getBalance(null, CAROL), ledger.getAvailableBalance(null, CAROL), 0);
+            assertEquals("BOB BALANCE", bobBalance + cumulative, ledger.getBalance(CAROL), 0);
+            assertEquals("BOB AVAILABLE BALANCE", ledger.getBalance(CAROL), ledger.getAvailableBalance(CAROL), 0);
         }
-        System.out.println("Bob's Balance: " + ledger.getBalance(null, CAROL));
+        System.out.println("Bob's Balance: " + ledger.getBalance(CAROL));
         assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
     public final void testBalance() throws LedgerException {
-        System.out.println("Alice's Balance: " + ledger.getBalance(null, ALICE));
-        System.out.println("Bob's Balance: " + ledger.getBalance(null, BOB));
+        System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
+        System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
         assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
     public final void testHoldAndExpireTransfer() throws LowlevelLedgerException, UnBalancedTransactionException, InvalidTransactionException, UnknownBookException {
         ensureBalance(100.0);
-        final double aliceBalance = ledger.getBalance(null, ALICE);
-        final double bobBalance = ledger.getBalance(null, BOB);
+        final double aliceBalance = ledger.getBalance(ALICE);
+        final double bobBalance = ledger.getBalance(BOB);
         final double amount = 100;
-        System.out.println("Alice's Balance: " + ledger.getBalance(null, ALICE));
-        System.out.println("Bob's Balance: " + ledger.getBalance(null, BOB));
+        System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
+        System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
 
         hold(ALICE, BOB, new Date(System.currentTimeMillis() + 5000), amount, "LOAN");
-        assertEquals("ALICE Available BALANCE", aliceBalance - amount, ledger.getAvailableBalance(null, ALICE), 0);
-        assertEquals("BOB Available BALANCE", bobBalance, ledger.getAvailableBalance(null, BOB), 0);
-        assertEquals("ALICE BALANCE", aliceBalance, ledger.getBalance(null, ALICE), 0);
-        assertEquals("BOB BALANCE", bobBalance, ledger.getBalance(null, BOB), 0);
+        assertEquals("ALICE Available BALANCE", aliceBalance - amount, ledger.getAvailableBalance(ALICE), 0);
+        assertEquals("BOB Available BALANCE", bobBalance, ledger.getAvailableBalance(BOB), 0);
+        assertEquals("ALICE BALANCE", aliceBalance, ledger.getBalance(ALICE), 0);
+        assertEquals("BOB BALANCE", bobBalance, ledger.getBalance(BOB), 0);
 
         try {
             Thread.currentThread().sleep(5000);
         } catch (InterruptedException e) {
             ;
         }
-        assertEquals("ALICE BALANCE EXPIRED", aliceBalance, ledger.getBalance(null, ALICE), 0);
-        assertEquals("BOB BALANCE EXPIRED", bobBalance, ledger.getBalance(null, BOB), 0);
+        assertEquals("ALICE BALANCE EXPIRED", aliceBalance, ledger.getBalance(ALICE), 0);
+        assertEquals("BOB BALANCE EXPIRED", bobBalance, ledger.getBalance(BOB), 0);
 
-        assertEquals("ALICE Available BALANCE EXPIRED", aliceBalance, ledger.getAvailableBalance(null, ALICE), 0);
-        assertEquals("BOB Available BALANCE EXPIRED", bobBalance, ledger.getAvailableBalance(null, BOB), 0);
+        assertEquals("ALICE Available BALANCE EXPIRED", aliceBalance, ledger.getAvailableBalance(ALICE), 0);
+        assertEquals("BOB Available BALANCE EXPIRED", bobBalance, ledger.getAvailableBalance(BOB), 0);
 
 
-        System.out.println("Alice's Balance: " + ledger.getBalance(null, ALICE));
-        System.out.println("Bob's Balance: " + ledger.getBalance(null, BOB));
+        System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
+        System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
         assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
     private void ensureBalance(final double target) throws LowlevelLedgerException, InvalidTransactionException, UnknownBookException {
-        if (ledger.getAvailableBalance(null, ALICE) < target)
-            transfer("MONEY PRESS", ALICE, -ledger.getAvailableBalance(null, ALICE) + target, "FUND");
+        if (ledger.getAvailableBalance(ALICE) < target)
+            transfer("MONEY PRESS", ALICE, -ledger.getAvailableBalance(ALICE) + target, "FUND");
     }
 
     public final void testHoldAndCancelTransfer() throws LowlevelLedgerException, UnBalancedTransactionException, InvalidTransactionException, UnknownTransactionException, UnknownBookException {
-        if (ledger.getAvailableBalance(null, ALICE) < 100)
-            transfer("MONEY PRESS", ALICE, -ledger.getAvailableBalance(null, ALICE) + 100, "FUND");
-        final double aliceBalance = ledger.getBalance(null, ALICE);
-        final double bobBalance = ledger.getBalance(null, BOB);
+        if (ledger.getAvailableBalance(ALICE) < 100)
+            transfer("MONEY PRESS", ALICE, -ledger.getAvailableBalance(ALICE) + 100, "FUND");
+        final double aliceBalance = ledger.getBalance(ALICE);
+        final double bobBalance = ledger.getBalance(BOB);
         final double amount = 100;
-        System.out.println("Alice's Balance: " + ledger.getBalance(null, ALICE));
-        System.out.println("Bob's Balance: " + ledger.getBalance(null, BOB));
+        System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
+        System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
 
         PostedHeldTransaction tran = hold(ALICE, BOB, new Date(System.currentTimeMillis() + 5000), amount, "LOAN");
-        assertEquals("ALICE BALANCE", aliceBalance, ledger.getBalance(null, ALICE), 0);
-        assertEquals("BOB BALANCE", bobBalance, ledger.getBalance(null, BOB), 0);
+        assertEquals("ALICE BALANCE", aliceBalance, ledger.getBalance(ALICE), 0);
+        assertEquals("BOB BALANCE", bobBalance, ledger.getBalance(BOB), 0);
 
-        assertEquals("ALICE Available BALANCE", aliceBalance - amount, ledger.getAvailableBalance(null, ALICE), 0);
-        assertEquals("BOB Available BALANCE", bobBalance, ledger.getAvailableBalance(null, BOB), 0);
+        assertEquals("ALICE Available BALANCE", aliceBalance - amount, ledger.getAvailableBalance(ALICE), 0);
+        assertEquals("BOB Available BALANCE", bobBalance, ledger.getAvailableBalance(BOB), 0);
 
         final Date before = new Date();
         final Date date = ledger.performCancelHold(tran);
         assertNotNull(date);
         assertTrue(!date.before(before));
-        assertEquals("ALICE BALANCE CANCELLED", aliceBalance, ledger.getBalance(null, ALICE), 0);
-        assertEquals("BOB BALANCE CANCELLED", bobBalance, ledger.getBalance(null, BOB), 0);
+        assertEquals("ALICE BALANCE CANCELLED", aliceBalance, ledger.getBalance(ALICE), 0);
+        assertEquals("BOB BALANCE CANCELLED", bobBalance, ledger.getBalance(BOB), 0);
 
-        assertEquals("ALICE Available BALANCE CANCELLED", aliceBalance, ledger.getAvailableBalance(null, ALICE), 0);
-        assertEquals("BOB Available BALANCE CANCELLED", bobBalance, ledger.getAvailableBalance(null, BOB), 0);
+        assertEquals("ALICE Available BALANCE CANCELLED", aliceBalance, ledger.getAvailableBalance(ALICE), 0);
+        assertEquals("BOB Available BALANCE CANCELLED", bobBalance, ledger.getAvailableBalance(BOB), 0);
 
 
-        System.out.println("Alice's Balance: " + ledger.getBalance(null, ALICE));
-        System.out.println("Bob's Balance: " + ledger.getBalance(null, BOB));
+        System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
+        System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
         assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
     public final void testHoldAndCompleteTransfer() throws LowlevelLedgerException, UnBalancedTransactionException, InvalidTransactionException, UnknownTransactionException, TransactionExpiredException, UnknownBookException {
-        if (ledger.getAvailableBalance(null, ALICE) < 100)
-            transfer("MONEY PRESS", ALICE, -ledger.getAvailableBalance(null, ALICE) + 100, "FUND");
-        final double aliceBalance = ledger.getBalance(null, ALICE);
-        final double bobBalance = ledger.getBalance(null, BOB);
+        if (ledger.getAvailableBalance(ALICE) < 100)
+            transfer("MONEY PRESS", ALICE, -ledger.getAvailableBalance(ALICE) + 100, "FUND");
+        final double aliceBalance = ledger.getBalance(ALICE);
+        final double bobBalance = ledger.getBalance(BOB);
         final double amount = 100;
-        System.out.println("Alice's Balance: " + ledger.getBalance(null, ALICE));
-        System.out.println("Bob's Balance: " + ledger.getBalance(null, BOB));
+        System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
+        System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
 
         PostedHeldTransaction tran = hold(ALICE, BOB, new Date(System.currentTimeMillis() + 5000), amount, "LOAN");
-        assertEquals("ALICE BALANCE", aliceBalance, ledger.getBalance(null, ALICE), 0);
-        assertEquals("BOB BALANCE", bobBalance, ledger.getBalance(null, BOB), 0);
+        assertEquals("ALICE BALANCE", aliceBalance, ledger.getBalance(ALICE), 0);
+        assertEquals("BOB BALANCE", bobBalance, ledger.getBalance(BOB), 0);
 
-        assertEquals("ALICE Available BALANCE", aliceBalance - amount, ledger.getAvailableBalance(null, ALICE), 0);
-        assertEquals("BOB Available BALANCE", bobBalance, ledger.getAvailableBalance(null, BOB), 0);
+        assertEquals("ALICE Available BALANCE", aliceBalance - amount, ledger.getAvailableBalance(ALICE), 0);
+        assertEquals("BOB Available BALANCE", bobBalance, ledger.getAvailableBalance(BOB), 0);
 
         PostedTransaction pstd = ledger.performCompleteHold(tran, 100, "done");
         ledger.setReceiptId(pstd.getRequestId(), CryptoTools.createRandomID());
 
-        assertEquals("ALICE BALANCE COMPLETED", aliceBalance - amount, ledger.getBalance(null, ALICE), 0);
-        assertEquals("BOB BALANCE COMPLETED", bobBalance + amount, ledger.getBalance(null, BOB), 0);
+        assertEquals("ALICE BALANCE COMPLETED", aliceBalance - amount, ledger.getBalance(ALICE), 0);
+        assertEquals("BOB BALANCE COMPLETED", bobBalance + amount, ledger.getBalance(BOB), 0);
 
-        assertEquals("ALICE Available BALANCE COMPLETED", aliceBalance - amount, ledger.getAvailableBalance(null, ALICE), 0);
-        assertEquals("BOB Available BALANCE COMPLETED", bobBalance + amount, ledger.getAvailableBalance(null, BOB), 0);
+        assertEquals("ALICE Available BALANCE COMPLETED", aliceBalance - amount, ledger.getAvailableBalance(ALICE), 0);
+        assertEquals("BOB Available BALANCE COMPLETED", bobBalance + amount, ledger.getAvailableBalance(BOB), 0);
 
 
-        System.out.println("Alice's Balance: " + ledger.getBalance(null, ALICE));
-        System.out.println("Bob's Balance: " + ledger.getBalance(null, BOB));
+        System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
+        System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
         assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
     public final void testHoldAndInsufficientFunds() throws LowlevelLedgerException, UnBalancedTransactionException, InvalidTransactionException, UnknownTransactionException, UnknownBookException {
-        final double aliceBalance = ledger.getBalance(null, ALICE);
-        final double bobBalance = ledger.getBalance(null, BOB);
+        final double aliceBalance = ledger.getBalance(ALICE);
+        final double bobBalance = ledger.getBalance(BOB);
         final double amount = 100;
-        System.out.println("Alice's Balance: " + ledger.getBalance(null, ALICE));
-        System.out.println("Bob's Balance: " + ledger.getBalance(null, BOB));
+        System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
+        System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
 
         // Now check that it throws InsufficientFundsException
         try {
-            hold(ALICE, BOB, new Date(System.currentTimeMillis() + 5000), ledger.getAvailableBalance(null, ALICE) + 10, "To much");
+            hold(ALICE, BOB, new Date(System.currentTimeMillis() + 5000), ledger.getAvailableBalance(ALICE) + 10, "To much");
             assertTrue("InssuficientFundsException should have been thrown", false);
         } catch (InsufficientFundsException e) {
             ;
         }
 
 
-        System.out.println("Alice's Balance: " + ledger.getBalance(null, ALICE));
-        System.out.println("Bob's Balance: " + ledger.getBalance(null, BOB));
+        System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
+        System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
         assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
     public final void testSetReceiptId() throws LedgerException {
-        final double aliceBalance = ledger.getBalance(null, ALICE);
-        final double bobBalance = ledger.getBalance(null, BOB);
+        final double aliceBalance = ledger.getBalance(ALICE);
+        final double bobBalance = ledger.getBalance(BOB);
 
-        PostedTransaction tran = ledger.transfer("CHANGEME", CryptoTools.createRandomID(), ALICE, BOB, 100, "LOAN");
+        PostedTransaction tran = ledger.transfer("test", CryptoTools.createRandomID(), ALICE, BOB, 100, "LOAN");
 
-        assertEquals(aliceBalance, ledger.getBalance(null, ALICE), 0);
-        assertEquals(aliceBalance, ledger.getAvailableBalance(null, ALICE), 0);
-        assertEquals(bobBalance, ledger.getBalance(null, BOB), 0);
-        assertEquals(bobBalance, ledger.getAvailableBalance(null, BOB), 0);
+        assertEquals(aliceBalance, ledger.getBalance(ALICE), 0);
+        assertEquals(aliceBalance, ledger.getAvailableBalance(ALICE), 0);
+        assertEquals(bobBalance, ledger.getBalance(BOB), 0);
+        assertEquals(bobBalance, ledger.getAvailableBalance(BOB), 0);
 
         assertNull(tran.getReceiptId());
         try {
@@ -430,10 +434,10 @@ public abstract class AbstractLedgerTest extends TestCase {
         } catch (UnknownTransactionException e) {
             assertTrue(false);
         }
-        assertEquals(aliceBalance - 100, ledger.getBalance(null, ALICE), 0);
-        assertEquals(aliceBalance - 100, ledger.getAvailableBalance(null, ALICE), 0);
-        assertEquals(bobBalance + 100, ledger.getBalance(null, BOB), 0);
-        assertEquals(bobBalance + 100, ledger.getAvailableBalance(null, BOB), 0);
+        assertEquals(aliceBalance - 100, ledger.getBalance(ALICE), 0);
+        assertEquals(aliceBalance - 100, ledger.getAvailableBalance(ALICE), 0);
+        assertEquals(bobBalance + 100, ledger.getBalance(BOB), 0);
+        assertEquals(bobBalance + 100, ledger.getAvailableBalance(BOB), 0);
 
 
     }
@@ -454,15 +458,15 @@ public abstract class AbstractLedgerTest extends TestCase {
 
     public final void testSetHeldReceiptId() throws LedgerException {
         ensureBalance(100);
-        final double aliceBalance = ledger.getBalance(null, ALICE);
-        final double bobBalance = ledger.getBalance(null, BOB);
+        final double aliceBalance = ledger.getBalance(ALICE);
+        final double bobBalance = ledger.getBalance(BOB);
 
         PostedHeldTransaction tran = ledger.hold(ALICE, BOB, new Date(System.currentTimeMillis() + 5000), 100, "LOAN");
         assertNull(tran.getReceiptId());
-        assertEquals(aliceBalance, ledger.getBalance(null, ALICE), 0);
-        assertEquals(aliceBalance, ledger.getAvailableBalance(null, ALICE), 0);
-        assertEquals(bobBalance, ledger.getBalance(null, BOB), 0);
-        assertEquals(bobBalance, ledger.getAvailableBalance(null, BOB), 0);
+        assertEquals(aliceBalance, ledger.getBalance(ALICE), 0);
+        assertEquals(aliceBalance, ledger.getAvailableBalance(ALICE), 0);
+        assertEquals(bobBalance, ledger.getBalance(BOB), 0);
+        assertEquals(bobBalance, ledger.getAvailableBalance(BOB), 0);
 
         try {
             ledger.setHeldReceiptId(tran.getRequestId(), "1234");
@@ -471,10 +475,10 @@ public abstract class AbstractLedgerTest extends TestCase {
         }
         PostedHeldTransaction t2 = ledger.findHeldTransaction(tran.getRequestId());
         assertEquals(t2.getRequestId(), "1234", t2.getReceiptId());
-        assertEquals(aliceBalance, ledger.getBalance(null, ALICE), 0);
-        assertEquals(aliceBalance - 100, ledger.getAvailableBalance(null, ALICE), 0);
-        assertEquals(bobBalance, ledger.getBalance(null, BOB), 0);
-        assertEquals(bobBalance, ledger.getAvailableBalance(null, BOB), 0);
+        assertEquals(aliceBalance, ledger.getBalance(ALICE), 0);
+        assertEquals(aliceBalance - 100, ledger.getAvailableBalance(ALICE), 0);
+        assertEquals(bobBalance, ledger.getBalance(BOB), 0);
+        assertEquals(bobBalance, ledger.getAvailableBalance(BOB), 0);
 
     }
 
@@ -484,11 +488,11 @@ public abstract class AbstractLedgerTest extends TestCase {
         final String book = "benchbook-" + System.currentTimeMillis();
         final double fundamount = amount * iterations;
         final String fundbook = "fund-" + System.currentTimeMillis();
-        final double fundbalance = ledger.getBalance(null, fundbook);
+        final double fundbalance = ledger.getBalance(fundbook);
         transfer(fundbook, book, fundamount, "fund the benchmark");
-        System.out.println("Start Balance: " + ledger.getBalance(null, book));
-        assertEquals(fundamount, ledger.getAvailableBalance(null, book), 0);
-        assertEquals(fundamount, ledger.getBalance(null, book), 0);
+        System.out.println("Start Balance: " + ledger.getBalance(book));
+        assertEquals(fundamount, ledger.getAvailableBalance(book), 0);
+        assertEquals(fundamount, ledger.getBalance(book), 0);
 
         long start = System.currentTimeMillis();
         for (int i = 0; i < iterations; i++) {
@@ -497,10 +501,10 @@ public abstract class AbstractLedgerTest extends TestCase {
         final long duration = System.currentTimeMillis() - start;
         System.out.println("" + iterations + " iterations took " + duration + " ms");
         System.out.println("Each iteration took " + duration / iterations + " ms");
-        assertEquals(0, ledger.getAvailableBalance(null, book), 0);
-        assertEquals(0, ledger.getBalance(null, book), 0);
-        assertEquals(fundbalance, ledger.getAvailableBalance(null, fundbook), 0);
-        assertEquals(fundbalance, ledger.getBalance(null, fundbook), 0);
+        assertEquals(0, ledger.getAvailableBalance(book), 0);
+        assertEquals(0, ledger.getBalance(book), 0);
+        assertEquals(fundbalance, ledger.getAvailableBalance(fundbook), 0);
+        assertEquals(fundbalance, ledger.getBalance(fundbook), 0);
         assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
@@ -535,6 +539,29 @@ public abstract class AbstractLedgerTest extends TestCase {
         assertNotNull(book2.getRegistrationId());
         assertEquals(regid, book2.getRegistrationId());
 
+    }
+
+    public void testMultiLedger() throws UnknownBookException, InvalidTransactionException, LowlevelLedgerException, UnknownTransactionException {
+        assertEquals(0, ledger.getBalance("a", "bob"), 0);
+        assertEquals(0, ledger.getBalance("a", "alice"), 0);
+        assertEquals(0, ledger.getBalance("b", "bob"), 0);
+        assertEquals(0, ledger.getBalance("b", "alice"), 0);
+
+        PostedTransaction t1 = ledger.transfer("a", CryptoTools.createRandomID(), "bob", "alice", 100, "ledger a");
+        ledger.setReceiptId(t1.getRequestId(), CryptoTools.createRandomID());
+        assertEquals("a", t1.getLedger());
+        assertEquals(-100, ledger.getBalance("a", "bob"), 0);
+        assertEquals(100, ledger.getBalance("a", "alice"), 0);
+        assertEquals(0, ledger.getBalance("b", "bob"), 0);
+        assertEquals(0, ledger.getBalance("b", "alice"), 0);
+
+        PostedTransaction t2 = ledger.transfer("b", CryptoTools.createRandomID(), "bob", "alice", 120, "ledger a");
+        ledger.setReceiptId(t2.getRequestId(), CryptoTools.createRandomID());
+        assertEquals("b", t2.getLedger());
+        assertEquals(-100, ledger.getBalance("a", "bob"), 0);
+        assertEquals(100, ledger.getBalance("a", "alice"), 0);
+        assertEquals(-120, ledger.getBalance("b", "bob"), 0);
+        assertEquals(120, ledger.getBalance("b", "alice"), 0);
     }
 
     protected LedgerController ledger;
