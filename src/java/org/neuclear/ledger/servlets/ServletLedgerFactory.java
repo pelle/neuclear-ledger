@@ -59,9 +59,9 @@ public final class ServletLedgerFactory {
 
     private LedgerController createLedger(String type, String serviceid) throws ClassNotFoundException, IllegalAccessException, NoSuchMethodException, InvocationTargetException, InstantiationException {
         if (type.equals("hibernate"))
-            return createLedger(Class.forName("org.neuclear.ledger.hibernate.HibernateLedger"), serviceid);
+            return createLedger(Class.forName("org.neuclear.ledger.hibernate.HibernateLedgerController"), serviceid);
         if (type.equals("prevalent"))
-            return createLedger(Class.forName("org.neuclear.ledger.prevalent.PrevalentLedger"), serviceid);
+            return createLedger(Class.forName("org.neuclear.ledger.prevalent.PrevalentLedgerController"), serviceid);
         if (type.equals("simple"))
             return new SimpleLedgerController(serviceid);
         return createLedger(Class.forName(type), serviceid);
