@@ -44,7 +44,11 @@ public class Book implements Serializable {
 
     public Book(String id, Date registered) {
         this.id = id;
-        this.nickname = id;
+        System.out.println("ID=" + id);
+        this.nickname = (id.length() == 32) ? (
+                id.substring(0, 4) + '-'
+                + id.substring(4, 8)
+                ) : id;
         this.type = "identity";
         this.source = null;
         this.registered = registered;

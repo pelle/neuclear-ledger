@@ -11,15 +11,18 @@ import java.util.Date;
  * User: pelleb
  * Date: Jan 22, 2003
  * Time: 4:18:35 PM
- * $Id: AbstractLedgerTest.java,v 1.10 2004/04/19 18:57:27 pelle Exp $
+ * $Id: AbstractLedgerTest.java,v 1.11 2004/04/23 19:09:16 pelle Exp $
  * $Log: AbstractLedgerTest.java,v $
+ * Revision 1.11  2004/04/23 19:09:16  pelle
+ * Lots of cleanups and improvements to the userinterface and look of the bux application.
+ *
  * Revision 1.10  2004/04/19 18:57:27  pelle
  * Updated Ledger to support more advanced book information.
  * You can now create a book or fetch a book by doing getBook(String id) on the ledger.
  * You can register a book or upddate an existing one using registerBook()
  * SimpleLedger now works and passes all tests.
  * HibernateLedger has been implemented, but there are a few things that dont work yet.
- *
+ * <p/>
  * Revision 1.9  2004/04/12 19:26:37  pelle
  * Hibernate and Pervayler implementations of the Ledger all pass now for both currency and ledger tests.
  * <p/>
@@ -197,7 +200,7 @@ public abstract class AbstractLedgerTest extends TestCase {
 
     public abstract Ledger createLedger() throws LowlevelLedgerException, UnknownLedgerException;
 
-    private final PostedTransaction transfer(final String from, final String to, final double amount, final String comment) throws InvalidTransactionException, LowlevelLedgerException {
+    private final PostedTransaction transfer(final String from, final String to, final double amount, final String comment) throws InvalidTransactionException, LowlevelLedgerException, UnknownBookException {
         PostedTransaction tran = ledger.transfer(CryptoTools.createRandomID(), from, to, amount, comment);
         try {
             ledger.setReceiptId(tran.getRequestId(), CryptoTools.createRandomID());
@@ -208,7 +211,7 @@ public abstract class AbstractLedgerTest extends TestCase {
 
     }
 
-    public final PostedHeldTransaction hold(final String from, final String to, final Date expires, final double amount, final String comment) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
+    public final PostedHeldTransaction hold(final String from, final String to, final Date expires, final double amount, final String comment) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException, UnknownBookException {
         PostedHeldTransaction tran = ledger.hold(CryptoTools.createRandomID(), from, to, expires, amount, comment);
         try {
             ledger.setHeldReceiptId(tran.getRequestId(), CryptoTools.createRandomID());
@@ -265,7 +268,7 @@ public abstract class AbstractLedgerTest extends TestCase {
         assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
-    public final void testMultiTransfer() throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException, UnknownTransactionException {
+    public final void testMultiTransfer() throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException, UnknownTransactionException, UnknownBookException {
         final double bobBalance = ledger.getBalance(CAROL);
         int cumulative = 0;
         for (int i = 0; i < 100; i++) {
@@ -284,7 +287,7 @@ public abstract class AbstractLedgerTest extends TestCase {
         assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
-    public final void testHoldAndExpireTransfer() throws LowlevelLedgerException, UnBalancedTransactionException, InvalidTransactionException {
+    public final void testHoldAndExpireTransfer() throws LowlevelLedgerException, UnBalancedTransactionException, InvalidTransactionException, UnknownBookException {
         ensureBalance(100.0);
         final double aliceBalance = ledger.getBalance(ALICE);
         final double bobBalance = ledger.getBalance(BOB);
@@ -315,12 +318,12 @@ public abstract class AbstractLedgerTest extends TestCase {
         assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
-    private void ensureBalance(final double target) throws LowlevelLedgerException, InvalidTransactionException {
+    private void ensureBalance(final double target) throws LowlevelLedgerException, InvalidTransactionException, UnknownBookException {
         if (ledger.getAvailableBalance(ALICE) < target)
             transfer("MONEY PRESS", ALICE, -ledger.getAvailableBalance(ALICE) + target, "FUND");
     }
 
-    public final void testHoldAndCancelTransfer() throws LowlevelLedgerException, UnBalancedTransactionException, InvalidTransactionException, UnknownTransactionException {
+    public final void testHoldAndCancelTransfer() throws LowlevelLedgerException, UnBalancedTransactionException, InvalidTransactionException, UnknownTransactionException, UnknownBookException {
         if (ledger.getAvailableBalance(ALICE) < 100)
             transfer("MONEY PRESS", ALICE, -ledger.getAvailableBalance(ALICE) + 100, "FUND");
         final double aliceBalance = ledger.getBalance(ALICE);
@@ -352,7 +355,7 @@ public abstract class AbstractLedgerTest extends TestCase {
         assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
-    public final void testHoldAndCompleteTransfer() throws LowlevelLedgerException, UnBalancedTransactionException, InvalidTransactionException, UnknownTransactionException, TransactionExpiredException {
+    public final void testHoldAndCompleteTransfer() throws LowlevelLedgerException, UnBalancedTransactionException, InvalidTransactionException, UnknownTransactionException, TransactionExpiredException, UnknownBookException {
         if (ledger.getAvailableBalance(ALICE) < 100)
             transfer("MONEY PRESS", ALICE, -ledger.getAvailableBalance(ALICE) + 100, "FUND");
         final double aliceBalance = ledger.getBalance(ALICE);
@@ -383,7 +386,7 @@ public abstract class AbstractLedgerTest extends TestCase {
         assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
-    public final void testHoldAndInsufficientFunds() throws LowlevelLedgerException, UnBalancedTransactionException, InvalidTransactionException, UnknownTransactionException {
+    public final void testHoldAndInsufficientFunds() throws LowlevelLedgerException, UnBalancedTransactionException, InvalidTransactionException, UnknownTransactionException, UnknownBookException {
         final double aliceBalance = ledger.getBalance(ALICE);
         final double bobBalance = ledger.getBalance(BOB);
         final double amount = 100;
@@ -469,7 +472,7 @@ public abstract class AbstractLedgerTest extends TestCase {
 
     }
 
-    public final void testNaiveBenchmark() throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException {
+    public final void testNaiveBenchmark() throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException, UnknownBookException {
         final int iterations = 100;
         final double amount = 50;
         final String book = "benchbook-" + System.currentTimeMillis();
@@ -495,7 +498,7 @@ public abstract class AbstractLedgerTest extends TestCase {
         assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
-    public void testRegisterBook() throws LowlevelLedgerException {
+    public void testRegisterBook() throws LowlevelLedgerException, UnknownBookException {
         String bookid = CryptoTools.createRandomID();
         final Book book1 = ledger.getBook(bookid);
         assertNotNull(book1);

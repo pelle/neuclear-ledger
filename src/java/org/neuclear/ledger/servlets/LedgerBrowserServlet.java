@@ -37,8 +37,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerBrowserServlet.java,v 1.5 2004/04/22 23:59:21 pelle Exp $
+$Id: LedgerBrowserServlet.java,v 1.6 2004/04/23 19:09:15 pelle Exp $
 $Log: LedgerBrowserServlet.java,v $
+Revision 1.6  2004/04/23 19:09:15  pelle
+Lots of cleanups and improvements to the userinterface and look of the bux application.
+
 Revision 1.5  2004/04/22 23:59:21  pelle
 Added various statistics to Ledger as well as AssetController
 Improved look and feel in the web app.
@@ -115,10 +118,12 @@ public class LedgerBrowserServlet extends HttpServlet {
         response.setContentType("text/html");
         PrintWriter out = response.getWriter();
         Principal user = request.getUserPrincipal();
-        ServletTools.printHeader(out, request, title, "Account Browser for " + Utility.denullString(user.getName()));
+        Book book = (Book) request.getSession(true).getAttribute("book");
+
+        ServletTools.printHeader(out, request, title, "Account Browser for " + Utility.denullString(book.getNickname()));
         String url = ServletTools.getAbsoluteURL(request, request.getServletPath());
         try {
-            String book = user.getName();
+            String bookid = user.getName();
             System.out.println("Browsing: " + book);
 
             String fromStr = request.getParameter("from");
@@ -127,7 +132,7 @@ public class LedgerBrowserServlet extends HttpServlet {
             Date from = parseDate(fromStr);
             Date to = parseDate(toStr);
 
-            BookBrowser stmt = browse(book, from, to);
+            BookBrowser stmt = browse(bookid, from, to);
             out.println("<table><tr><th>Transaction ID</th><th>Time</th><th>Counterparty</th><th>Comment</th><th>Amount</th></tr>");
             int linecount = 0;
             while (stmt.next()) {

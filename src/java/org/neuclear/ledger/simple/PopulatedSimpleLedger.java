@@ -1,8 +1,8 @@
 package org.neuclear.ledger.simple;
 
-import org.neuclear.ledger.UnBalancedTransactionException;
-import org.neuclear.ledger.LowlevelLedgerException;
 import org.neuclear.ledger.InvalidTransactionException;
+import org.neuclear.ledger.LowlevelLedgerException;
+import org.neuclear.ledger.UnknownBookException;
 
 /*
 NeuClear Distributed Transaction Clearing Platform
@@ -22,8 +22,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: PopulatedSimpleLedger.java,v 1.1 2004/03/29 23:43:30 pelle Exp $
+$Id: PopulatedSimpleLedger.java,v 1.2 2004/04/23 19:09:15 pelle Exp $
 $Log: PopulatedSimpleLedger.java,v $
+Revision 1.2  2004/04/23 19:09:15  pelle
+Lots of cleanups and improvements to the userinterface and look of the bux application.
+
 Revision 1.1  2004/03/29 23:43:30  pelle
 The servlets now work and display the ledger contents.
 
@@ -35,18 +38,18 @@ The servlets now work and display the ledger contents.
  * Time: 7:36:18 PM
  */
 public class PopulatedSimpleLedger extends SimpleLedger {
-    public PopulatedSimpleLedger(String name) throws InvalidTransactionException, LowlevelLedgerException {
+    public PopulatedSimpleLedger(String name) throws InvalidTransactionException, LowlevelLedgerException, UnknownBookException {
         super(name);
 
-        transfer("mint","bob",10000,"Initial Funding");
-        transfer("mint","alice",10000,"Initial Funding");
+        transfer("mint", "bob", 10000, "Initial Funding");
+        transfer("mint", "alice", 10000, "Initial Funding");
 
-        for(int i=0;i<50;i++){
-            transfer("bob","carol", 50+i,"test"+i);
+        for (int i = 0; i < 50; i++) {
+            transfer("bob", "carol", 50 + i, "test" + i);
         }
 
-        for(int i=0;i<50;i++){
-            transfer("alice","bob", 50+i,"test"+i);
+        for (int i = 0; i < 50; i++) {
+            transfer("alice", "bob", 50 + i, "test" + i);
         }
 
     }

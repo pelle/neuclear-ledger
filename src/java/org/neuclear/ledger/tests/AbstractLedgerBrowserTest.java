@@ -5,14 +5,18 @@ import org.neuclear.commons.crypto.CryptoTools;
 import org.neuclear.ledger.InvalidTransactionException;
 import org.neuclear.ledger.Ledger;
 import org.neuclear.ledger.LowlevelLedgerException;
+import org.neuclear.ledger.UnknownBookException;
 import org.neuclear.ledger.browser.BookBrowser;
 import org.neuclear.ledger.browser.LedgerBrowser;
 
 import java.util.Date;
 
 /*
-$Id: AbstractLedgerBrowserTest.java,v 1.6 2004/04/20 00:15:32 pelle Exp $
+$Id: AbstractLedgerBrowserTest.java,v 1.7 2004/04/23 19:09:15 pelle Exp $
 $Log: AbstractLedgerBrowserTest.java,v $
+Revision 1.7  2004/04/23 19:09:15  pelle
+Lots of cleanups and improvements to the userinterface and look of the bux application.
+
 Revision 1.6  2004/04/20 00:15:32  pelle
 Updated test to use books
 
@@ -79,7 +83,7 @@ public abstract class AbstractLedgerBrowserTest extends TestCase {
         return t;
     }
 
-    public void testAmountOfEntries() throws LowlevelLedgerException, InvalidTransactionException {
+    public void testAmountOfEntries() throws LowlevelLedgerException, InvalidTransactionException, UnknownBookException {
         final String bob = getBobBook();
         final String alice = getAliceBook();
 
@@ -93,7 +97,7 @@ public abstract class AbstractLedgerBrowserTest extends TestCase {
         assertBookBrowserSize(alice, i, browser.browse(alice));
     }
 
-    public void testEntryContent() throws LowlevelLedgerException, InvalidTransactionException {
+    public void testEntryContent() throws LowlevelLedgerException, InvalidTransactionException, UnknownBookException {
         final String bob = getBobBook();
         final String alice = getAliceBook();
 
@@ -109,7 +113,7 @@ public abstract class AbstractLedgerBrowserTest extends TestCase {
 
     }
 
-    public void testAmountOfEntriesFromTime() throws LowlevelLedgerException, InvalidTransactionException {
+    public void testAmountOfEntriesFromTime() throws LowlevelLedgerException, InvalidTransactionException, UnknownBookException {
         final String bob = getBobBook();
         final String alice = getAliceBook();
 
@@ -141,7 +145,7 @@ public abstract class AbstractLedgerBrowserTest extends TestCase {
 
     }
 
-    public void testAmountOfEntriesInTimeRange() throws LowlevelLedgerException, InvalidTransactionException {
+    public void testAmountOfEntriesInTimeRange() throws LowlevelLedgerException, InvalidTransactionException, UnknownBookException {
         final String bob = getBobBook();
         final String alice = getAliceBook();
 
