@@ -1,8 +1,11 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: LedgerController.java,v 1.7 2004/05/05 20:46:24 pelle Exp $
+ * $Id: LedgerController.java,v 1.8 2004/05/11 22:53:34 pelle Exp $
  * $Log: LedgerController.java,v $
+ * Revision 1.8  2004/05/11 22:53:34  pelle
+ * The update to ledger expectedly broke a few things around CurrencyController and friends. Most but not all is now fixed.
+ *
  * Revision 1.7  2004/05/05 20:46:24  pelle
  * BookListBrowser works both in SimpleLedgerController and HibernateLedgerController
  * Added new interface Browser, which is implemented by both BookBrowser and BookListBrowser
@@ -411,7 +414,7 @@ public abstract class LedgerController {
     }
 
     public final PostedHeldTransaction hold(String ledger, String req, String from, String to, Date expiry, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException, UnknownBookException {
-        if (getAvailableBalance(id, from) - amount < 0)
+        if (getAvailableBalance(ledger, from) - amount < 0)
             throw new InsufficientFundsException(this, from, amount);
         UnPostedHeldTransaction tran = new UnPostedHeldTransaction(ledger, req, comment, expiry);
         tran.addItem(getBook(from), -amount);
