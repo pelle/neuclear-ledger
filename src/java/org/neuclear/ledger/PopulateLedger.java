@@ -1,14 +1,14 @@
 package org.neuclear.ledger;
 
-import org.neuclear.ledger.implementations.SQLLedger;
+import org.neuclear.commons.NeuClearException;
 import org.neuclear.commons.sql.DefaultXAConnectionSource;
 import org.neuclear.commons.sql.statements.SimpleStatementFactory;
-import org.neuclear.commons.NeuClearException;
 import org.neuclear.commons.time.TimeTools;
+import org.neuclear.ledger.implementations.SQLLedger;
 
 import javax.naming.NamingException;
-import java.sql.SQLException;
 import java.io.IOException;
+import java.sql.SQLException;
 
 /*
 NeuClear Distributed Transaction Clearing Platform
@@ -28,8 +28,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: PopulateLedger.java,v 1.1 2004/01/02 23:18:34 pelle Exp $
+$Id: PopulateLedger.java,v 1.2 2004/02/19 15:28:55 pelle Exp $
 $Log: PopulateLedger.java,v $
+Revision 1.2  2004/02/19 15:28:55  pelle
+Various cleanups and corrections
+
 Revision 1.1  2004/01/02 23:18:34  pelle
 Added StatementFactory pattern and refactored the ledger to use it.
 
@@ -41,16 +44,21 @@ Added StatementFactory pattern and refactored the ledger to use it.
  * Time: 3:49:52 PM
  */
 public class PopulateLedger {
-    public final static String LEDGERID="neu://test/bux";
-    public static void main(String args[]){
+
+    private PopulateLedger() {
+    }
+
+    public final static String LEDGERID = "neu://test/bux";
+
+    public static void main(String args[]) {
         try {
-            Ledger ledger=new SQLLedger(new SimpleStatementFactory(new DefaultXAConnectionSource()),LEDGERID);
-            Book bob=ledger.createNewBook("neu://bob@test");
-            Book alice=ledger.createNewBook("neu://alice@test");
-            for (int i=0;i<20;i++){
-                System.out.println("Performing transfer number: "+i);
-                bob.transfer(alice,100+i,"Loan "+i,TimeTools.now());
-                alice.transfer(bob,100+2*i,"Repayment"+i,TimeTools.now());
+            Ledger ledger = new SQLLedger(new SimpleStatementFactory(new DefaultXAConnectionSource()), LEDGERID);
+            Book bob = ledger.createNewBook("neu://bob@test");
+            Book alice = ledger.createNewBook("neu://alice@test");
+            for (int i = 0; i < 20; i++) {
+                System.out.println("Performing transfer number: " + i);
+                bob.transfer(alice, 100 + i, "Loan " + i, TimeTools.now());
+                alice.transfer(bob, 100 + 2 * i, "Repayment" + i, TimeTools.now());
             }
         } catch (LowlevelLedgerException e) {
             e.printStackTrace();
