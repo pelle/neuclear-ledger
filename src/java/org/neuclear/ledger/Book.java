@@ -1,5 +1,6 @@
 package org.neuclear.ledger;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /*
@@ -27,7 +28,7 @@ import java.util.Date;
  * Date: Apr 19, 2004
  * Time: 10:51:01 AM
  */
-public class Book {
+public class Book implements Serializable {
     protected Book() {
     }
 
