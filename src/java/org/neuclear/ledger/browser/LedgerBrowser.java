@@ -22,8 +22,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerBrowser.java,v 1.5 2004/05/03 23:54:18 pelle Exp $
+$Id: LedgerBrowser.java,v 1.6 2004/05/05 14:04:50 pelle Exp $
 $Log: LedgerBrowser.java,v $
+Revision 1.6  2004/05/05 14:04:50  pelle
+Added BookListBrowser
+
 Revision 1.5  2004/05/03 23:54:18  pelle
 HibernateLedgerController now supports multiple ledgers.
 Fixed many unit tests.
@@ -60,4 +63,6 @@ public interface LedgerBrowser {
     public BookBrowser browseFrom(String book, Date from) throws LowlevelLedgerException;
 
     public BookBrowser browseRange(String book, Date from, Date until) throws LowlevelLedgerException;
+
+    public BookListBrowser browseBooks(String ledger) throws LowlevelLedgerException;
 }
