@@ -13,13 +13,16 @@ import java.util.Date;
  * User: pelleb
  * Date: Jan 22, 2003
  * Time: 4:18:35 PM
- * $Id: LedgerTest.java,v 1.12 2004/03/22 17:33:02 pelle Exp $
- * $Log: LedgerTest.java,v $
+ * $Id: AbstractLedgerTest.java,v 1.1 2004/03/22 20:08:24 pelle Exp $
+ * $Log: AbstractLedgerTest.java,v $
+ * Revision 1.1  2004/03/22 20:08:24  pelle
+ * Added simple ledger for unit testing and in memory use
+ *
  * Revision 1.12  2004/03/22 17:33:02  pelle
  * Added a verified transfer to neuclear-ledger.
  * Added InsufficientFundsException to be thrown if transfer isnt verified.
  * HeldTransfers also are now verified.
- *
+ * <p/>
  * Revision 1.11  2004/03/21 00:48:36  pelle
  * The problem with Enveloped signatures has now been fixed. It was a problem in the way transforms work. I have bandaided it, but in the future if better support for transforms need to be made, we need to rethink it a bit. Perhaps using the new crypto channel's in neuclear-commons.
  * <p/>
@@ -102,7 +105,7 @@ import java.util.Date;
  * Ledgers now have a required display name.
  * <p/>
  * Revision 1.7  2003/07/21 19:43:39  pelle
- * Moved the Revisioning tests into the main LedgerTest.
+ * Moved the Revisioning tests into the main AbstractLedgerTest.
  * Fixed the getTransactionTime method in SQLLedger.
  * <p/>
  * Revision 1.6  2003/07/21 18:35:15  pelle
@@ -125,12 +128,12 @@ import java.util.Date;
  * I've split the Transaction Class into two sub classes and made Transaction  abstract.
  * The two new Transaction Classes reflect the state of the Transaction and their methods reflect this.
  */
-public abstract class LedgerTest extends TestCase {
+public abstract class AbstractLedgerTest extends TestCase {
     static final String BOB = "bob";
     static final String ALICE = "alice";
 
 
-    public LedgerTest(final String s) throws LowlevelLedgerException, UnknownLedgerException, SQLException, NamingException, IOException, NeuClearException {
+    public AbstractLedgerTest(final String s) throws LowlevelLedgerException, UnknownLedgerException, SQLException, NamingException, IOException, NeuClearException {
         super(s);
 //        ledger=createLedger();
     }
@@ -155,7 +158,7 @@ public abstract class LedgerTest extends TestCase {
         ledger.close();
     }
 
-    public abstract Ledger createLedger() throws LowlevelLedgerException;
+    public abstract Ledger createLedger() throws LowlevelLedgerException, UnknownLedgerException;
 
     public final void testTransfer() throws LedgerException {
         final double aliceBalance = ledger.getBalance(ALICE);

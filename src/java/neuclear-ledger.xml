@@ -1,6 +1,6 @@
 <components>
     <component type="org.neuclear.commons.sql.ConnectionSource" class="org.neuclear.commons.sql.DefaultConnectionSource"/>
-    <component type="org.neuclear.ledger.Ledger" class="org.neuclear.ledger.implementations.SQLLedger">
+    <component type="org.neuclear.ledger.Ledger" class="org.neuclear.ledger.sql.SQLLedger">
         <param type="java.lang.String">neu://superbux/reserve</param>
     </component>
 </components>

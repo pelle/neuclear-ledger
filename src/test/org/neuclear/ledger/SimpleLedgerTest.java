@@ -1,6 +1,7 @@
 package org.neuclear.ledger;
 
 import org.neuclear.commons.NeuClearException;
+import org.neuclear.ledger.simple.SimpleLedger;
 
 import javax.naming.NamingException;
 import java.io.IOException;
@@ -13,14 +14,13 @@ import java.sql.SQLException;
  * Time: 12:58:30 PM
  * To change this template use Options | File Templates.
  */
-public final class SQLLedgerTest extends LedgerTest {
-    public SQLLedgerTest(final String s) throws LowlevelLedgerException, UnknownLedgerException, SQLException, NamingException, IOException, NeuClearException {
+public final class SimpleLedgerTest extends AbstractLedgerTest {
+    public SimpleLedgerTest(final String s) throws LowlevelLedgerException, UnknownLedgerException, SQLException, NamingException, IOException, NeuClearException {
         super(s);
-        //SQLLedger.create(new DefaultConnectionSource());
     }
 
     public final Ledger createLedger() {
-        return null;  //To change body of implemented methods use Options | File Templates.
+        return new SimpleLedger("test");
     }
 
 
