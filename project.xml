@@ -86,14 +86,22 @@
             </properties>
        </dependency>
    <dependency>
-      <id>bouncycastle</id>
-      <name>bouncycastle</name>
-      <version>115</version>
-      <jar>jce-jdk13-115.jar</jar>
-      <properties>
-            <war.bundle.jar>false</war.bundle.jar>
-      </properties>
-    </dependency>
+            <id>dom4j</id>
+            <version>1.4</version>
+            <jar>dom4j-1.4.jar</jar>
+            <properties>
+                <war.bundle>true</war.bundle>
+            </properties>
+        </dependency>
+        <dependency>
+            <id>bouncycastle</id>
+            <name>bouncycastle</name>
+            <version>120</version>
+            <jar>bcprov-jdk14-120.jar</jar>
+            <properties>
+                <war.bundle>false</war.bundle>
+            </properties>
+        </dependency>
        <dependency>
            <id>servletapi</id>
            <version>2.3</version>

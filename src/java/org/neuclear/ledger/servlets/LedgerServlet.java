@@ -7,6 +7,10 @@ import org.neuclear.commons.sql.JNDIConnectionSource;
 import org.neuclear.id.NSTools;
 import org.neuclear.id.InvalidNamedObjectException;
 import org.neuclear.ledger.implementations.SQLLedger;
+import org.neuclear.ledger.browser.Statement;
+import org.neuclear.ledger.browser.StatementEntry;
+import org.neuclear.ledger.UnknownBookException;
+import org.neuclear.ledger.LowlevelLedgerException;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -43,8 +47,12 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerServlet.java,v 1.1 2003/12/29 22:40:15 pelle Exp $
+$Id: LedgerServlet.java,v 1.2 2003/12/31 00:39:04 pelle Exp $
 $Log: LedgerServlet.java,v $
+Revision 1.2  2003/12/31 00:39:04  pelle
+Added Drivers for handling different Database dialects in the entity model.
+Added Statement pattern to ledger, simplifying the statement writing process.
+
 Revision 1.1  2003/12/29 22:40:15  pelle
 Added LedgerServlet and friends
 
@@ -65,8 +73,6 @@ public class LedgerServlet extends HttpServlet {
                     consrc,
                         serviceid
                 );
-            ledger.createLedger(serviceid);
-
         } catch (Exception e) {
             throw new ServletException(e);
         }
@@ -77,47 +83,46 @@ public class LedgerServlet extends HttpServlet {
         response.setContentType("text/html");
         PrintWriter out=response.getWriter();
         ServletTools.printHeader(out,request,"Account Browser");
-        String url=request.getServletPath();
+        String url=ServletTools.getAbsoluteURL(request,request.getServletPath());
         try {
-            Connection con=consrc.getConnection();
-            PreparedStatement stmt=con.prepareStatement("select t.id,t.valuetime, r.bookid,t.comment,s.amount from entry s,entry r, transaction t where s.transactionid=t.id and r.transactionid=t.id and r.id<>s.id\n" +
-                    "and (s.bookid = ? ) and t.ledgerid=?");
             Principal user=request.getUserPrincipal();
             String book=request.getPathInfo();
             if (Utility.isEmpty(book))
                 book=serviceid;
             else
                 book="neu:/"+book;
-            stmt.setString(1,book);
-            stmt.setString(2,book);
-            stmt.setString(3,serviceid);
-            ResultSet rs=stmt.executeQuery();
+            Statement stmt=ledger.browse(ledger.getBook(book));
             out.println("<table><tr><th>Transaction ID</th><th>Time</th><th>Counterparty</th><th>Comment</th><th>Amount</th></tr>");
-            while(rs.next()){
-                final BigDecimal amount = rs.getBigDecimal(5);
+            while(stmt.next()){
+                final BigDecimal amount = stmt.getAmount();
                 out.print("<tr");
                 if (amount.compareTo(ZERO)<0)
                     out.print(" class=\"negative\"");
-                out.print("><td>");
-                out.print(rs.getString(1));
+                out.print("><td style=\"size:small\">");
+                out.print(stmt.getXid());
                 out.print("</td><td>");
-                out.print(TimeTools.formatTimeStamp(rs.getTimestamp(2)));
+                out.print(TimeTools.formatTimeStampShort(stmt.getValuetime()));
                 out.print("</td><td><a href=\"");
                 out.print(url);
-                out.print(NSTools.name2path(rs.getString(3)));
+                if (NSTools.isValidName(stmt.getCounterparty()))
+                    out.print(NSTools.name2path(stmt.getCounterparty()));
+                else
+                    out.print("/"+stmt.getCounterparty());
                 out.println("\">");
-                out.print(rs.getString(3));
+                out.print(stmt.getCounterparty());
                 out.print("</a></td><td>");
-                out.print(rs.getString(4));
+                out.print(stmt.getComment());
                 out.print("</td><td>");
                 out.print(amount);
                 out.print("</td></tr>");
 
             }
             out.println("</table>");
-        } catch (SQLException e) {
-            e.printStackTrace(out);
         } catch (InvalidNamedObjectException e) {
+            e.printStackTrace();
+        } catch (UnknownBookException e) {
+            e.printStackTrace();
+        } catch (LowlevelLedgerException e) {
             e.printStackTrace();
         }
     }

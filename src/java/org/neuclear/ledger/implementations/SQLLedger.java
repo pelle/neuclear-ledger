@@ -11,10 +11,14 @@ import org.neuclear.commons.sql.SQLTools;
 import org.neuclear.commons.sql.SQLContext;
 import org.neuclear.commons.sql.DefaultConnectionSource;
 import org.neuclear.commons.sql.entities.EntityModel;
+import org.neuclear.commons.sql.entities.Schema;
 import org.neuclear.commons.NeuClearException;
 import org.neuclear.commons.crypto.CryptoTools;
 import org.neuclear.ledger.*;
 import org.neuclear.ledger.InvalidTransactionException;
+import org.neuclear.ledger.browser.LedgerBrowser;
+import org.neuclear.ledger.browser.Statement;
+import org.neuclear.ledger.browser.QueryStatement;
 import org.neuclear.id.NSTools;
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.digests.SHA1Digest;
@@ -32,7 +36,7 @@ import java.util.Iterator;
  *         To change the template for this generated type comment go to
  *         Window>Preferences>Java>Code Generation>Code and Comments
  */
-public final class SQLLedger extends Ledger {
+public final class SQLLedger extends Ledger implements LedgerBrowser {
 
     /**
      * public SQLLedger(String id) throws SQLException, IOException, UnknownLedgerException {
@@ -49,9 +53,13 @@ public final class SQLLedger extends Ledger {
     public SQLLedger(final ConnectionSource con, final String id) throws LowlevelLedgerException, UnknownLedgerException {
         super(id, "sql ledger");
         this.con = new SQLContext(con);
-//        create(this.con);
-
-        create(con);
+        try {
+            create(con.getConnection());
+        } catch (SQLException e) {
+            throw new LowlevelLedgerException(this,e);
+        } catch (IOException e) {
+            throw new LowlevelLedgerException(this,e);
+        }
         createLedger(id);
     }
 
@@ -72,48 +80,49 @@ public final class SQLLedger extends Ledger {
          }
 
     }
-    public static synchronized void  create(ConnectionSource con) {
-        try {
-            Connection connection=con.getConnection();
-            EntityModel ledgerModel=new EntityModel("ledger",true);
-            ledgerModel.addTitle();
-//            ledgerModel.addComment();
-            ledgerModel.addTimeStamp();
-            EntityModel bookModel=new EntityModel("book",true);
-            bookModel.addTitle();
-            bookModel.addTimeStamp();
-            EntityModel xactModel=new EntityModel("transaction",true);
-            xactModel.addComment();
-            xactModel.addValueTime();
-            xactModel.addReference(ledgerModel);
-            EntityModel entryModel=new EntityModel("entry",false);
-            entryModel.addMoney();
-            entryModel.addReference(bookModel);
-            entryModel.addReference(xactModel);
+    public static synchronized void create(Connection con){
+        createSchema().create(con);
+    }
+    public static Schema createSchema() {
+        Schema schema=new Schema("mysql");
 
-            EntityModel hxactModel=new EntityModel("held_transaction",true);
-            hxactModel.addComment();
-            hxactModel.addValueTime();
-            hxactModel.addTimeStamp("held_until");
-            hxactModel.addReference(ledgerModel);
-            hxactModel.addReference(xactModel);
-            hxactModel.addBoolean("cancelled");
-            EntityModel hentryModel=new EntityModel("held_entry",false);
-            hentryModel.addMoney();
-            hentryModel.addReference(bookModel);
-            hentryModel.addReference(hxactModel);
-            entryModel.create(connection);
-            hentryModel.create(connection);
-            connection.close();
+        EntityModel ledgerModel=schema.addEntityModel("ledger");
+        ledgerModel.addTitle();
+//            ledgerModel.addComment();
+        ledgerModel.addTimeStamp();
+        EntityModel bookModel=schema.addEntityModel("book");
+        bookModel.addTitle();
+        bookModel.addTimeStamp();
+        EntityModel xactModel=schema.addEntityModel("transaction");
+        xactModel.addComment();
+        xactModel.addValueTime();
+        xactModel.addReference(ledgerModel);
+        EntityModel entryModel=schema.addEntityModel("entry",false);
+        entryModel.addMoney();
+        entryModel.addReference(bookModel);
+        entryModel.addReference(xactModel);
+
+        EntityModel hxactModel=schema.addEntityModel("held_transaction");
+        hxactModel.addComment();
+        hxactModel.addValueTime();
+        hxactModel.addTimeStamp("held_until");
+        hxactModel.addReference(ledgerModel);
+        hxactModel.addReference(xactModel);
+        hxactModel.addBoolean("cancelled");
+        EntityModel hentryModel=schema.addEntityModel("held_entry",false);
+        hentryModel.addMoney();
+        hentryModel.addReference(bookModel);
+        hentryModel.addReference(hxactModel);
+        return schema;
+    }
+    public static void main(String args[]){
+        try {
+            create(new DefaultConnectionSource().getConnection());
         } catch (SQLException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-    }
-    public static void main(String args[]){
-        create(new DefaultConnectionSource());
     }
     private static String getLedgerName(final ConnectionSource con, final String id) throws UnknownLedgerException, LowlevelLedgerException {
         try {
@@ -516,6 +525,30 @@ public final class SQLLedger extends Ledger {
         } catch (SQLException e) {
             throw new LowlevelLedgerException(this,e);
         } catch (IOException e) {
+            throw new LowlevelLedgerException(this,e);
+        }
+    }
+
+    public Statement browse(Book book) throws LowlevelLedgerException {
+        try {
+            return new QueryStatement(book,getConnection());
+        } catch (SQLException e) {
+            throw new LowlevelLedgerException(this,e);
+        }
+    }
+
+    public Statement browseFrom(Book book, Timestamp from) throws LowlevelLedgerException {
+        try {
+            return new QueryStatement(book,getConnection(),from);
+        } catch (SQLException e) {
+            throw new LowlevelLedgerException(this,e);
+        }
+    }
+
+    public Statement browseRange(Book book, Timestamp from, Timestamp until) throws LowlevelLedgerException {
+        try {
+            return new QueryStatement(book,getConnection(),from,until);
+        } catch (SQLException e) {
             throw new LowlevelLedgerException(this,e);
         }
     }
