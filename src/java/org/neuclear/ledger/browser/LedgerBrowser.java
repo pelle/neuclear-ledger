@@ -2,7 +2,7 @@ package org.neuclear.ledger.browser;
 
 import org.neuclear.ledger.LowlevelLedgerException;
 
-import java.sql.Timestamp;
+import java.util.Date;
 
 /*
 NeuClear Distributed Transaction Clearing Platform
@@ -22,8 +22,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerBrowser.java,v 1.3 2004/03/21 00:48:35 pelle Exp $
+$Id: LedgerBrowser.java,v 1.4 2004/03/26 23:36:34 pelle Exp $
 $Log: LedgerBrowser.java,v $
+Revision 1.4  2004/03/26 23:36:34  pelle
+The simple browse(book) now works on hibernate, I have implemented the other two, which currently don not constrain the query correctly.
+
 Revision 1.3  2004/03/21 00:48:35  pelle
 The problem with Enveloped signatures has now been fixed. It was a problem in the way transforms work. I have bandaided it, but in the future if better support for transforms need to be made, we need to rethink it a bit. Perhaps using the new crypto channel's in neuclear-commons.
 
@@ -44,7 +47,7 @@ Added BookBrowser pattern to ledger, simplifying the statement writing process.
 public interface LedgerBrowser {
     public BookBrowser browse(String book) throws LowlevelLedgerException;
 
-    public BookBrowser browseFrom(String book, Timestamp from) throws LowlevelLedgerException;
+    public BookBrowser browseFrom(String book, Date from) throws LowlevelLedgerException;
 //    public BookBrowser browseUntil(Book book,Timestamp until);
-    public BookBrowser browseRange(String book, Timestamp from, Timestamp until) throws LowlevelLedgerException;
+    public BookBrowser browseRange(String book, Date from, Date until) throws LowlevelLedgerException;
 }

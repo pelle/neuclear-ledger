@@ -41,8 +41,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerServlet.java,v 1.5 2004/03/25 22:04:46 pelle Exp $
+$Id: LedgerServlet.java,v 1.6 2004/03/26 23:36:34 pelle Exp $
 $Log: LedgerServlet.java,v $
+Revision 1.6  2004/03/26 23:36:34  pelle
+The simple browse(book) now works on hibernate, I have implemented the other two, which currently don not constrain the query correctly.
+
 Revision 1.5  2004/03/25 22:04:46  pelle
 The first shell for the HibernateBookBrowser
 
@@ -99,9 +102,9 @@ public class LedgerServlet extends HttpServlet {
             BookBrowser stmt = ledger.browse(book);
             out.println("<table><tr><th>Transaction ID</th><th>Time</th><th>Counterparty</th><th>Comment</th><th>Amount</th></tr>");
             while (stmt.next()) {
-                final BigDecimal amount = stmt.getAmount();
+                final double amount = stmt.getAmount();
                 out.print("<tr");
-                if (amount.compareTo(ZERO) < 0)
+                if (amount < 0)
                     out.print(" class=\"negative\"");
                 out.print("><td style=\"size:small\">");
                 out.print(stmt.getId());

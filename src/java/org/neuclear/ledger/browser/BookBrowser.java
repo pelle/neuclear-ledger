@@ -2,8 +2,7 @@ package org.neuclear.ledger.browser;
 
 import org.neuclear.ledger.LowlevelLedgerException;
 
-import java.math.BigDecimal;
-import java.sql.Timestamp;
+import java.util.Date;
 
 /*
 NeuClear Distributed Transaction Clearing Platform
@@ -23,8 +22,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: BookBrowser.java,v 1.3 2004/03/25 22:04:45 pelle Exp $
+$Id: BookBrowser.java,v 1.4 2004/03/26 23:36:34 pelle Exp $
 $Log: BookBrowser.java,v $
+Revision 1.4  2004/03/26 23:36:34  pelle
+The simple browse(book) now works on hibernate, I have implemented the other two, which currently don not constrain the query correctly.
+
 Revision 1.3  2004/03/25 22:04:45  pelle
 The first shell for the HibernateBookBrowser
 
@@ -53,13 +55,16 @@ public abstract class BookBrowser {
     public abstract boolean next() throws LowlevelLedgerException;
 
 
-    protected final void setRow(String xid, String reqid, String counterparty, String comment, Timestamp valuetime, BigDecimal amount) {
+    protected final void setRow(String xid, String reqid, String counterparty, String comment, Date valuetime, double amount, Date expirytime, Date cancelled, String completedId) {
         this.id = xid;
         this.reqid = reqid;
         this.counterparty = counterparty;
         this.comment = comment;
         this.valuetime = valuetime;
         this.amount = amount;
+        this.cancelled = cancelled;
+        this.expirytime = expirytime;
+        this.completedId = completedId;
     }
 
     public String getBook() {
@@ -82,12 +87,28 @@ public abstract class BookBrowser {
         return comment;
     }
 
-    public Timestamp getValuetime() {
+    public Date getValuetime() {
         return valuetime;
     }
 
-    public BigDecimal getAmount() {
+    public double getAmount() {
         return amount;
+    }
+
+    public Date getExpirytime() {
+        return expirytime;
+    }
+
+    public Date getCancelled() {
+        return cancelled;
+    }
+
+    public String getCompletedId() {
+        return completedId;
+    }
+
+    boolean isHeld() {
+        return (expirytime != null);
     }
 
     private final String book;
@@ -96,6 +117,9 @@ public abstract class BookBrowser {
     private String reqid;
     private String counterparty;
     private String comment;
-    private Timestamp valuetime;
-    private BigDecimal amount;
+    private Date valuetime;
+    private Date expirytime;
+    private Date cancelled;
+    private String completedId;
+    private double amount;
 }

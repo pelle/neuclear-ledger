@@ -1,8 +1,11 @@
 package org.neuclear.ledger.simple;
 
 /**
- * $Id: SimpleLedger.java,v 1.5 2004/03/26 18:37:56 pelle Exp $
+ * $Id: SimpleLedger.java,v 1.6 2004/03/26 23:36:34 pelle Exp $
  * $Log: SimpleLedger.java,v $
+ * Revision 1.6  2004/03/26 23:36:34  pelle
+ * The simple browse(book) now works on hibernate, I have implemented the other two, which currently don not constrain the query correctly.
+ *
  * Revision 1.5  2004/03/26 18:37:56  pelle
  * More work on browsers. Added an AbstractLedgerBrowserTest for unit testing LedgerBrowsers.
  *
@@ -85,7 +88,6 @@ import org.neuclear.ledger.*;
 import org.neuclear.ledger.browser.BookBrowser;
 import org.neuclear.ledger.browser.LedgerBrowser;
 
-import java.sql.Timestamp;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -320,11 +322,11 @@ public final class SimpleLedger extends Ledger implements LedgerBrowser {
         return new SimpleBookBrowser(book);
     }
 
-    public BookBrowser browseFrom(String book, Timestamp from) throws LowlevelLedgerException {
+    public BookBrowser browseFrom(String book, Date from) throws LowlevelLedgerException {
         return null;
     }
 
-    public BookBrowser browseRange(String book, Timestamp from, Timestamp until) throws LowlevelLedgerException {
+    public BookBrowser browseRange(String book, Date from, Date until) throws LowlevelLedgerException {
         return null;
     }
 
