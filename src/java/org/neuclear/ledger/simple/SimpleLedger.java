@@ -1,8 +1,13 @@
 package org.neuclear.ledger.simple;
 
 /**
- * $Id: SimpleLedger.java,v 1.6 2004/03/26 23:36:34 pelle Exp $
+ * $Id: SimpleLedger.java,v 1.7 2004/03/29 16:56:26 pelle Exp $
  * $Log: SimpleLedger.java,v $
+ * Revision 1.7  2004/03/29 16:56:26  pelle
+ * AbstractLedgerBrowserTest has been extended to test date ranges
+ * SimpleLedger now passes all tests.
+ * HibernateLedger passes at times, which is mysterious. More research needed.
+ *
  * Revision 1.6  2004/03/26 23:36:34  pelle
  * The simple browse(book) now works on hibernate, I have implemented the other two, which currently don not constrain the query correctly.
  *
@@ -88,9 +93,7 @@ import org.neuclear.ledger.*;
 import org.neuclear.ledger.browser.BookBrowser;
 import org.neuclear.ledger.browser.LedgerBrowser;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.*;
 
 /**
  * This implementation is very simple and only is meant for testing. It uses the Java Collection for the implementation and is in no way
@@ -104,6 +107,7 @@ public final class SimpleLedger extends Ledger implements LedgerBrowser {
         ledger = new HashMap();
         held = new HashMap();
         balances = new HashMap();
+        books = new HashMap();
 
     }
 
@@ -120,9 +124,25 @@ public final class SimpleLedger extends Ledger implements LedgerBrowser {
         if (!trans.isBalanced())
             throw new UnBalancedTransactionException(this, trans);
         final PostedTransaction posted = new PostedTransaction(trans, new Date());
-        ledger.put(id, posted);
+        return post(posted);
+    }
+
+    private PostedTransaction post(final PostedTransaction posted) {
+        ledger.put(posted.getId(), posted);
+        postToBook(posted);
         updateBalances(posted);
         return posted;
+    }
+
+    private void postToBook(final PostedTransaction posted) {
+        Iterator iter = posted.getItems();
+        while (iter.hasNext()) {
+            TransactionItem item = (TransactionItem) iter.next();
+            if (!books.containsKey(item.getBook()))
+                books.put(item.getBook(), new LinkedList());
+            List bookentries = (List) books.get(item.getBook());
+            bookentries.add(posted);
+        }
     }
 
     private void updateBalances(final PostedTransaction trans) {
@@ -171,6 +191,7 @@ public final class SimpleLedger extends Ledger implements LedgerBrowser {
             throw new UnBalancedTransactionException(this, trans);
         final PostedHeldTransaction posted = new PostedHeldTransaction(trans, new Date());
         held.put(posted.getId(), posted);
+        postToBook(posted);
         return posted;
     }
 
@@ -210,9 +231,7 @@ public final class SimpleLedger extends Ledger implements LedgerBrowser {
             throw new TransactionExpiredException(this, hold);
         held.remove(hold.getId());
         PostedTransaction posted = new PostedTransaction(hold, new Date(), amount, comment);
-        ledger.put(posted.getId(), posted);
-        updateBalances(posted);
-        return posted;
+        return post(posted);
     }
 
     /**
@@ -323,33 +342,92 @@ public final class SimpleLedger extends Ledger implements LedgerBrowser {
     }
 
     public BookBrowser browseFrom(String book, Date from) throws LowlevelLedgerException {
-        return null;
+        return new SimpleBookBrowser(book, from);
     }
 
     public BookBrowser browseRange(String book, Date from, Date until) throws LowlevelLedgerException {
-        return null;
+        return new SimpleBookBrowser(book, from, until);
     }
 
     private final HashMap ledger;
     private final HashMap held;
     private final String id;
     private final HashMap balances;
+    private final HashMap books;
 
     private class SimpleBookBrowser extends BookBrowser {
-        public SimpleBookBrowser(String book) {
+        public SimpleBookBrowser(final String book) {
+            this(book, null, null);
+        }
+
+        public SimpleBookBrowser(final String book, final Date from) {
+            this(book, from, null);
+        }
+
+        public SimpleBookBrowser(final String book, final Date from, final Date to) {
             super(book);
-            iter = ledger.keySet().iterator();
-            System.out.println("ledger contains: " + ledger.size());
+            this.from = from;
+            this.to = to;
+            if (books.containsKey(book)) {
+                iter = ((List) books.get(book)).iterator();
+//                System.out.println("book contains: " + ((List)books.get(book)).size());
+            } else {
+                iter = new Iterator() {
+                    public void remove() {
+
+                    }
+
+                    public boolean hasNext() {
+                        return false;
+                    }
+
+                    public Object next() {
+                        return null;
+                    }
+
+                };
+            }
         }
 
         public boolean next() throws LowlevelLedgerException {
             if (!iter.hasNext())
                 return false;
-//            PostedTransaction tran=(PostedTransaction) ledger.get((iter.next()));
-            iter.next();
+            PostedTransaction tran = (PostedTransaction) iter.next();
+            if (!isValid(tran))
+                return next();
+
+            setRow(tran);
             return true;
         }
 
+        private boolean isValid(final PostedTransaction posted) {
+            if (from == null)
+                return true;
+            if (posted.getTransactionTime().after(from)) {
+                return (to == null) || posted.getTransactionTime().before(to);
+            }
+            return false;
+        }
+
+        private void setRow(PostedTransaction tran) {
+            Iterator iter = tran.getItems();
+            TransactionItem item = null;
+            String counterparty = null;
+            while (iter.hasNext()) {
+                TransactionItem party = (TransactionItem) iter.next();
+                if (!party.getBook().equals(getBook())) {
+                    counterparty = party.getBook();
+                } else {
+                    item = party;
+                }
+            }
+
+            setRow(tran.getId(), tran.getRequestId(), counterparty, tran.getComment(), tran.getTransactionTime(), item.getAmount(), null, null, null);
+        }
+
         private final Iterator iter;
+        private final Date from;
+        private final Date to;
+//        private int i=0;
     }
 }

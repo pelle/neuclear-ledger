@@ -10,8 +10,13 @@ import org.neuclear.ledger.browser.LedgerBrowser;
 import java.util.Date;
 
 /*
-$Id: AbstractLedgerBrowserTest.java,v 1.2 2004/03/26 23:36:34 pelle Exp $
+$Id: AbstractLedgerBrowserTest.java,v 1.3 2004/03/29 16:56:26 pelle Exp $
 $Log: AbstractLedgerBrowserTest.java,v $
+Revision 1.3  2004/03/29 16:56:26  pelle
+AbstractLedgerBrowserTest has been extended to test date ranges
+SimpleLedger now passes all tests.
+HibernateLedger passes at times, which is mysterious. More research needed.
+
 Revision 1.2  2004/03/26 23:36:34  pelle
 The simple browse(book) now works on hibernate, I have implemented the other two, which currently don not constrain the query correctly.
 
@@ -41,6 +46,21 @@ public abstract class AbstractLedgerBrowserTest extends TestCase {
 
     protected void tearDown() throws Exception {
         ledger.close();
+    }
+
+    public static Date getIsolatedTimeStamp() {
+        try {
+            Thread.currentThread().sleep(5);
+        } catch (InterruptedException e) {
+            ;
+        }
+        final Date t = new Date();
+        try {
+            Thread.currentThread().sleep(5);
+        } catch (InterruptedException e) {
+            ;
+        }
+        return t;
     }
 
     public void testAmountOfEntries() throws LowlevelLedgerException, InvalidTransactionException {
@@ -77,7 +97,7 @@ public abstract class AbstractLedgerBrowserTest extends TestCase {
         final String bob = getBobBook();
         final String alice = getAliceBook();
 
-        Date t1 = new Date();
+        Date t1 = getIsolatedTimeStamp();
         assertBookBrowserSize(bob, 0, browser.browse(bob));
         assertBookBrowserSize(alice, 0, browser.browse(alice));
         int i;
@@ -87,7 +107,7 @@ public abstract class AbstractLedgerBrowserTest extends TestCase {
         assertBookBrowserSize(bob, i, browser.browse(bob));
         assertBookBrowserSize(alice, i, browser.browse(alice));
 
-        Date t2 = new Date();
+        Date t2 = getIsolatedTimeStamp();
         assertTrue(t2.after(t1));
 
         for (i = 0; i < 10; i++) {
@@ -105,22 +125,53 @@ public abstract class AbstractLedgerBrowserTest extends TestCase {
 
     }
 
-    public void testEntryContentFromTime() throws LowlevelLedgerException, InvalidTransactionException {
+    public void testAmountOfEntriesInTimeRange() throws LowlevelLedgerException, InvalidTransactionException {
         final String bob = getBobBook();
         final String alice = getAliceBook();
 
+        Date t1 = getIsolatedTimeStamp();
         assertBookBrowserSize(bob, 0, browser.browse(bob));
         assertBookBrowserSize(alice, 0, browser.browse(alice));
         int i;
         for (i = 0; i < 10; i++) {
             ledger.transfer(bob, alice, 10, "test" + i);
         }
-        assertVerifyBrowserContent(bob, alice, -10, i, browser.browse(bob));
-        assertVerifyBrowserContent(alice, bob, 10, i, browser.browse(alice));
+        assertBookBrowserSize(bob, i, browser.browse(bob));
+        assertBookBrowserSize(alice, i, browser.browse(alice));
 
+        Date t2 = getIsolatedTimeStamp();
+
+        for (i = 0; i < 10; i++) {
+            ledger.transfer(bob, alice, 10, "test" + i);
+        }
+        assertBookBrowserSize(bob, 20, browser.browse(bob));
+        assertBookBrowserSize(alice, 20, browser.browse(alice));
+        Date t3 = getIsolatedTimeStamp();
+
+        for (i = 0; i < 10; i++) {
+            ledger.transfer(bob, alice, 10, "test" + i);
+        }
+        Date t4 = getIsolatedTimeStamp();
+        assertBookBrowserSize(bob, 30, browser.browse(bob));
+        assertBookBrowserSize(alice, 30, browser.browse(alice));
+
+        assertBookBrowserSize(bob, 10, browser.browseRange(bob, t3, t4));
+        assertBookBrowserSize(alice, 10, browser.browseRange(alice, t3, t4));
+        assertBookBrowserSize(bob, 10, browser.browseRange(bob, t2, t3));
+        assertBookBrowserSize(alice, 10, browser.browseRange(alice, t2, t3));
+        assertBookBrowserSize(bob, 10, browser.browseRange(bob, t1, t2));
+        assertBookBrowserSize(alice, 10, browser.browseRange(alice, t1, t2));
+
+
+        assertBookBrowserSize(bob, 20, browser.browseRange(bob, t1, t3));
+        assertBookBrowserSize(alice, 20, browser.browseRange(alice, t1, t3));
+        assertBookBrowserSize(bob, 20, browser.browseRange(bob, t2, t4));
+        assertBookBrowserSize(alice, 20, browser.browseRange(alice, t2, t4));
+
+        assertBookBrowserSize(bob, 30, browser.browseRange(bob, t1, t4));
+        assertBookBrowserSize(alice, 30, browser.browseRange(alice, t1, t4));
 
     }
-
 
     public void assertVerifyBrowserContent(final String book, final String counterparty, final double amount, final int count, final BookBrowser bb) throws LowlevelLedgerException {
         assertNotNull("null book browser for " + book, bb);
