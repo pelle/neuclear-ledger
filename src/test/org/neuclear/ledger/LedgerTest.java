@@ -13,11 +13,16 @@ import java.util.Date;
  * User: pelleb
  * Date: Jan 22, 2003
  * Time: 4:18:35 PM
- * $Id: LedgerTest.java,v 1.11 2004/03/21 00:48:36 pelle Exp $
+ * $Id: LedgerTest.java,v 1.12 2004/03/22 17:33:02 pelle Exp $
  * $Log: LedgerTest.java,v $
+ * Revision 1.12  2004/03/22 17:33:02  pelle
+ * Added a verified transfer to neuclear-ledger.
+ * Added InsufficientFundsException to be thrown if transfer isnt verified.
+ * HeldTransfers also are now verified.
+ *
  * Revision 1.11  2004/03/21 00:48:36  pelle
  * The problem with Enveloped signatures has now been fixed. It was a problem in the way transforms work. I have bandaided it, but in the future if better support for transforms need to be made, we need to rethink it a bit. Perhaps using the new crypto channel's in neuclear-commons.
- *
+ * <p/>
  * Revision 1.10  2004/01/02 23:18:35  pelle
  * Added StatementFactory pattern and refactored the ledger to use it.
  * <p/>
@@ -169,6 +174,33 @@ public abstract class LedgerTest extends TestCase {
         System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
     }
 
+    public final void testVerifiedTransfer() throws LedgerException {
+        // Need a positive amount in alice's account
+        if (ledger.getAvailableBalance(ALICE) < 100)
+            ledger.transfer("MONEY PRESS", ALICE, -ledger.getAvailableBalance(ALICE) + 100, "FUND");
+        final double aliceBalance = ledger.getBalance(ALICE);
+        final double bobBalance = ledger.getBalance(BOB);
+        final double amount = 100;
+
+        assertTrue("ALICE has a balance of 100 or more", aliceBalance >= 100);
+
+        ledger.verifiedTransfer(ALICE, BOB, amount, "LOAN");
+        assertEquals("ALICE BALANCE", aliceBalance - amount, ledger.getBalance(ALICE), 0);
+        assertEquals("BOB BALANCE", bobBalance + amount, ledger.getBalance(BOB), 0);
+
+        // Now check that it throws InsufficientFundsException
+        try {
+            ledger.verifiedTransfer(ALICE, BOB, ledger.getAvailableBalance(ALICE) + 10, "To much");
+            assertTrue("InssuficientFundsException should have been thrown", false);
+        } catch (InsufficientFundsException e) {
+            ;
+        }
+
+
+        System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
+        System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
+    }
+
     public final void testMultiTransfer() throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException {
         final double bobBalance = ledger.getBalance(BOB);
         int cumulative = 0;
@@ -176,6 +208,7 @@ public abstract class LedgerTest extends TestCase {
             ledger.transfer("req" + i + System.currentTimeMillis(), "x" + i + System.currentTimeMillis(), "Issuer", "bob", i, "fund it");
             cumulative += i;
             assertEquals("BOB BALANCE", bobBalance + cumulative, ledger.getBalance(BOB), 0);
+            assertEquals("BOB AVAILABLE BALANCE", ledger.getBalance(BOB), ledger.getAvailableBalance(BOB), 0);
         }
         System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
     }
@@ -186,6 +219,8 @@ public abstract class LedgerTest extends TestCase {
     }
 
     public final void testHoldAndExpireTransfer() throws LowlevelLedgerException, UnBalancedTransactionException, InvalidTransactionException {
+        if (ledger.getAvailableBalance(ALICE) < 100)
+            ledger.transfer("MONEY PRESS", ALICE, -ledger.getAvailableBalance(ALICE) + 100, "FUND");
         final double aliceBalance = ledger.getBalance(ALICE);
         final double bobBalance = ledger.getBalance(BOB);
         final double amount = 100;
@@ -215,9 +250,13 @@ public abstract class LedgerTest extends TestCase {
     }
 
     public final void testHoldAndCancelTransfer() throws LowlevelLedgerException, UnBalancedTransactionException, InvalidTransactionException, UnknownTransactionException {
+        if (ledger.getAvailableBalance(ALICE) < 100)
+            ledger.transfer("MONEY PRESS", ALICE, -ledger.getAvailableBalance(ALICE) + 100, "FUND");
         final double aliceBalance = ledger.getBalance(ALICE);
         final double bobBalance = ledger.getBalance(BOB);
         final double amount = 100;
+        System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
+        System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
 
         PostedHeldTransaction tran = ledger.hold(ALICE, BOB, new Date(System.currentTimeMillis() + 5000), amount, "LOAN");
         assertEquals("ALICE BALANCE", aliceBalance, ledger.getBalance(ALICE), 0);
@@ -239,9 +278,13 @@ public abstract class LedgerTest extends TestCase {
     }
 
     public final void testHoldAndCompleteTransfer() throws LowlevelLedgerException, UnBalancedTransactionException, InvalidTransactionException, UnknownTransactionException, TransactionExpiredException {
+        if (ledger.getAvailableBalance(ALICE) < 100)
+            ledger.transfer("MONEY PRESS", ALICE, -ledger.getAvailableBalance(ALICE) + 100, "FUND");
         final double aliceBalance = ledger.getBalance(ALICE);
         final double bobBalance = ledger.getBalance(BOB);
         final double amount = 100;
+        System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
+        System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
 
         PostedHeldTransaction tran = ledger.hold(ALICE, BOB, new Date(System.currentTimeMillis() + 5000), amount, "LOAN");
         assertEquals("ALICE BALANCE", aliceBalance, ledger.getBalance(ALICE), 0);
@@ -261,6 +304,27 @@ public abstract class LedgerTest extends TestCase {
         System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
         System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
     }
+
+    public final void testHoldAndInsufficientFunds() throws LowlevelLedgerException, UnBalancedTransactionException, InvalidTransactionException, UnknownTransactionException {
+        final double aliceBalance = ledger.getBalance(ALICE);
+        final double bobBalance = ledger.getBalance(BOB);
+        final double amount = 100;
+        System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
+        System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
+
+        // Now check that it throws InsufficientFundsException
+        try {
+            ledger.hold(ALICE, BOB, new Date(System.currentTimeMillis() + 5000), ledger.getAvailableBalance(ALICE) + 10, "To much");
+            assertTrue("InssuficientFundsException should have been thrown", false);
+        } catch (InsufficientFundsException e) {
+            ;
+        }
+
+
+        System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
+        System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
+    }
+
 
     protected Ledger ledger;
 }

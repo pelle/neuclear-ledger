@@ -1,8 +1,13 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: Ledger.java,v 1.10 2004/03/21 00:48:36 pelle Exp $
+ * $Id: Ledger.java,v 1.11 2004/03/22 17:33:02 pelle Exp $
  * $Log: Ledger.java,v $
+ * Revision 1.11  2004/03/22 17:33:02  pelle
+ * Added a verified transfer to neuclear-ledger.
+ * Added InsufficientFundsException to be thrown if transfer isnt verified.
+ * HeldTransfers also are now verified.
+ *
  * Revision 1.10  2004/03/21 00:48:36  pelle
  * The problem with Enveloped signatures has now been fixed. It was a problem in the way transforms work. I have bandaided it, but in the future if better support for transforms need to be made, we need to rethink it a bit. Perhaps using the new crypto channel's in neuclear-commons.
  *
@@ -131,22 +136,53 @@ public abstract class Ledger {
     /**
      * The basic interface for creating Transactions in the database.
      * The implementing class takes this transacion information and stores it with an automatically generated uniqueid.
-     * This id is returned as an identifier of the transaction.
-     * 
+     *
      * @param trans Transaction to perform
-     * @return Unique ID
+     * @return The reference to the transaction
      */
     public abstract PostedTransaction performTransaction(UnPostedTransaction trans) throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException;
 
     /**
+     * Similar to a transaction but guarantees that there wont be any negative balances left after the transaction.
+     *
+     * @param trans Transaction to perform
+     * @return The reference to the transaction
+     */
+    public abstract PostedTransaction performVerifiedTransfer(UnPostedTransaction trans) throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException;
+
+    /**
      * The basic interface for creating Transactions in the database.
      * The implementing class takes this transacion information and stores it with an automatically generated uniqueid.
-     * This id is returned as an identifier of the transaction.
+     * This transaction guarantees to not leave a negative balance in any account.
      * 
      * @param trans Transaction to perform
-     * @return Unique ID
      */
-    public abstract PostedHeldTransaction performHeldTransaction(UnPostedHeldTransaction trans) throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException;
+    public abstract PostedHeldTransaction performHeldTransfer(UnPostedHeldTransaction trans) throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException;
+
+    /**
+     * Cancels a Held Transaction.
+     *
+     * @param hold
+     * @throws org.neuclear.ledger.LowlevelLedgerException
+     *
+     * @throws org.neuclear.ledger.UnknownTransactionException
+     *
+     */
+    public abstract void performCancelHold(PostedHeldTransaction hold) throws LowlevelLedgerException, UnknownTransactionException;
+
+    /**
+     * Completes a held transaction. Which means:
+     * cancelling the hold and performing the transfer with the given updated amount and comment.
+     *
+     * @param hold    HeldTransaction to complete
+     * @param amount  The updatd amount. It must be <= than the amount of the hold
+     * @param comment
+     * @return
+     * @throws InvalidTransactionException
+     * @throws LowlevelLedgerException
+     * @throws TransactionExpiredException
+     */
+    public abstract PostedTransaction performCompleteHold(PostedHeldTransaction hold, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, TransactionExpiredException;
 
     /**
      * Searches for a Transaction based on its Transaction ID
@@ -219,18 +255,6 @@ public abstract class Ledger {
      */
     public abstract PostedHeldTransaction findHeldTransaction(String idstring) throws LowlevelLedgerException, UnknownTransactionException;
 
-    /**
-     * Cancels a Held Transaction.
-     * 
-     * @param hold 
-     * @throws org.neuclear.ledger.LowlevelLedgerException
-     *          
-     * @throws org.neuclear.ledger.UnknownTransactionException
-     *          
-     */
-    public abstract void performCancelHold(PostedHeldTransaction hold) throws LowlevelLedgerException, UnknownTransactionException;
-
-    public abstract PostedTransaction performCompleteHold(PostedHeldTransaction hold, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, TransactionExpiredException;
 
     public final PostedTransaction transfer(String req, String id, String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException {
         UnPostedTransaction tran = new UnPostedTransaction(req, id, comment);
@@ -243,14 +267,25 @@ public abstract class Ledger {
         return transfer(CryptoTools.createRandomID(), CryptoTools.createRandomID(), from, to, amount, comment);
     }
 
-    public final PostedHeldTransaction hold(String req, String id, String from, String to, Date expiry, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException {
+    public final PostedTransaction verifiedTransfer(String req, String id, String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException {
+        UnPostedTransaction tran = new UnPostedTransaction(req, id, comment);
+        tran.addItem(from, -amount);
+        tran.addItem(to, amount);
+        return performVerifiedTransfer(tran);
+    }
+
+    public final PostedTransaction verifiedTransfer(String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException {
+        return verifiedTransfer(CryptoTools.createRandomID(), CryptoTools.createRandomID(), from, to, amount, comment);
+    }
+
+    public final PostedHeldTransaction hold(String req, String id, String from, String to, Date expiry, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException {
         UnPostedHeldTransaction tran = new UnPostedHeldTransaction(req, id, comment, expiry);
         tran.addItem(from, -amount);
         tran.addItem(to, amount);
-        return performHeldTransaction(tran);
+        return performHeldTransfer(tran);
     }
 
-    public final PostedHeldTransaction hold(String from, String to, Date expiry, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException {
+    public final PostedHeldTransaction hold(String from, String to, Date expiry, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException {
         return hold(CryptoTools.createRandomID(), CryptoTools.createRandomID(), from, to, expiry, amount, comment);
     }
 
