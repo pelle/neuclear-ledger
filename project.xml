@@ -171,16 +171,17 @@
       </excludes>
     </unitTest>
 
-    <!-- J A R  R E S O U R C E S -->
-    <!-- Resources that are packaged up inside the JAR file -->
+      <resources>
+          <resource>
+              <directory>
+                  src/java
+              </directory>
+              <includes>*.jks</includes>
+              <includes>*.xml</includes>
+  <!--            <targetPath>org/neuclear/commons/crypto/signers</targetPath>-->
+          </resource>
+      </resources>
 
-    <jarResources>
-    </jarResources>
-
-    <jars>
-<!--    <jar>lib/jce-jdk13-115.jar</jar>
-    <jar>lib/dom4j-1.3.jar</jar>-->
-    </jars>
   </build>
 </project>
 
