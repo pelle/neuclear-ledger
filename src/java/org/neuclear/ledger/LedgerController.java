@@ -1,46 +1,179 @@
 package org.neuclear.ledger;
 
+/**
+ * $Id: LedgerController.java,v 1.3 2004/04/27 15:23:55 pelle Exp $
+ * $Log: LedgerController.java,v $
+ * Revision 1.3  2004/04/27 15:23:55  pelle
+ * Due to a new API change in 0.5 I have changed the name of Ledger and it's implementers to LedgerController.
+ *
+ * Revision 1.20  2004/04/23 19:09:16  pelle
+ * Lots of cleanups and improvements to the userinterface and look of the bux application.
+ *
+ * Revision 1.19  2004/04/22 23:59:22  pelle
+ * Added various statistics to Ledger as well as AssetController
+ * Improved look and feel in the web app.
+ *
+ * Revision 1.18  2004/04/19 18:57:27  pelle
+ * Updated Ledger to support more advanced book information.
+ * You can now create a book or fetch a book by doing getBook(String id) on the ledger.
+ * You can register a book or upddate an existing one using registerBook()
+ * SimpleLedger now works and passes all tests.
+ * HibernateLedger has been implemented, but there are a few things that dont work yet.
+ *
+ * Revision 1.17  2004/04/05 22:54:15  pelle
+ * API changes in Ledger to support Auditor and CurrencyController in Pay
+ *
+ * Revision 1.16  2004/04/05 22:06:46  pelle
+ * added setHeldReceiptId() method to ledger
+ *
+ * Revision 1.15  2004/03/31 23:11:10  pelle
+ * Reworked the ID's of the transactions. The primary ID is now the request ID.
+ * Receipt ID's are optional and added using a separate set method.
+ * The various interactive passphrase agents now have shell methods for the new interactive approach.
+ *
+ * Revision 1.14  2004/03/25 16:44:22  pelle
+ * Added getTestBalance() and isBalanced() to Ledger to see if ledger is balanced.
+ * The hibernate implementation has changed the comment size to 255 to work with mysql and now
+ * has included hibernates full hibernate.properties to make it easier to try various databases.
+ * It has now been tested with hsql and mysql.
+ *
+ * Revision 1.13  2004/03/23 22:01:43  pelle
+ * Bumped version numbers for commons and xmlsig througout.
+ * Updated repositories and webservers to use old.neuclear.org
+ * Various other fixes in project.xml and project.properties on misc projects.
+ *
+ * Revision 1.12  2004/03/22 21:59:37  pelle
+ * SimpleLedger now passes all unit tests
+ *
+ * Revision 1.11  2004/03/22 17:33:02  pelle
+ * Added a verified transfer to neuclear-ledger.
+ * Added InsufficientFundsException to be thrown if transfer isnt verified.
+ * HeldTransfers also are now verified.
+ *
+ * Revision 1.10  2004/03/21 00:48:36  pelle
+ * The problem with Enveloped signatures has now been fixed. It was a problem in the way transforms work. I have bandaided it, but in the future if better support for transforms need to be made, we need to rethink it a bit. Perhaps using the new crypto channel's in neuclear-commons.
+ *
+ * Revision 1.9  2003/12/11 23:56:06  pelle
+ * Trying to test the ReceiverServlet with cactus. Still no luck. Need to return a ElementProxy of some sort.
+ * Cleaned up some missing fluff in the ElementProxy interface. getTagName(), getQName() and getNameSpace() have been killed.
+ *
+ * Revision 1.8  2003/12/01 17:11:01  pelle
+ * Added initial Support for entityengine (OFBiz)
+ *
+ * Revision 1.7  2003/11/21 04:43:20  pelle
+ * EncryptedFileStore now works. It uses the PBECipher with DES3 afair.
+ * Otherwise You will Finaliate.
+ * Anything that can be final has been made final throughout everyting. We've used IDEA's Inspector tool to find all instance of variables that could be final.
+ * This should hopefully make everything more stable (and secure).
+ *
+ * Revision 1.6  2003/11/11 21:17:32  pelle
+ * Further vital reshuffling.
+ * org.neudist.crypto.* and org.neudist.utils.* have been moved to respective areas under org.neuclear.commons
+ * org.neuclear.signers.* as well as org.neuclear.passphraseagents have been moved under org.neuclear.commons.crypto as well.
+ * Did a bit of work on the Canonicalizer and changed a few other minor bits.
+ *
+ * Revision 1.5  2003/10/29 21:15:12  pelle
+ * Refactored the whole signing process. Now we have an interface called Signer which is the old SignerStore.
+ * To use it you pass a byte array and an alias. The sign method then returns the signature.
+ * If a Signer needs a passphrase it uses a PassPhraseAgent to present a dialogue box, read it from a command line etc.
+ * This new Signer pattern allows us to use secure signing hardware such as N-Cipher in the future for server applications as well
+ * as SmartCards for end user applications.
+ *
+ * Revision 1.4  2003/10/28 23:43:14  pelle
+ * The GuiDialogAgent now works. It simply presents itself as a simple modal dialog box asking for a passphrase.
+ * The two Signer implementations both use it for the passphrase.
+ *
+ * Revision 1.3  2003/10/25 00:39:05  pelle
+ * Fixed SmtpSender it now sends the messages.
+ * Refactored CommandLineSigner. Now it simply signs files read from command line. However new class IdentityCreator
+ * is subclassed and creates new Identities. You can subclass CommandLineSigner to create your own variants.
+ * Several problems with configuration. Trying to solve at the moment. Updated PicoContainer to beta-2
+ *
+ * Revision 1.2  2003/10/01 17:35:53  pelle
+ * Made as much as possible immutable for security and reliability reasons.
+ * The only thing that isnt immutable are the items and balance of the
+ * UnpostedTransaction
+ *
+ * Revision 1.1.1.1  2003/09/20 23:16:19  pelle
+ * First revision of neuclear-ledger in /cvsroot/neuclear
+ * Older versions can be found /cvsroot/neuclear
+ *
+ * Revision 1.13  2003/08/15 22:39:22  pelle
+ * Introducing new neuclear-commons project.
+ * The commons project will have all the non application specific common stuff such as database connectivity, configuration etc.
+ * Did various refactorings to support this.
+ *
+ * Revision 1.12  2003/08/14 19:12:28  pelle
+ * Configuration is now done in an xml file neuclear-conf.xml
+ *
+ * Revision 1.11  2003/08/06 16:41:21  pelle
+ * Fixed a few implementation bugs with regards to the Held Transactions
+ *
+ * Revision 1.10  2003/08/01 21:59:41  pelle
+ * More changes to the way helds are managed.
+ *
+ * Revision 1.9  2003/07/29 22:57:44  pelle
+ * New version with refactored support for HeldTransactions.
+ * Please note that this causes a sql exception when adding held_item rows.
+ *
+ * Revision 1.8  2003/07/23 18:17:44  pelle
+ * Added support for display names in the books.
+ *
+ * Revision 1.7  2003/07/23 17:19:26  pelle
+ * Ledgers now have a required display name.
+ *
+ * Revision 1.6  2003/07/21 18:35:13  pelle
+ * Completed Exception handling refactoring
+ *
+ * Revision 1.5  2003/07/18 20:27:39  pelle
+ * *** empty log message ***
+ *
+ * Revision 1.4  2003/07/17 22:33:57  pelle
+ * Fixed various problems. Lets see how we do. I waiting for the autoincrement to work on the entries.
+ *
+ * Revision 1.3  2003/07/17 21:21:17  pelle
+ * Most SQLLedger methods have been implemented (Now on to debugging them)
+ *
+ * Revision 1.2  2003/01/25 19:14:47  pelle
+ * The ridiculously simple SimpleLedger now passes initial test.
+ * I've split the Transaction Class into two sub classes and made Transaction  abstract.
+ * The two new Transaction Classes reflect the state of the Transaction and their methods reflect this.
+ *
+ * Revision 1.1  2003/01/18 16:17:46  pelle
+ * First checkin of the NeuClear Ledger API.
+ * This is meant as a standardized super simple API for applications to use when posting transactions to a ledger.
+ * Ledger's could be General Ledger's for accounting applications or Bank Account ledger's for financial applications.
+ *
+ * Revision 1.1  2003/01/16 23:03:28  pelle
+ * Updated Ledger Architecture.
+ * We now have a Ledger class and a stubbed out SimpleLedger implementation.
+ * Book is now final. Everything it needs to access it's data is defined as abstract methods in Ledger.
+ *
+ * We still need a Ledger Factory and to actually implement SimpleLedger with a database.
+ *
+ * User: pelleb
+ * Date: Jan 16, 2003
+ * Time: 5:31:53 PM
+ */
+
+import org.neuclear.commons.crypto.CryptoTools;
+
 import java.util.Date;
 
-/*
-NeuClear Distributed Transaction Clearing Platform
-(C) 2003 Pelle Braendgaard
-
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-$Id: LedgerController.java,v 1.2 2004/03/31 23:11:10 pelle Exp $
-$Log: LedgerController.java,v $
-Revision 1.2  2004/03/31 23:11:10  pelle
-Reworked the ID's of the transactions. The primary ID is now the request ID.
-Receipt ID's are optional and added using a separate set method.
-The various interactive passphrase agents now have shell methods for the new interactive approach.
-
-Revision 1.1  2004/03/29 23:43:29  pelle
-The servlets now work and display the ledger contents.
-
-*/
-
 /**
- * User: pelleb
- * Date: Mar 29, 2004
- * Time: 9:35:30 PM
+ * This is the abstract Ledger class that implementators of the NeuClear Ledger need to implement.
  */
 public abstract class LedgerController {
-    public abstract void createLedger(String id);
 
-    public abstract boolean ledgerExists(String id);
+    /**
+     * The unique id of the ledger
+     * 
+     * @param id 
+     */
+    public LedgerController(final String id) {
+        this.id = id;
+    }
+
 
     /**
      * The basic interface for creating Transactions in the database.
@@ -63,7 +196,7 @@ public abstract class LedgerController {
      * The basic interface for creating Transactions in the database.
      * The implementing class takes this transacion information and stores it with an automatically generated uniqueid.
      * This transaction guarantees to not leave a negative balance in any account.
-     *
+     * 
      * @param trans Transaction to perform
      */
     public abstract PostedHeldTransaction performHeldTransfer(UnPostedHeldTransaction trans) throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException;
@@ -77,7 +210,7 @@ public abstract class LedgerController {
      * @throws org.neuclear.ledger.UnknownTransactionException
      *
      */
-    public abstract void performCancelHold(PostedHeldTransaction hold) throws LowlevelLedgerException, UnknownTransactionException;
+    public abstract Date performCancelHold(PostedHeldTransaction hold) throws LowlevelLedgerException, UnknownTransactionException;
 
     /**
      * Completes a held transaction. Which means:
@@ -95,11 +228,11 @@ public abstract class LedgerController {
 
     /**
      * Searches for a Transaction based on its Transaction ID
-     *
+     * 
      * @param id A valid ID
      * @return The Transaction object
      */
-    public abstract Date getTransactionTime(String id) throws LowlevelLedgerException, UnknownTransactionException, InvalidTransactionException, UnknownBookException;
+    public abstract Date getTransactionTime(String id) throws LowlevelLedgerException, UnknownTransactionException;
 
     /**
      * Calculate the true accounting balance at a given time. This does not take into account any held transactions, thus may not necessarily
@@ -118,7 +251,7 @@ public abstract class LedgerController {
      *       ) d
      * <p/>
      * </pre>
-     *
+     * 
      * @return the balance as a double
      */
 
@@ -140,23 +273,120 @@ public abstract class LedgerController {
      *       ) d
      * <p/>
      * </pre>
-     *
+     * 
      * @return the balance as a double
      */
 
     public abstract double getAvailableBalance(String book) throws LowlevelLedgerException;
 
+    public abstract long getBookCount() throws LowlevelLedgerException;
+//    public abstract long getFundedBookCount() throws LowlevelLedgerException;
+    public abstract long getTransactionCount() throws LowlevelLedgerException;
+
+    public abstract boolean transactionExists(String id) throws LowlevelLedgerException;
+
+    public abstract boolean heldTransactionExists(String id) throws LowlevelLedgerException;
+
+    /**
+     * Register a Book in the system
+     *
+     * @param id
+     * @param nickname
+     * @param type
+     * @param source
+     * @param registrationid
+     * @return
+     * @throws LowlevelLedgerException
+     */
+    public abstract Book registerBook(String id, String nickname, String type, String source, String registrationid) throws LowlevelLedgerException;
+
+    public abstract Book getBook(String id) throws LowlevelLedgerException, UnknownBookException;
+
+    public String toString() {
+        return id;
+    }
+
+    public final String getId() {
+        return id;
+    }
+
+    private final String id;
+
     /**
      * Searches for a Held Transaction based on its Transaction ID
-     *
+     * 
      * @param idstring A valid ID
      * @return The Transaction object
      */
     public abstract PostedHeldTransaction findHeldTransaction(String idstring) throws LowlevelLedgerException, UnknownTransactionException;
 
+    public abstract void setReceiptId(String id, String receipt) throws LowlevelLedgerException, UnknownTransactionException;
+
+    public abstract void setHeldReceiptId(String id, String receipt) throws LowlevelLedgerException, UnknownTransactionException;
+
     public abstract double getTestBalance() throws LowlevelLedgerException;
 
+    public final boolean isBalanced() throws LowlevelLedgerException {
+        return getTestBalance() == 0;
+    }
+
+    public final PostedTransaction transfer(String req, String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, UnknownBookException {
+        UnPostedTransaction tran = new UnPostedTransaction(req, comment);
+        tran.addItem(getBook(from), -amount);
+        tran.addItem(getBook(to), amount);
+        return performTransaction(tran);
+    }
+
+    public final PostedTransaction transfer(String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, UnknownBookException {
+        final PostedTransaction tran = transfer(CryptoTools.createRandomID(), from, to, amount, comment);
+        try {
+            setReceiptId(tran.getRequestId(), CryptoTools.createRandomID());
+        } catch (UnknownTransactionException e) {
+            e.printStackTrace();
+        }
+        return tran;
+    }
+
+    public final PostedTransaction verifiedTransfer(String req, String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException, UnknownBookException {
+        UnPostedTransaction tran = new UnPostedTransaction(req, comment);
+        tran.addItem(getBook(from), -amount);
+        tran.addItem(getBook(to), amount);
+        return performVerifiedTransfer(tran);
+    }
+
+    public final PostedTransaction verifiedTransfer(String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException, UnknownBookException {
+        final PostedTransaction tran = verifiedTransfer(CryptoTools.createRandomID(), from, to, amount, comment);
+        try {
+            setReceiptId(tran.getRequestId(), CryptoTools.createRandomID());
+        } catch (UnknownTransactionException e) {
+            e.printStackTrace();
+        }
+        return tran;
+    }
+
+    public final PostedHeldTransaction hold(String req, String from, String to, Date expiry, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException, UnknownBookException {
+        UnPostedHeldTransaction tran = new UnPostedHeldTransaction(req, comment, expiry);
+        tran.addItem(getBook(from), -amount);
+        tran.addItem(getBook(to), amount);
+        return performHeldTransfer(tran);
+    }
+
+    public final PostedHeldTransaction hold(String from, String to, Date expiry, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException, UnknownBookException {
+        if (getAvailableBalance(from) - amount < 0)
+            throw new InsufficientFundsException(this, from, amount);
+        return hold(CryptoTools.createRandomID(), from, to, expiry, amount, comment);
+    }
+
+    public final Date cancel(String id) throws LowlevelLedgerException, UnknownTransactionException {
+        PostedHeldTransaction tran = findHeldTransaction(id);
+        return performCancelHold(tran);
+    }
+
+    public final PostedTransaction complete(String id, double amount, String comment) throws LowlevelLedgerException, UnknownTransactionException, TransactionExpiredException, InvalidTransactionException {
+        PostedHeldTransaction tran = findHeldTransaction(id);
+        return performCompleteHold(tran, amount, comment);
+    }
+
+
     public abstract void close() throws LowlevelLedgerException;
-
-
 }

@@ -8,7 +8,7 @@ package org.neuclear.ledger;
  * To change this template use Options | File Templates.
  */
 public final class TransactionExpiredException extends LedgerException {
-    public TransactionExpiredException(final Ledger ledger, final PostedHeldTransaction tran) {
+    public TransactionExpiredException(final LedgerController ledger, final PostedHeldTransaction tran) {
         super(ledger);
         transaction = tran;
     }

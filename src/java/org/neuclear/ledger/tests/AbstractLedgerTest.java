@@ -11,11 +11,14 @@ import java.util.Date;
  * User: pelleb
  * Date: Jan 22, 2003
  * Time: 4:18:35 PM
- * $Id: AbstractLedgerTest.java,v 1.11 2004/04/23 19:09:16 pelle Exp $
+ * $Id: AbstractLedgerTest.java,v 1.12 2004/04/27 15:23:54 pelle Exp $
  * $Log: AbstractLedgerTest.java,v $
+ * Revision 1.12  2004/04/27 15:23:54  pelle
+ * Due to a new API change in 0.5 I have changed the name of Ledger and it's implementers to LedgerController.
+ *
  * Revision 1.11  2004/04/23 19:09:16  pelle
  * Lots of cleanups and improvements to the userinterface and look of the bux application.
- *
+ * <p/>
  * Revision 1.10  2004/04/19 18:57:27  pelle
  * Updated Ledger to support more advanced book information.
  * You can now create a book or fetch a book by doing getBook(String id) on the ledger.
@@ -198,7 +201,7 @@ public abstract class AbstractLedgerTest extends TestCase {
         ledger.close();
     }
 
-    public abstract Ledger createLedger() throws LowlevelLedgerException, UnknownLedgerException;
+    public abstract LedgerController createLedger() throws LowlevelLedgerException, UnknownLedgerException;
 
     private final PostedTransaction transfer(final String from, final String to, final double amount, final String comment) throws InvalidTransactionException, LowlevelLedgerException, UnknownBookException {
         PostedTransaction tran = ledger.transfer(CryptoTools.createRandomID(), from, to, amount, comment);
@@ -531,5 +534,5 @@ public abstract class AbstractLedgerTest extends TestCase {
 
     }
 
-    protected Ledger ledger;
+    protected LedgerController ledger;
 }

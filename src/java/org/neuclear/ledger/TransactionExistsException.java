@@ -8,7 +8,7 @@ package org.neuclear.ledger;
  * To change this template use File | Settings | File Templates.
  */
 public class TransactionExistsException extends InvalidTransactionException {
-    public TransactionExistsException(Ledger ledger, String id) {
+    public TransactionExistsException(LedgerController ledger, String id) {
         super(ledger, "Transaction: " + id + " already exists");
     }
 }

@@ -8,7 +8,7 @@ package org.neuclear.ledger;
  * To change this template use Options | File Templates.
  */
 public final class UnBalancedTransactionException extends InvalidTransactionException {
-    public UnBalancedTransactionException(final Ledger ledger, final Transaction tran, final double amount) {
+    public UnBalancedTransactionException(final LedgerController ledger, final Transaction tran, final double amount) {
         super(ledger, "Transaction was Unbalanced by: " + amount);
         transaction = tran;
     }

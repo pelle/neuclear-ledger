@@ -1,12 +1,15 @@
 package org.neuclear.ledger.browser;
 
-import org.neuclear.ledger.Ledger;
-import org.neuclear.ledger.simple.SimpleLedger;
+import org.neuclear.ledger.LedgerController;
+import org.neuclear.ledger.simple.SimpleLedgerController;
 import org.neuclear.ledger.tests.AbstractLedgerBrowserTest;
 
 /*
-$Id: SimpleLedgerBrowserTest.java,v 1.1 2004/03/26 18:37:56 pelle Exp $
+$Id: SimpleLedgerBrowserTest.java,v 1.2 2004/04/27 15:23:56 pelle Exp $
 $Log: SimpleLedgerBrowserTest.java,v $
+Revision 1.2  2004/04/27 15:23:56  pelle
+Due to a new API change in 0.5 I have changed the name of Ledger and it's implementers to LedgerController.
+
 Revision 1.1  2004/03/26 18:37:56  pelle
 More work on browsers. Added an AbstractLedgerBrowserTest for unit testing LedgerBrowsers.
 
@@ -22,7 +25,7 @@ public class SimpleLedgerBrowserTest extends AbstractLedgerBrowserTest {
         super(name);
     }
 
-    public Ledger getLedger() {
-        return new SimpleLedger("test browser");
+    public LedgerController getLedger() {
+        return new SimpleLedgerController("test browser");
     }
 }

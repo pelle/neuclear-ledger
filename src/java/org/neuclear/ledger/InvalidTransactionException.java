@@ -8,7 +8,7 @@ package org.neuclear.ledger;
  * To change this template use Options | File Templates.
  */
 public class InvalidTransactionException extends LedgerException {
-    public InvalidTransactionException(final Ledger ledger, final String message) {
+    public InvalidTransactionException(final LedgerController ledger, final String message) {
         super(ledger);
         this.message = message;
     }

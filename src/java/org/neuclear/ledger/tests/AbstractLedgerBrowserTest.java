@@ -3,7 +3,7 @@ package org.neuclear.ledger.tests;
 import junit.framework.TestCase;
 import org.neuclear.commons.crypto.CryptoTools;
 import org.neuclear.ledger.InvalidTransactionException;
-import org.neuclear.ledger.Ledger;
+import org.neuclear.ledger.LedgerController;
 import org.neuclear.ledger.LowlevelLedgerException;
 import org.neuclear.ledger.UnknownBookException;
 import org.neuclear.ledger.browser.BookBrowser;
@@ -12,8 +12,11 @@ import org.neuclear.ledger.browser.LedgerBrowser;
 import java.util.Date;
 
 /*
-$Id: AbstractLedgerBrowserTest.java,v 1.7 2004/04/23 19:09:15 pelle Exp $
+$Id: AbstractLedgerBrowserTest.java,v 1.8 2004/04/27 15:23:54 pelle Exp $
 $Log: AbstractLedgerBrowserTest.java,v $
+Revision 1.8  2004/04/27 15:23:54  pelle
+Due to a new API change in 0.5 I have changed the name of Ledger and it's implementers to LedgerController.
+
 Revision 1.7  2004/04/23 19:09:15  pelle
 Lots of cleanups and improvements to the userinterface and look of the bux application.
 
@@ -56,7 +59,7 @@ public abstract class AbstractLedgerBrowserTest extends TestCase {
         super(name);
     }
 
-    public abstract Ledger getLedger() throws LowlevelLedgerException;
+    public abstract LedgerController getLedger() throws LowlevelLedgerException;
 
     protected void setUp() throws Exception {
         ledger = getLedger();
@@ -233,7 +236,7 @@ public abstract class AbstractLedgerBrowserTest extends TestCase {
         return getNewBook("Alicia");
     }
 
-    protected Ledger ledger;
+    protected LedgerController ledger;
     protected LedgerBrowser browser;
 
 }

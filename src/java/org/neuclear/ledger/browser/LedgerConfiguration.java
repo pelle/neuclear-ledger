@@ -1,8 +1,7 @@
 package org.neuclear.ledger.browser;
 
 import org.neuclear.commons.configuration.Configuration;
-import org.neuclear.ledger.Ledger;
-import org.neuclear.ledger.simple.SimpleLedger;
+import org.neuclear.ledger.LedgerController;
 import org.neuclear.ledger.simple.PopulatedSimpleLedger;
 import org.picocontainer.Parameter;
 import org.picocontainer.defaults.ConstantParameter;
@@ -25,8 +24,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerConfiguration.java,v 1.4 2004/03/29 23:43:30 pelle Exp $
+$Id: LedgerConfiguration.java,v 1.5 2004/04/27 15:23:39 pelle Exp $
 $Log: LedgerConfiguration.java,v $
+Revision 1.5  2004/04/27 15:23:39  pelle
+Due to a new API change in 0.5 I have changed the name of Ledger and it's implementers to LedgerController.
+
 Revision 1.4  2004/03/29 23:43:30  pelle
 The servlets now work and display the ledger contents.
 
@@ -53,7 +55,7 @@ public class LedgerConfiguration implements Configuration {
 //        pico.registerComponentImplementation(ConnectionSource.class, TestCaseXAConnectionSource.class);
 //        pico.registerComponentImplementation(StatementFactory.class, SimpleStatementFactory.class);
 //        pico.registerComponentImplementation(Ledger.class,SQLLedger.class,new Parameter[] {new ConstantParameter("neu://test/bux")});
-        pico.registerComponentImplementation(Ledger.class, PopulatedSimpleLedger.class, new Parameter[]{new ConstantParameter("test")});
+        pico.registerComponentImplementation(LedgerController.class, PopulatedSimpleLedger.class, new Parameter[]{new ConstantParameter("test")});
 
     }
 }

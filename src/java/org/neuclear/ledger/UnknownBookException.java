@@ -8,7 +8,7 @@ package org.neuclear.ledger;
  * To change this template use Options | File Templates.
  */
 public final class UnknownBookException extends LedgerException {
-    public UnknownBookException(final Ledger ledger, final String bookID) {
+    public UnknownBookException(final LedgerController ledger, final String bookID) {
         super(ledger);
         this.bookID = bookID;
     }

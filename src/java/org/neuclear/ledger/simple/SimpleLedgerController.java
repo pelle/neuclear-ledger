@@ -1,8 +1,11 @@
 package org.neuclear.ledger.simple;
 
 /**
- * $Id: SimpleLedger.java,v 1.14 2004/04/22 23:59:21 pelle Exp $
- * $Log: SimpleLedger.java,v $
+ * $Id: SimpleLedgerController.java,v 1.1 2004/04/27 15:23:54 pelle Exp $
+ * $Log: SimpleLedgerController.java,v $
+ * Revision 1.1  2004/04/27 15:23:54  pelle
+ * Due to a new API change in 0.5 I have changed the name of Ledger and it's implementers to LedgerController.
+ *
  * Revision 1.14  2004/04/22 23:59:21  pelle
  * Added various statistics to Ledger as well as AssetController
  * Improved look and feel in the web app.
@@ -129,9 +132,9 @@ import java.util.Iterator;
  * This implementation is very simple and only is meant for testing. It uses the Java Collection for the implementation and is in no way
  * thread safe or supportive of transactions.
  */
-public class SimpleLedger extends Ledger implements LedgerBrowser {
+public class SimpleLedgerController extends LedgerController implements LedgerBrowser {
 
-    public SimpleLedger(final String name) {
+    public SimpleLedgerController(final String name) {
         super(name);
         id = name;
         ledger = new HashMap();

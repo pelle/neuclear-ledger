@@ -2,9 +2,9 @@ package org.neuclear.ledger.servlets;
 
 import org.neuclear.commons.crypto.CryptoTools;
 import org.neuclear.commons.servlets.ServletTools;
-import org.neuclear.ledger.Ledger;
+import org.neuclear.ledger.LedgerController;
 import org.neuclear.ledger.LowlevelLedgerException;
-import org.neuclear.ledger.simple.SimpleLedger;
+import org.neuclear.ledger.simple.SimpleLedgerController;
 
 import javax.servlet.ServletConfig;
 import java.lang.reflect.InvocationTargetException;
@@ -38,15 +38,15 @@ public final class ServletLedgerFactory {
         map = Collections.synchronizedMap(new HashMap());
     }
 
-    public synchronized Ledger createLedger(ServletConfig config) throws LowlevelLedgerException {
+    public synchronized LedgerController createLedger(ServletConfig config) throws LowlevelLedgerException {
         final String type = ServletTools.getInitParam("ledger", config);
         final String serviceid = ServletTools.getInitParam("serviceid", config);
         final String hash = getConfigHash(type, serviceid);
         if (map.containsKey(hash))
-            return (Ledger) map.get(hash);
+            return (LedgerController) map.get(hash);
 
         System.out.println("using ledger: " + type);
-        final Ledger ledger;
+        final LedgerController ledger;
         try {
             ledger = createLedger(type, serviceid);
         } catch (Exception e) {
@@ -57,18 +57,18 @@ public final class ServletLedgerFactory {
         return ledger;
     }
 
-    private Ledger createLedger(String type, String serviceid) throws ClassNotFoundException, IllegalAccessException, NoSuchMethodException, InvocationTargetException, InstantiationException {
+    private LedgerController createLedger(String type, String serviceid) throws ClassNotFoundException, IllegalAccessException, NoSuchMethodException, InvocationTargetException, InstantiationException {
         if (type.equals("hibernate"))
             return createLedger(Class.forName("org.neuclear.ledger.hibernate.HibernateLedger"), serviceid);
         if (type.equals("prevalent"))
             return createLedger(Class.forName("org.neuclear.ledger.prevalent.PrevalentLedger"), serviceid);
         if (type.equals("simple"))
-            return new SimpleLedger(serviceid);
+            return new SimpleLedgerController(serviceid);
         return createLedger(Class.forName(type), serviceid);
     }
 
-    private Ledger createLedger(Class aClass, String serviceid) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        return (Ledger) aClass.getConstructor(new Class[]{String.class}).newInstance(new String[]{serviceid});
+    private LedgerController createLedger(Class aClass, String serviceid) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        return (LedgerController) aClass.getConstructor(new Class[]{String.class}).newInstance(new String[]{serviceid});
     }
 
 

@@ -22,8 +22,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: PopulatedSimpleLedger.java,v 1.2 2004/04/23 19:09:15 pelle Exp $
+$Id: PopulatedSimpleLedger.java,v 1.3 2004/04/27 15:23:54 pelle Exp $
 $Log: PopulatedSimpleLedger.java,v $
+Revision 1.3  2004/04/27 15:23:54  pelle
+Due to a new API change in 0.5 I have changed the name of Ledger and it's implementers to LedgerController.
+
 Revision 1.2  2004/04/23 19:09:15  pelle
 Lots of cleanups and improvements to the userinterface and look of the bux application.
 
@@ -37,7 +40,7 @@ The servlets now work and display the ledger contents.
  * Date: Mar 29, 2004
  * Time: 7:36:18 PM
  */
-public class PopulatedSimpleLedger extends SimpleLedger {
+public class PopulatedSimpleLedger extends SimpleLedgerController {
     public PopulatedSimpleLedger(String name) throws InvalidTransactionException, LowlevelLedgerException, UnknownBookException {
         super(name);
 

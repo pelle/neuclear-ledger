@@ -1,7 +1,7 @@
 package org.neuclear.ledger.simple;
 
 import org.neuclear.commons.NeuClearException;
-import org.neuclear.ledger.Ledger;
+import org.neuclear.ledger.LedgerController;
 import org.neuclear.ledger.LowlevelLedgerException;
 import org.neuclear.ledger.UnknownLedgerException;
 import org.neuclear.ledger.tests.AbstractLedgerTest;
@@ -22,8 +22,8 @@ public final class SimpleLedgerTest extends AbstractLedgerTest {
         super(s);
     }
 
-    public final Ledger createLedger() {
-        return new SimpleLedger("test");
+    public final LedgerController createLedger() {
+        return new SimpleLedgerController("test");
     }
 
 

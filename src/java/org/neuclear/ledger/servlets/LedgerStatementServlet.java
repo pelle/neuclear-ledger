@@ -2,7 +2,7 @@ package org.neuclear.ledger.servlets;
 
 import org.neuclear.commons.Utility;
 import org.neuclear.commons.servlets.ServletTools;
-import org.neuclear.ledger.Ledger;
+import org.neuclear.ledger.LedgerController;
 import org.neuclear.ledger.LowlevelLedgerException;
 
 import javax.servlet.ServletConfig;
@@ -32,8 +32,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerStatementServlet.java,v 1.2 2004/04/21 23:24:18 pelle Exp $
+$Id: LedgerStatementServlet.java,v 1.3 2004/04/27 15:23:40 pelle Exp $
 $Log: LedgerStatementServlet.java,v $
+Revision 1.3  2004/04/27 15:23:40  pelle
+Due to a new API change in 0.5 I have changed the name of Ledger and it's implementers to LedgerController.
+
 Revision 1.2  2004/04/21 23:24:18  pelle
 Integrated Browser with the asset controller
 Updated look and feel
@@ -115,5 +118,5 @@ public class LedgerStatementServlet extends HttpServlet {
 
 
     private String serviceid;
-    private Ledger ledger;
+    private LedgerController ledger;
 }

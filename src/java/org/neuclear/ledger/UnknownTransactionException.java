@@ -8,10 +8,11 @@ package org.neuclear.ledger;
  * To change this template use Options | File Templates.
  */
 public final class UnknownTransactionException extends LedgerException {
-    public UnknownTransactionException(final Ledger ledger,final String xid) {
+    public UnknownTransactionException(final LedgerController ledger, final String xid) {
         super(ledger);
-        this.xid=xid;
+        this.xid = xid;
     }
+
     public final String getTransactionID() {
         return xid;
     }
@@ -19,6 +20,6 @@ public final class UnknownTransactionException extends LedgerException {
     private final String xid;
 
     public final String getSubMessage() {
-        return "Unknown Transaction: "+xid;
+        return "Unknown Transaction: " + xid;
     }
 }
