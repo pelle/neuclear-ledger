@@ -12,12 +12,19 @@ import java.util.Random;
  * User: pelleb
  * Date: Jan 22, 2003
  * Time: 4:18:35 PM
- * $Id: LedgerTest.java,v 1.2 2003/10/28 23:43:15 pelle Exp $
+ * $Id: LedgerTest.java,v 1.3 2003/10/29 21:15:13 pelle Exp $
  * $Log: LedgerTest.java,v $
- * Revision 1.2  2003/10/28 23:43:15  pelle
- * The PassPhraseDialogue now works. It simply presents itself as a simple modal dialog box asking for a passphrase.
- * The two SignerStore implementations both use it for the passphrase.
+ * Revision 1.3  2003/10/29 21:15:13  pelle
+ * Refactored the whole signing process. Now we have an interface called Signer which is the old SignerStore.
+ * To use it you pass a byte array and an alias. The sign method then returns the signature.
+ * If a Signer needs a passphrase it uses a PassPhraseAgent to present a dialogue box, read it from a command line etc.
+ * This new Signer pattern allows us to use secure signing hardware such as N-Cipher in the future for server applications as well
+ * as SmartCards for end user applications.
  *
+ * Revision 1.2  2003/10/28 23:43:15  pelle
+ * The GuiDialogAgent now works. It simply presents itself as a simple modal dialog box asking for a passphrase.
+ * The two Signer implementations both use it for the passphrase.
+ * <p/>
  * Revision 1.1.1.1  2003/09/20 23:16:21  pelle
  * First revision of neuclear-ledger in /cvsroot/neuclear
  * Older versions can be found /cvsroot/neudist

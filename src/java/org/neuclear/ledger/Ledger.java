@@ -1,11 +1,18 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: Ledger.java,v 1.4 2003/10/28 23:43:14 pelle Exp $
+ * $Id: Ledger.java,v 1.5 2003/10/29 21:15:12 pelle Exp $
  * $Log: Ledger.java,v $
+ * Revision 1.5  2003/10/29 21:15:12  pelle
+ * Refactored the whole signing process. Now we have an interface called Signer which is the old SignerStore.
+ * To use it you pass a byte array and an alias. The sign method then returns the signature.
+ * If a Signer needs a passphrase it uses a PassPhraseAgent to present a dialogue box, read it from a command line etc.
+ * This new Signer pattern allows us to use secure signing hardware such as N-Cipher in the future for server applications as well
+ * as SmartCards for end user applications.
+ *
  * Revision 1.4  2003/10/28 23:43:14  pelle
- * The PassPhraseDialogue now works. It simply presents itself as a simple modal dialog box asking for a passphrase.
- * The two SignerStore implementations both use it for the passphrase.
+ * The GuiDialogAgent now works. It simply presents itself as a simple modal dialog box asking for a passphrase.
+ * The two Signer implementations both use it for the passphrase.
  *
  * Revision 1.3  2003/10/25 00:39:05  pelle
  * Fixed SmtpSender it now sends the messages.
