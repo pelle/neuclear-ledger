@@ -10,8 +10,15 @@ import org.neuclear.ledger.browser.LedgerBrowser;
 import java.util.Date;
 
 /*
-$Id: AbstractLedgerBrowserTest.java,v 1.4 2004/03/31 23:11:09 pelle Exp $
+$Id: AbstractLedgerBrowserTest.java,v 1.5 2004/04/19 18:57:27 pelle Exp $
 $Log: AbstractLedgerBrowserTest.java,v $
+Revision 1.5  2004/04/19 18:57:27  pelle
+Updated Ledger to support more advanced book information.
+You can now create a book or fetch a book by doing getBook(String id) on the ledger.
+You can register a book or upddate an existing one using registerBook()
+SimpleLedger now works and passes all tests.
+HibernateLedger has been implemented, but there are a few things that dont work yet.
+
 Revision 1.4  2004/03/31 23:11:09  pelle
 Reworked the ID's of the transactions. The primary ID is now the request ID.
 Receipt ID's are optional and added using a separate set method.
@@ -183,7 +190,7 @@ public abstract class AbstractLedgerBrowserTest extends TestCase {
         int total = 0;
         while (bb.next()) {
             assertEquals("book", book, bb.getBook());
-            assertEquals("counterparty", counterparty, bb.getCounterparty());
+            assertEquals("counterparty", counterparty, bb.getCounterparty().getId());
             assertEquals("amount", amount, bb.getAmount(), 0);
             assertEquals("comment", "test" + total, bb.getComment());
             assertNotNull("request", bb.getRequestId());

@@ -5,8 +5,15 @@ package org.neuclear.ledger;
  * User: pelleb
  * Date: Jan 25, 2003
  * Time: 12:54:28 PM
- * $Id: UnPostedTransaction.java,v 1.9 2004/03/31 23:11:10 pelle Exp $
+ * $Id: UnPostedTransaction.java,v 1.10 2004/04/19 18:57:27 pelle Exp $
  * $Log: UnPostedTransaction.java,v $
+ * Revision 1.10  2004/04/19 18:57:27  pelle
+ * Updated Ledger to support more advanced book information.
+ * You can now create a book or fetch a book by doing getBook(String id) on the ledger.
+ * You can register a book or upddate an existing one using registerBook()
+ * SimpleLedger now works and passes all tests.
+ * HibernateLedger has been implemented, but there are a few things that dont work yet.
+ *
  * Revision 1.9  2004/03/31 23:11:10  pelle
  * Reworked the ID's of the transactions. The primary ID is now the request ID.
  * Receipt ID's are optional and added using a separate set method.
@@ -126,7 +133,7 @@ public class UnPostedTransaction extends Transaction {
      * @param amount 
      * @return the new balance
      */
-    public final synchronized double addItem(final String book, final double amount) throws InvalidTransactionException {
+    public final synchronized double addItem(final Book book, final double amount) throws InvalidTransactionException {
         if (book == null)
             throw new InvalidTransactionException(null, "You must supply a valid Book");
         items.add(new TransactionItem(book, amount));

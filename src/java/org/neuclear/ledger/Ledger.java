@@ -1,8 +1,15 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: Ledger.java,v 1.17 2004/04/05 22:54:15 pelle Exp $
+ * $Id: Ledger.java,v 1.18 2004/04/19 18:57:27 pelle Exp $
  * $Log: Ledger.java,v $
+ * Revision 1.18  2004/04/19 18:57:27  pelle
+ * Updated Ledger to support more advanced book information.
+ * You can now create a book or fetch a book by doing getBook(String id) on the ledger.
+ * You can register a book or upddate an existing one using registerBook()
+ * SimpleLedger now works and passes all tests.
+ * HibernateLedger has been implemented, but there are a few things that dont work yet.
+ *
  * Revision 1.17  2004/04/05 22:54:15  pelle
  * API changes in Ledger to support Auditor and CurrencyController in Pay
  *
@@ -267,6 +274,21 @@ public abstract class Ledger {
 
     public abstract boolean heldTransactionExists(String id) throws LowlevelLedgerException;
 
+    /**
+     * Register a Book in the system
+     *
+     * @param id
+     * @param nickname
+     * @param type
+     * @param source
+     * @param registrationid
+     * @return
+     * @throws LowlevelLedgerException
+     */
+    public abstract Book registerBook(String id, String nickname, String type, String source, String registrationid) throws LowlevelLedgerException;
+
+    public abstract Book getBook(String id) throws LowlevelLedgerException;
+
     public String toString() {
         return id;
     }
@@ -297,8 +319,8 @@ public abstract class Ledger {
 
     public final PostedTransaction transfer(String req, String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException {
         UnPostedTransaction tran = new UnPostedTransaction(req, comment);
-        tran.addItem(from, -amount);
-        tran.addItem(to, amount);
+        tran.addItem(getBook(from), -amount);
+        tran.addItem(getBook(to), amount);
         return performTransaction(tran);
     }
 
@@ -314,8 +336,8 @@ public abstract class Ledger {
 
     public final PostedTransaction verifiedTransfer(String req, String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException {
         UnPostedTransaction tran = new UnPostedTransaction(req, comment);
-        tran.addItem(from, -amount);
-        tran.addItem(to, amount);
+        tran.addItem(getBook(from), -amount);
+        tran.addItem(getBook(to), amount);
         return performVerifiedTransfer(tran);
     }
 
@@ -331,8 +353,8 @@ public abstract class Ledger {
 
     public final PostedHeldTransaction hold(String req, String from, String to, Date expiry, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException {
         UnPostedHeldTransaction tran = new UnPostedHeldTransaction(req, comment, expiry);
-        tran.addItem(from, -amount);
-        tran.addItem(to, amount);
+        tran.addItem(getBook(from), -amount);
+        tran.addItem(getBook(to), amount);
         return performHeldTransfer(tran);
     }
 

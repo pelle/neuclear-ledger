@@ -3,8 +3,7 @@ package org.neuclear.ledger.servlets;
 import org.neuclear.commons.Utility;
 import org.neuclear.commons.servlets.ServletTools;
 import org.neuclear.commons.time.TimeTools;
-import org.neuclear.id.InvalidNamedObjectException;
-import org.neuclear.id.NSTools;
+import org.neuclear.ledger.Book;
 import org.neuclear.ledger.LowlevelLedgerException;
 import org.neuclear.ledger.browser.BookBrowser;
 import org.neuclear.ledger.browser.LedgerBrowser;
@@ -39,8 +38,15 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerBrowserServlet.java,v 1.2 2004/03/31 23:11:09 pelle Exp $
+$Id: LedgerBrowserServlet.java,v 1.3 2004/04/19 18:57:26 pelle Exp $
 $Log: LedgerBrowserServlet.java,v $
+Revision 1.3  2004/04/19 18:57:26  pelle
+Updated Ledger to support more advanced book information.
+You can now create a book or fetch a book by doing getBook(String id) on the ledger.
+You can register a book or upddate an existing one using registerBook()
+SimpleLedger now works and passes all tests.
+HibernateLedger has been implemented, but there are a few things that dont work yet.
+
 Revision 1.2  2004/03/31 23:11:09  pelle
 Reworked the ID's of the transactions. The primary ID is now the request ID.
 Receipt ID's are optional and added using a separate set method.
@@ -126,12 +132,10 @@ public class LedgerBrowserServlet extends HttpServlet {
                 out.print(TimeTools.formatTimeStampShort(stmt.getValuetime()));
                 out.print("</td><td><a href=\"");
                 out.print(url);
-                if (NSTools.isValidName(stmt.getCounterparty()))
-                    out.print(NSTools.name2path(stmt.getCounterparty()));
-                else
-                    out.print("/" + stmt.getCounterparty());
+                Book counterparty = stmt.getCounterparty();
+                out.println(counterparty.getId());
                 out.println("\">");
-                out.print(stmt.getCounterparty());
+                out.print(counterparty.getNickname());
                 out.print("</a></td><td>");
                 out.print(stmt.getComment());
                 out.print("</td><td>");
@@ -140,8 +144,6 @@ public class LedgerBrowserServlet extends HttpServlet {
 
             }
             out.println("</table>");
-        } catch (InvalidNamedObjectException e) {
-            e.printStackTrace();
         } catch (LowlevelLedgerException e) {
             e.printStackTrace();
         }

@@ -22,8 +22,15 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: TransactionTest.java,v 1.1 2004/03/31 23:11:10 pelle Exp $
+$Id: TransactionTest.java,v 1.2 2004/04/19 18:57:27 pelle Exp $
 $Log: TransactionTest.java,v $
+Revision 1.2  2004/04/19 18:57:27  pelle
+Updated Ledger to support more advanced book information.
+You can now create a book or fetch a book by doing getBook(String id) on the ledger.
+You can register a book or upddate an existing one using registerBook()
+SimpleLedger now works and passes all tests.
+HibernateLedger has been implemented, but there are a few things that dont work yet.
+
 Revision 1.1  2004/03/31 23:11:10  pelle
 Reworked the ID's of the transactions. The primary ID is now the request ID.
 Receipt ID's are optional and added using a separate set method.
@@ -49,17 +56,17 @@ public class TransactionTest extends TestCase {
         assertNotNull(tran.getItemList());
         assertEquals(0, tran.getItemList().size());
 
-        tran.addItem("bob", 10);
+        tran.addItem(BOB, 10);
         assertEquals(1, tran.getItemList().size());
 
         assertFalse(tran.isBalanced());
 
-        tran.addItem("alice", -10);
+        tran.addItem(ALICE, -10);
         assertEquals(2, tran.getItemList().size());
 
         assertTrue(tran.isBalanced());
 
-        tran.addItem("alice", -10);
+        tran.addItem(ALICE, -10);
         assertEquals(3, tran.getItemList().size());
         assertFalse(tran.isBalanced());
 
@@ -73,8 +80,8 @@ public class TransactionTest extends TestCase {
         assertNotNull(tran.getItemList());
         assertEquals(0, tran.getItemList().size());
 
-        tran.addItem("bob", 10);
-        tran.addItem("alice", -10);
+        tran.addItem(BOB, 10);
+        tran.addItem(ALICE, -10);
 
         assertTrue(tran.isBalanced());
         final Date time = new Date();
@@ -102,8 +109,8 @@ public class TransactionTest extends TestCase {
         assertNotNull(tran.getItemList());
         assertEquals(0, tran.getItemList().size());
 
-        tran.addItem("bob", 10);
-        tran.addItem("alice", -30);
+        tran.addItem(BOB, 10);
+        tran.addItem(ALICE, -30);
 
         assertFalse(tran.isBalanced());
         final Date time = new Date();
@@ -130,17 +137,17 @@ public class TransactionTest extends TestCase {
         assertNotNull(tran.getItemList());
         assertEquals(0, tran.getItemList().size());
 
-        tran.addItem("bob", 10);
+        tran.addItem(BOB, 10);
         assertEquals(1, tran.getItemList().size());
 
         assertFalse(tran.isBalanced());
 
-        tran.addItem("alice", -10);
+        tran.addItem(ALICE, -10);
         assertEquals(2, tran.getItemList().size());
 
         assertTrue(tran.isBalanced());
 
-        tran.addItem("alice", -10);
+        tran.addItem(ALICE, -10);
         assertEquals(3, tran.getItemList().size());
         assertFalse(tran.isBalanced());
 
@@ -157,8 +164,8 @@ public class TransactionTest extends TestCase {
         assertNotNull(tran.getItemList());
         assertEquals(0, tran.getItemList().size());
 
-        tran.addItem("bob", 10);
-        tran.addItem("alice", -10);
+        tran.addItem(BOB, 10);
+        tran.addItem(ALICE, -10);
         assertEquals(10.0, tran.getAmount(), 0);
 
         assertTrue(tran.isBalanced());
@@ -191,8 +198,8 @@ public class TransactionTest extends TestCase {
         assertNotNull(tran.getItemList());
         assertEquals(0, tran.getItemList().size());
 
-        tran.addItem("bob", 10);
-        tran.addItem("alice", -30);
+        tran.addItem(BOB, 10);
+        tran.addItem(ALICE, -30);
 
         assertFalse(tran.isBalanced());
 
@@ -216,8 +223,8 @@ public class TransactionTest extends TestCase {
         assertNotNull(tran.getItemList());
         assertEquals(0, tran.getItemList().size());
 
-        tran.addItem("bob", 10);
-        tran.addItem("alice", -10);
+        tran.addItem(BOB, 10);
+        tran.addItem(ALICE, -10);
 
         assertEquals(10.0, tran.getAmount(), 0);
         assertTrue(tran.isBalanced());
@@ -265,4 +272,7 @@ public class TransactionTest extends TestCase {
         assertEquals("2345", posted.getReceiptId());
 
     }
+
+    private static final Book BOB = new Book("bob", new Date());
+    private static final Book ALICE = new Book("alice", new Date());
 }

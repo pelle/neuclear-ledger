@@ -1,8 +1,15 @@
 package org.neuclear.ledger.simple;
 
 /**
- * $Id: SimpleLedger.java,v 1.12 2004/04/06 22:50:14 pelle Exp $
+ * $Id: SimpleLedger.java,v 1.13 2004/04/19 18:57:26 pelle Exp $
  * $Log: SimpleLedger.java,v $
+ * Revision 1.13  2004/04/19 18:57:26  pelle
+ * Updated Ledger to support more advanced book information.
+ * You can now create a book or fetch a book by doing getBook(String id) on the ledger.
+ * You can register a book or upddate an existing one using registerBook()
+ * SimpleLedger now works and passes all tests.
+ * HibernateLedger has been implemented, but there are a few things that dont work yet.
+ *
  * Revision 1.12  2004/04/06 22:50:14  pelle
  * Updated Unit Tests
  *
@@ -110,7 +117,9 @@ import org.neuclear.ledger.*;
 import org.neuclear.ledger.browser.BookBrowser;
 import org.neuclear.ledger.browser.LedgerBrowser;
 
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  * This implementation is very simple and only is meant for testing. It uses the Java Collection for the implementation and is in no way
@@ -123,7 +132,7 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
         id = name;
         ledger = new HashMap();
         held = new HashMap();
-        balances = new HashMap();
+//        balances = new HashMap();
         books = new HashMap();
 
     }
@@ -153,17 +162,16 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
         Iterator iter = posted.getItems();
         while (iter.hasNext()) {
             TransactionItem item = (TransactionItem) iter.next();
-            if (!books.containsKey(item.getBook()))
-                books.put(item.getBook(), new LinkedList());
-            List bookentries = (List) books.get(item.getBook());
-            bookentries.add(posted);
+            if (!books.containsKey(item.getBook().getId()))
+                books.put(item.getBook().getId(), new SimpleBook("id", new Date()));
+            ((SimpleBook) books.get(item.getBook().getId())).add(posted);
         }
     }
 
     private void updateBalances(final PostedTransaction trans) {
         if (trans.getReceiptId() == null)
             return;
-        synchronized (balances) {
+        synchronized (books) {
             Iterator iter = trans.getItems();
             while (iter.hasNext()) {
                 TransactionItem item = (TransactionItem) iter.next();
@@ -173,10 +181,7 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
     }
 
     private void addTransactionItem(TransactionItem item) {
-        if (balances.containsKey(item.getBook()))
-            balances.put(item.getBook(), new Double(((Double) balances.get(item.getBook())).doubleValue() + item.getAmount()));
-        else
-            balances.put(item.getBook(), new Double(item.getAmount()));
+        ((SimpleBook) books.get(item.getBook().getId())).updateBalance(item.getAmount());
     }
 
     /**
@@ -189,8 +194,8 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
         Iterator iter = trans.getItems();
         while (iter.hasNext()) {
             TransactionItem item = (TransactionItem) iter.next();
-            if (item.getAmount() < 0 && getAvailableBalance(item.getBook()) + item.getAmount() < 0)
-                throw new InsufficientFundsException(this, item.getBook(), item.getAmount());
+            if (item.getAmount() < 0 && getAvailableBalance(item.getBook().getId()) + item.getAmount() < 0)
+                throw new InsufficientFundsException(this, item.getBook().getId(), item.getAmount());
         }
         return performTransaction(trans);
     }
@@ -207,8 +212,8 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
         Iterator iter = trans.getItems();
         while (iter.hasNext()) {
             TransactionItem item = (TransactionItem) iter.next();
-            if (item.getAmount() < 0 && getAvailableBalance(item.getBook()) + item.getAmount() < 0)
-                throw new InsufficientFundsException(this, item.getBook(), item.getAmount());
+            if (item.getAmount() < 0 && getAvailableBalance(item.getBook().getId()) + item.getAmount() < 0)
+                throw new InsufficientFundsException(this, item.getBook().getId(), item.getAmount());
         }
 
         final PostedHeldTransaction posted = new PostedHeldTransaction(trans, new Date());
@@ -278,20 +283,13 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
      * @return the balance as a double
      */
     public double getBalance(final String book) {
-        if (balances.containsKey(book))
-            return ((Double) balances.get(book)).doubleValue();
+        if (books.containsKey(book))
+            return ((SimpleBook) books.get(book)).getBalance();
         return 0;
     }
 
     /**
-     * Calculate the true accounting balance at a given time. This does not take into account any held transactions, thus may not necessarily
-     * show the Available balance.<p>
-     * Basic Algorithm:
-     * <ol><li>If transactiondate is AFTER balance date SKIP
-     * <li>If Transaction DOES NOT have an expiry date its a regular transaction and ADD to balance and SKIP
-     * </ol>
-     *
-     * @return the balance as a double
+     * @return the held balance as a double
      */
     private double getHeldBalance(final String book) {
         double balance = 0;
@@ -308,7 +306,7 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
                     final Iterator items = tran.getItems();
                     while (items.hasNext()) {
                         final TransactionItem item = (TransactionItem) items.next();
-                        if (item.getBook().equals(book) && item.getAmount() < 0)
+                        if (item.getBook().getId().equals(book) && item.getAmount() < 0)
                             balance += item.getAmount();
                     }
                 }
@@ -339,6 +337,36 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
 
     public boolean heldTransactionExists(String id) throws LowlevelLedgerException {
         return held.containsKey(id);
+    }
+
+    /**
+     * Register a Book in the system
+     *
+     * @param id
+     * @param nickname
+     * @param type
+     * @param source
+     * @param registrationid
+     * @return
+     * @throws org.neuclear.ledger.LowlevelLedgerException
+     *
+     */
+    public Book registerBook(String id, String nickname, String type, String source, String registrationid) throws LowlevelLedgerException {
+        if (books.containsKey(id)) {
+            SimpleBook orig = (SimpleBook) books.get(id);
+            final SimpleBook book = new SimpleBook(orig, nickname, type, new Date(), source, registrationid);
+            books.put(id, book);
+            return book;
+        }
+        return (Book) books.put(id, new SimpleBook(id, nickname, type, source, new Date(), new Date(), registrationid));
+    }
+
+    public Book getBook(String id) throws LowlevelLedgerException {
+        Book book = (Book) books.get(id);
+        if (book != null) return book;
+        book = new SimpleBook(id, new Date());
+        books.put(id, book);
+        return book;
     }
 
 
@@ -377,11 +405,11 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
     }
 
     public double getTestBalance() throws LowlevelLedgerException {
-        Iterator iter = balances.keySet().iterator();
+        Iterator iter = books.keySet().iterator();
         double test = 0;
         while (iter.hasNext()) {
             String s = (String) iter.next();
-            test += ((Double) balances.get(s)).doubleValue();
+            test += ((SimpleBook) books.get(s)).getBalance();
         }
         return test;
     }
@@ -405,7 +433,7 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
     private final HashMap ledger;
     private final HashMap held;
     private final String id;
-    private final HashMap balances;
+//    private final HashMap balances;
     private final HashMap books;
 
     private class SimpleBookBrowser extends BookBrowser {
@@ -422,7 +450,7 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
             this.from = from;
             this.to = to;
             if (books.containsKey(book)) {
-                iter = ((List) books.get(book)).iterator();
+                iter = ((SimpleBook) books.get(book)).iterator();
 //                System.out.println("book contains: " + ((List)books.get(book)).size());
             } else {
                 iter = new Iterator() {
@@ -465,10 +493,10 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
         private void setRow(PostedTransaction tran) {
             Iterator iter = tran.getItems();
             TransactionItem item = null;
-            String counterparty = null;
+            Book counterparty = null;
             while (iter.hasNext()) {
                 TransactionItem party = (TransactionItem) iter.next();
-                if (!party.getBook().equals(getBook())) {
+                if (!party.getBook().getId().equals(getBook())) {
                     counterparty = party.getBook();
                 } else {
                     item = party;
@@ -483,4 +511,6 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
         private final Date to;
 //        private int i=0;
     }
+
+
 }

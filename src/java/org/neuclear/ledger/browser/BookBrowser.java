@@ -1,5 +1,6 @@
 package org.neuclear.ledger.browser;
 
+import org.neuclear.ledger.Book;
 import org.neuclear.ledger.LowlevelLedgerException;
 
 import java.util.Date;
@@ -22,8 +23,15 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: BookBrowser.java,v 1.5 2004/03/31 23:11:09 pelle Exp $
+$Id: BookBrowser.java,v 1.6 2004/04/19 18:57:25 pelle Exp $
 $Log: BookBrowser.java,v $
+Revision 1.6  2004/04/19 18:57:25  pelle
+Updated Ledger to support more advanced book information.
+You can now create a book or fetch a book by doing getBook(String id) on the ledger.
+You can register a book or upddate an existing one using registerBook()
+SimpleLedger now works and passes all tests.
+HibernateLedger has been implemented, but there are a few things that dont work yet.
+
 Revision 1.5  2004/03/31 23:11:09  pelle
 Reworked the ID's of the transactions. The primary ID is now the request ID.
 Receipt ID's are optional and added using a separate set method.
@@ -60,7 +68,7 @@ public abstract class BookBrowser {
     public abstract boolean next() throws LowlevelLedgerException;
 
 
-    protected final void setRow(String reqid, String counterparty, String comment, Date valuetime, double amount, Date expirytime, Date cancelled, String completedId) {
+    protected final void setRow(String reqid, Book counterparty, String comment, Date valuetime, double amount, Date expirytime, Date cancelled, String completedId) {
         this.reqid = reqid;
         this.counterparty = counterparty;
         this.comment = comment;
@@ -79,7 +87,7 @@ public abstract class BookBrowser {
         return reqid;
     }
 
-    public String getCounterparty() {
+    public Book getCounterparty() {
         return counterparty;
     }
 
@@ -114,7 +122,7 @@ public abstract class BookBrowser {
     private final String book;
 
     private String reqid;
-    private String counterparty;
+    private Book counterparty;
     private String comment;
     private Date valuetime;
     private Date expirytime;

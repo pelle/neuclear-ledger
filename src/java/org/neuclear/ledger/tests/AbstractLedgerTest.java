@@ -11,11 +11,18 @@ import java.util.Date;
  * User: pelleb
  * Date: Jan 22, 2003
  * Time: 4:18:35 PM
- * $Id: AbstractLedgerTest.java,v 1.9 2004/04/12 19:26:37 pelle Exp $
+ * $Id: AbstractLedgerTest.java,v 1.10 2004/04/19 18:57:27 pelle Exp $
  * $Log: AbstractLedgerTest.java,v $
+ * Revision 1.10  2004/04/19 18:57:27  pelle
+ * Updated Ledger to support more advanced book information.
+ * You can now create a book or fetch a book by doing getBook(String id) on the ledger.
+ * You can register a book or upddate an existing one using registerBook()
+ * SimpleLedger now works and passes all tests.
+ * HibernateLedger has been implemented, but there are a few things that dont work yet.
+ *
  * Revision 1.9  2004/04/12 19:26:37  pelle
  * Hibernate and Pervayler implementations of the Ledger all pass now for both currency and ledger tests.
- *
+ * <p/>
  * Revision 1.8  2004/04/06 22:50:14  pelle
  * Updated Unit Tests
  * <p/>
@@ -486,6 +493,39 @@ public abstract class AbstractLedgerTest extends TestCase {
         assertEquals(fundbalance, ledger.getAvailableBalance(fundbook), 0);
         assertEquals(fundbalance, ledger.getBalance(fundbook), 0);
         assertTrue("Ledger is balanced", ledger.isBalanced());
+    }
+
+    public void testRegisterBook() throws LowlevelLedgerException {
+        String bookid = CryptoTools.createRandomID();
+        final Book book1 = ledger.getBook(bookid);
+        assertNotNull(book1);
+        assertEquals(bookid, book1.getId());
+        assertTrue(!book1.getRegistered().after(new Date()));
+        assertEquals(book1.getRegistered().getTime(), book1.getUpdated().getTime());
+        assertEquals("identity", book1.getType());
+        assertEquals(bookid, book1.getNickname());
+        assertNull(book1.getSource());
+        assertNull(book1.getRegistrationId());
+
+        try {
+            Thread.currentThread().sleep(2000);
+        } catch (InterruptedException e) {
+            ;
+        }
+        String regid = CryptoTools.createRandomID();
+        final Book book2 = ledger.registerBook(bookid, "bob", "asset", "http://hotmail.com", regid);
+        assertNotNull(book2);
+        assertEquals(bookid, book2.getId());
+        assertTrue(!book2.getRegistered().after(new Date()));
+//        assertEquals(book1.getRegistered().getTime(),book2.getRegistered().getTime());
+        assertTrue(!book2.getUpdated().before(book1.getUpdated()));
+        assertTrue(!book2.getUpdated().before(book2.getRegistered()));
+        assertEquals("asset", book2.getType());
+        assertEquals("bob", book2.getNickname());
+        assertNotNull(book2.getSource());
+        assertNotNull(book2.getRegistrationId());
+        assertEquals(regid, book2.getRegistrationId());
+
     }
 
     protected Ledger ledger;

@@ -7,11 +7,18 @@ import java.io.Serializable;
  * User: pelleb
  * Date: Jan 17, 2003
  * Time: 5:40:26 PM
- * $Id: TransactionItem.java,v 1.5 2004/03/21 00:48:36 pelle Exp $
+ * $Id: TransactionItem.java,v 1.6 2004/04/19 18:57:27 pelle Exp $
  * $Log: TransactionItem.java,v $
+ * Revision 1.6  2004/04/19 18:57:27  pelle
+ * Updated Ledger to support more advanced book information.
+ * You can now create a book or fetch a book by doing getBook(String id) on the ledger.
+ * You can register a book or upddate an existing one using registerBook()
+ * SimpleLedger now works and passes all tests.
+ * HibernateLedger has been implemented, but there are a few things that dont work yet.
+ *
  * Revision 1.5  2004/03/21 00:48:36  pelle
  * The problem with Enveloped signatures has now been fixed. It was a problem in the way transforms work. I have bandaided it, but in the future if better support for transforms need to be made, we need to rethink it a bit. Perhaps using the new crypto channel's in neuclear-commons.
- *
+ * <p/>
  * Revision 1.4  2003/11/21 04:43:20  pelle
  * EncryptedFileStore now works. It uses the PBECipher with DES3 afair.
  * Otherwise You will Finaliate.
@@ -39,7 +46,7 @@ import java.io.Serializable;
  * Ledger's could be General Ledger's for accounting applications or Bank Account ledger's for financial applications.
  */
 public final class TransactionItem implements Serializable {
-    TransactionItem(final String book, final double amount) {
+    TransactionItem(final Book book, final double amount) {
         this.amount = amount;
         this.book = book;
     }
@@ -48,10 +55,10 @@ public final class TransactionItem implements Serializable {
         return amount;
     }
 
-    public String getBook() {
+    public Book getBook() {
         return book;
     }
 
-    private final String book;
+    private final Book book;
     private final double amount;
 }
