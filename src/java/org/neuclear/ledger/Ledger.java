@@ -1,8 +1,11 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: Ledger.java,v 1.16 2004/04/05 22:06:46 pelle Exp $
+ * $Id: Ledger.java,v 1.17 2004/04/05 22:54:15 pelle Exp $
  * $Log: Ledger.java,v $
+ * Revision 1.17  2004/04/05 22:54:15  pelle
+ * API changes in Ledger to support Auditor and CurrencyController in Pay
+ *
  * Revision 1.16  2004/04/05 22:06:46  pelle
  * added setHeldReceiptId() method to ledger
  *
@@ -190,7 +193,7 @@ public abstract class Ledger {
      * @throws org.neuclear.ledger.UnknownTransactionException
      *
      */
-    public abstract void performCancelHold(PostedHeldTransaction hold) throws LowlevelLedgerException, UnknownTransactionException;
+    public abstract Date performCancelHold(PostedHeldTransaction hold) throws LowlevelLedgerException, UnknownTransactionException;
 
     /**
      * Completes a held transaction. Which means:
@@ -212,7 +215,7 @@ public abstract class Ledger {
      * @param id A valid ID
      * @return The Transaction object
      */
-    public abstract Date getTransactionTime(String id) throws LowlevelLedgerException, UnknownTransactionException, InvalidTransactionException, UnknownBookException;
+    public abstract Date getTransactionTime(String id) throws LowlevelLedgerException, UnknownTransactionException;
 
     /**
      * Calculate the true accounting balance at a given time. This does not take into account any held transactions, thus may not necessarily
@@ -259,6 +262,11 @@ public abstract class Ledger {
 
     public abstract double getAvailableBalance(String book) throws LowlevelLedgerException;
 
+
+    public abstract boolean transactionExists(String id) throws LowlevelLedgerException;
+
+    public abstract boolean heldTransactionExists(String id) throws LowlevelLedgerException;
+
     public String toString() {
         return id;
     }
@@ -295,7 +303,13 @@ public abstract class Ledger {
     }
 
     public final PostedTransaction transfer(String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException {
-        return transfer(CryptoTools.createRandomID(), from, to, amount, comment);
+        final PostedTransaction tran = transfer(CryptoTools.createRandomID(), from, to, amount, comment);
+        try {
+            setReceiptId(tran.getRequestId(), CryptoTools.createRandomID());
+        } catch (UnknownTransactionException e) {
+            e.printStackTrace();
+        }
+        return tran;
     }
 
     public final PostedTransaction verifiedTransfer(String req, String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException {
@@ -306,7 +320,13 @@ public abstract class Ledger {
     }
 
     public final PostedTransaction verifiedTransfer(String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException {
-        return verifiedTransfer(CryptoTools.createRandomID(), from, to, amount, comment);
+        final PostedTransaction tran = verifiedTransfer(CryptoTools.createRandomID(), from, to, amount, comment);
+        try {
+            setReceiptId(tran.getRequestId(), CryptoTools.createRandomID());
+        } catch (UnknownTransactionException e) {
+            e.printStackTrace();
+        }
+        return tran;
     }
 
     public final PostedHeldTransaction hold(String req, String from, String to, Date expiry, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException {
@@ -322,9 +342,9 @@ public abstract class Ledger {
         return hold(CryptoTools.createRandomID(), from, to, expiry, amount, comment);
     }
 
-    public final void cancel(String id) throws LowlevelLedgerException, UnknownTransactionException {
+    public final Date cancel(String id) throws LowlevelLedgerException, UnknownTransactionException {
         PostedHeldTransaction tran = findHeldTransaction(id);
-        performCancelHold(tran);
+        return performCancelHold(tran);
     }
 
     public final PostedTransaction complete(String id, double amount, String comment) throws LowlevelLedgerException, UnknownTransactionException, TransactionExpiredException, InvalidTransactionException {

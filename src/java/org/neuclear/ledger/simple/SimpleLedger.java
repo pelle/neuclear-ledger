@@ -1,8 +1,11 @@
 package org.neuclear.ledger.simple;
 
 /**
- * $Id: SimpleLedger.java,v 1.10 2004/04/05 22:06:46 pelle Exp $
+ * $Id: SimpleLedger.java,v 1.11 2004/04/05 22:54:14 pelle Exp $
  * $Log: SimpleLedger.java,v $
+ * Revision 1.11  2004/04/05 22:54:14  pelle
+ * API changes in Ledger to support Auditor and CurrencyController in Pay
+ *
  * Revision 1.10  2004/04/05 22:06:46  pelle
  * added setHeldReceiptId() method to ledger
  *
@@ -155,6 +158,8 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
     }
 
     private void updateBalances(final PostedTransaction trans) {
+        if (trans.getReceiptId() == null)
+            return;
         synchronized (balances) {
             Iterator iter = trans.getItems();
             while (iter.hasNext()) {
@@ -211,9 +216,10 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
      * @throws org.neuclear.ledger.UnknownTransactionException
      *
      */
-    public void performCancelHold(PostedHeldTransaction hold) throws LowlevelLedgerException, UnknownTransactionException {
+    public Date performCancelHold(PostedHeldTransaction hold) throws LowlevelLedgerException, UnknownTransactionException {
         if (held.containsKey(hold.getRequestId()))
             held.remove(hold.getRequestId());
+        return new Date();
     }
 
     /**
@@ -247,7 +253,7 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
      * @param id A valid ID
      * @return The Transaction object
      */
-    public Date getTransactionTime(String id) throws LowlevelLedgerException, UnknownTransactionException, InvalidTransactionException, UnknownBookException {
+    public Date getTransactionTime(String id) throws LowlevelLedgerException, UnknownTransactionException {
         return ((PostedTransaction) ledger.get(id)).getTransactionTime();  //To change body of implemented methods use File | Settings | File Templates.
     }
 
@@ -288,11 +294,13 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
             if (now.after(tran.getExpiryTime())) {
                 iter.remove();
             } else {
-                final Iterator items = tran.getItems();
-                while (items.hasNext()) {
-                    final TransactionItem item = (TransactionItem) items.next();
-                    if (item.getBook().equals(book) && item.getAmount() < 0)
-                        balance += item.getAmount();
+                if (tran.getReceiptId() != null) {
+                    final Iterator items = tran.getItems();
+                    while (items.hasNext()) {
+                        final TransactionItem item = (TransactionItem) items.next();
+                        if (item.getBook().equals(book) && item.getAmount() < 0)
+                            balance += item.getAmount();
+                    }
                 }
             }
         }
@@ -315,6 +323,14 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
         return getBalance(book) + getHeldBalance(book);
     }
 
+    public boolean transactionExists(String id) throws LowlevelLedgerException {
+        return ledger.containsKey(id);
+    }
+
+    public boolean heldTransactionExists(String id) throws LowlevelLedgerException {
+        return held.containsKey(id);
+    }
+
 
     public String toString() {
         return "Simple Ledger: " + id;
@@ -333,13 +349,20 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
     public void setReceiptId(String id, String receipt) throws LowlevelLedgerException, UnknownTransactionException {
         if (!ledger.containsKey(id))
             throw new UnknownTransactionException(this, id);
-        ((PostedTransaction) ledger.get(id)).setReceiptId(receipt);
+
+        final PostedTransaction tran = (PostedTransaction) ledger.get(id);
+        if (tran.getReceiptId() == null) {
+            tran.setReceiptId(receipt);
+            updateBalances(tran);
+        }
     }
 
     public void setHeldReceiptId(String id, String receipt) throws LowlevelLedgerException, UnknownTransactionException {
         if (!held.containsKey(id))
             throw new UnknownTransactionException(this, id);
-        ((PostedTransaction) held.get(id)).setReceiptId(receipt);
+        final PostedTransaction tran = (PostedTransaction) held.get(id);
+        if (tran.getReceiptId() == null)
+            tran.setReceiptId(receipt);
 
     }
 
