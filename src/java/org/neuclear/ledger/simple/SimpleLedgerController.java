@@ -1,8 +1,11 @@
 package org.neuclear.ledger.simple;
 
 /**
- * $Id: SimpleLedgerController.java,v 1.7 2004/06/11 22:42:32 pelle Exp $
+ * $Id: SimpleLedgerController.java,v 1.8 2004/06/17 15:18:32 pelle Exp $
  * $Log: SimpleLedgerController.java,v $
+ * Revision 1.8  2004/06/17 15:18:32  pelle
+ * Added support for Ledger object within the LedgerController. This is only really implemented in the HibernateLedgerController.
+ *
  * Revision 1.7  2004/06/11 22:42:32  pelle
  * Added a new type of BookBrowser which lists transactions beetween two Books.
  *
@@ -408,6 +411,14 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
         book = new SimpleBook(id, new Date());
         books.put(id, book);
         return book;
+    }
+
+    public Ledger registerLedger(String id, String nickname, String type, String source, String registrationid, String unit, int decimal) throws LowlevelLedgerException {
+        return null;
+    }
+
+    public Ledger getLedger(String id) throws LowlevelLedgerException, UnknownLedgerException {
+        return null;
     }
 
 

@@ -11,12 +11,15 @@ import java.util.Date;
  * User: pelleb
  * Date: Jan 22, 2003
  * Time: 4:18:35 PM
- * $Id: AbstractLedgerTest.java,v 1.14 2004/05/03 23:54:18 pelle Exp $
+ * $Id: AbstractLedgerTest.java,v 1.15 2004/06/17 15:18:32 pelle Exp $
  * $Log: AbstractLedgerTest.java,v $
+ * Revision 1.15  2004/06/17 15:18:32  pelle
+ * Added support for Ledger object within the LedgerController. This is only really implemented in the HibernateLedgerController.
+ *
  * Revision 1.14  2004/05/03 23:54:18  pelle
  * HibernateLedgerController now supports multiple ledgers.
  * Fixed many unit tests.
- *
+ * <p/>
  * Revision 1.13  2004/05/01 00:23:40  pelle
  * Added Ledger field to Transaction as well as to getBalance() and friends.
  * <p/>
@@ -562,6 +565,43 @@ public abstract class AbstractLedgerTest extends TestCase {
         assertEquals(100, ledger.getBalance("a", "alice"), 0);
         assertEquals(-120, ledger.getBalance("b", "bob"), 0);
         assertEquals(120, ledger.getBalance("b", "alice"), 0);
+    }
+
+    public void testCreateLedger() throws UnknownLedgerException, LowlevelLedgerException {
+        final String id = CryptoTools.createRandomID();
+        Ledger l = ledger.getLedger(id);
+        assertNotNull(l);
+        assertEquals(id, l.getId());
+        assertEquals(id, l.getNickname());
+        assertEquals("", l.getUnit());
+        assertEquals(2, l.getDecimalPoint());
+        assertEquals("asset", l.getType());
+        assertNull(l.getRegistrationId());
+        assertNull(l.getSource());
+
+
+        final String id2 = CryptoTools.createRandomID();
+        Ledger l2 = ledger.registerLedger(id2, "testing", "bond", "http://testing.com", id, "$", 4);
+        assertNotNull(l2);
+        assertEquals(id2, l2.getId());
+        assertEquals("testing", l2.getNickname());
+        assertEquals("$", l2.getUnit());
+        assertEquals(4, l2.getDecimalPoint());
+        assertEquals("bond", l2.getType());
+        assertEquals("http://testing.com", l2.getSource());
+        assertEquals(id, l2.getRegistrationId());
+
+        Ledger l3 = ledger.getLedger(id2);
+        assertNotNull(l3);
+        assertEquals(id2, l3.getId());
+        assertEquals("testing", l3.getNickname());
+        assertEquals("$", l3.getUnit());
+        assertEquals(4, l3.getDecimalPoint());
+        assertEquals("bond", l3.getType());
+        assertEquals("http://testing.com", l3.getSource());
+        assertEquals(id, l3.getRegistrationId());
+
+
     }
 
     protected LedgerController ledger;

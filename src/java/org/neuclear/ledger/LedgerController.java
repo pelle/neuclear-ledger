@@ -1,8 +1,11 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: LedgerController.java,v 1.8 2004/05/11 22:53:34 pelle Exp $
+ * $Id: LedgerController.java,v 1.9 2004/06/17 15:18:33 pelle Exp $
  * $Log: LedgerController.java,v $
+ * Revision 1.9  2004/06/17 15:18:33  pelle
+ * Added support for Ledger object within the LedgerController. This is only really implemented in the HibernateLedgerController.
+ *
  * Revision 1.8  2004/05/11 22:53:34  pelle
  * The update to ledger expectedly broke a few things around CurrencyController and friends. Most but not all is now fixed.
  *
@@ -338,6 +341,10 @@ public abstract class LedgerController {
     public abstract Book registerBook(String id, String nickname, String type, String source, String registrationid) throws LowlevelLedgerException;
 
     public abstract Book getBook(String id) throws LowlevelLedgerException, UnknownBookException;
+
+    public abstract Ledger registerLedger(String id, String nickname, String type, String source, String registrationid, String unit, int decimal) throws LowlevelLedgerException;
+
+    public abstract Ledger getLedger(String id) throws LowlevelLedgerException, UnknownLedgerException;
 
     public String toString() {
         return id;
