@@ -22,10 +22,10 @@
 
     <repository>
      <connection>
-         scm:cvs:pserver:anonymous@cvs.neudist.sourceforge.net:/cvsroot/neudist:neuclear-ledger
+         scm:cvs:pserver:anonymous@cvs.neuclear.sourceforge.net:/cvsroot/neuclear:neuclear-ledger
      </connection>
      <url>
-      http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/neudist/neuclear-ledger/
+      http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/neuclear/neuclear-ledger/
     </url>
   </repository>
 
@@ -35,15 +35,15 @@
   <mailingLists>
     <mailingList>
       <name>NeuDist Announce</name>
-      <subscribe>http://lists.sourceforge.net/lists/listinfo/neudist-announce</subscribe>
-      <unsubscribe>http://lists.sourceforge.net/lists/listinfo/neudist-announce</unsubscribe>
-      <archive>http://www.geocrawler.com/redir-sf.php3?list=neudist-announce</archive>
+      <subscribe>http://lists.sourceforge.net/lists/listinfo/neuclear-announce</subscribe>
+      <unsubscribe>http://lists.sourceforge.net/lists/listinfo/neuclear-announce</unsubscribe>
+      <archive>http://www.geocrawler.com/redir-sf.php3?list=neuclear-announce</archive>
     </mailingList>
     <mailingList>
       <name>NeuDist Discuss</name>
-      <subscribe>http://lists.sourceforge.net/lists/listinfo/neudist-discuss</subscribe>
-      <unsubscribe>http://lists.sourceforge.net/lists/listinfo/neudist-discuss</unsubscribe>
-      <archive>http://www.geocrawler.com/redir-sf.php3?list=neudist-discuss</archive>
+      <subscribe>http://lists.sourceforge.net/lists/listinfo/neuclear-discuss</subscribe>
+      <unsubscribe>http://lists.sourceforge.net/lists/listinfo/neuclear-discuss</unsubscribe>
+      <archive>http://www.geocrawler.com/redir-sf.php3?list=neuclear-discuss</archive>
     </mailingList>
   </mailingLists>
 
@@ -78,8 +78,8 @@
            <version>0.3</version>
        </dependency>
        <!--    <dependency>
-   	<id>neudistframework</id>
-	<name>neudistframework</name>
+   	<id>neuclearframework</id>
+	<name>neuclearframework</name>
 	<version>0.5</version>
     </dependency>
     <dependency>

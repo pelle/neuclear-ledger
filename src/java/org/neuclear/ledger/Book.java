@@ -1,8 +1,14 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: Book.java,v 1.3 2003/11/06 20:01:24 pelle Exp $
+ * $Id: Book.java,v 1.4 2003/11/11 21:17:32 pelle Exp $
  * $Log: Book.java,v $
+ * Revision 1.4  2003/11/11 21:17:32  pelle
+ * Further vital reshuffling.
+ * org.neudist.crypto.* and org.neudist.utils.* have been moved to respective areas under org.neuclear.commons
+ * org.neuclear.signers.* as well as org.neuclear.passphraseagents have been moved under org.neuclear.commons.crypto as well.
+ * Did a bit of work on the Canonicalizer and changed a few other minor bits.
+ *
  * Revision 1.3  2003/11/06 20:01:24  pelle
  * Implemented AuthenticationTicket and friends to comply with the newer model.
  * Created SignatureRequest and friends to send unsigned NamedObjectBuilders to interactive signing services.
@@ -14,7 +20,7 @@ package org.neuclear.ledger;
  *
  * Revision 1.1.1.1  2003/09/20 23:16:18  pelle
  * First revision of neuclear-ledger in /cvsroot/neuclear
- * Older versions can be found /cvsroot/neudist
+ * Older versions can be found /cvsroot/neuclear
  *
  * Revision 1.7  2003/07/29 22:57:43  pelle
  * New version with refactored support for HeldTransactions.

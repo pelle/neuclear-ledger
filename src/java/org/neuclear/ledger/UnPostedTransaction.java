@@ -5,8 +5,14 @@ package org.neuclear.ledger;
  * User: pelleb
  * Date: Jan 25, 2003
  * Time: 12:54:28 PM
- * $Id: UnPostedTransaction.java,v 1.4 2003/10/29 21:15:13 pelle Exp $
+ * $Id: UnPostedTransaction.java,v 1.5 2003/11/11 21:17:32 pelle Exp $
  * $Log: UnPostedTransaction.java,v $
+ * Revision 1.5  2003/11/11 21:17:32  pelle
+ * Further vital reshuffling.
+ * org.neudist.crypto.* and org.neudist.utils.* have been moved to respective areas under org.neuclear.commons
+ * org.neuclear.signers.* as well as org.neuclear.passphraseagents have been moved under org.neuclear.commons.crypto as well.
+ * Did a bit of work on the Canonicalizer and changed a few other minor bits.
+ *
  * Revision 1.4  2003/10/29 21:15:13  pelle
  * Refactored the whole signing process. Now we have an interface called Signer which is the old SignerStore.
  * To use it you pass a byte array and an alias. The sign method then returns the signature.
@@ -25,7 +31,7 @@ package org.neuclear.ledger;
  *
  * Revision 1.1.1.1  2003/09/20 23:16:18  pelle
  * First revision of neuclear-ledger in /cvsroot/neuclear
- * Older versions can be found /cvsroot/neudist
+ * Older versions can be found /cvsroot/neuclear
  *
  * Revision 1.5  2003/07/29 22:57:44  pelle
  * New version with refactored support for HeldTransactions.

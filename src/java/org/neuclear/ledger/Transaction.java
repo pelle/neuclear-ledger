@@ -1,7 +1,13 @@
 package org.neuclear.ledger;
 /**
- * $Id: Transaction.java,v 1.2 2003/10/01 17:35:53 pelle Exp $
+ * $Id: Transaction.java,v 1.3 2003/11/11 21:17:32 pelle Exp $
  * $Log: Transaction.java,v $
+ * Revision 1.3  2003/11/11 21:17:32  pelle
+ * Further vital reshuffling.
+ * org.neudist.crypto.* and org.neudist.utils.* have been moved to respective areas under org.neuclear.commons
+ * org.neuclear.signers.* as well as org.neuclear.passphraseagents have been moved under org.neuclear.commons.crypto as well.
+ * Did a bit of work on the Canonicalizer and changed a few other minor bits.
+ *
  * Revision 1.2  2003/10/01 17:35:53  pelle
  * Made as much as possible immutable for security and reliability reasons.
  * The only thing that isnt immutable are the items and balance of the
@@ -9,7 +15,7 @@ package org.neuclear.ledger;
  *
  * Revision 1.1.1.1  2003/09/20 23:16:18  pelle
  * First revision of neuclear-ledger in /cvsroot/neuclear
- * Older versions can be found /cvsroot/neudist
+ * Older versions can be found /cvsroot/neuclear
  *
  * Revision 1.6  2003/07/29 22:57:44  pelle
  * New version with refactored support for HeldTransactions.

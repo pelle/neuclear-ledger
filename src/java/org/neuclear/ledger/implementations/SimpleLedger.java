@@ -1,9 +1,16 @@
 package org.neuclear.ledger.implementations;
 /**
- * $Id: SimpleLedger.java,v 1.1 2003/09/20 23:16:20 pelle Exp $
+ * $Id: SimpleLedger.java,v 1.2 2003/11/11 21:17:31 pelle Exp $
  * $Log: SimpleLedger.java,v $
- * Revision 1.1  2003/09/20 23:16:20  pelle
- * Initial revision
+ * Revision 1.2  2003/11/11 21:17:31  pelle
+ * Further vital reshuffling.
+ * org.neudist.crypto.* and org.neudist.utils.* have been moved to respective areas under org.neuclear.commons
+ * org.neuclear.signers.* as well as org.neuclear.passphraseagents have been moved under org.neuclear.commons.crypto as well.
+ * Did a bit of work on the Canonicalizer and changed a few other minor bits.
+ *
+ * Revision 1.1.1.1  2003/09/20 23:16:20  pelle
+ * First revision of neuclear-ledger in /cvsroot/neuclear
+ * Older versions can be found /cvsroot/neuclear
  *
  * Revision 1.12  2003/08/06 16:41:22  pelle
  * Fixed a few implementation bugs with regards to the Held Transactions
