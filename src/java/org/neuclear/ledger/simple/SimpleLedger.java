@@ -1,8 +1,14 @@
 package org.neuclear.ledger.simple;
 
 /**
- * $Id: SimpleLedger.java,v 1.3 2004/03/22 23:20:50 pelle Exp $
+ * $Id: SimpleLedger.java,v 1.4 2004/03/25 16:44:21 pelle Exp $
  * $Log: SimpleLedger.java,v $
+ * Revision 1.4  2004/03/25 16:44:21  pelle
+ * Added getTestBalance() and isBalanced() to Ledger to see if ledger is balanced.
+ * The hibernate implementation has changed the comment size to 255 to work with mysql and now
+ * has included hibernates full hibernate.properties to make it easier to try various databases.
+ * It has now been tested with hsql and mysql.
+ *
  * Revision 1.3  2004/03/22 23:20:50  pelle
  * Working on Hibernate Implementation.
  *
@@ -139,7 +145,7 @@ public final class SimpleLedger extends Ledger {
         Iterator iter = trans.getItems();
         while (iter.hasNext()) {
             TransactionItem item = (TransactionItem) iter.next();
-            if (getAvailableBalance(item.getBook()) + item.getAmount() < 0)
+            if (item.getAmount() < 0 && getAvailableBalance(item.getBook()) + item.getAmount() < 0)
                 throw new InsufficientFundsException(this, item.getBook(), item.getAmount());
         }
         return performTransaction(trans);
@@ -289,6 +295,16 @@ public final class SimpleLedger extends Ledger {
      */
     public PostedHeldTransaction findHeldTransaction(String idstring) throws LowlevelLedgerException, UnknownTransactionException {
         return (PostedHeldTransaction) held.get(idstring);
+    }
+
+    public double getTestBalance() throws LowlevelLedgerException {
+        Iterator iter = balances.keySet().iterator();
+        double test = 0;
+        while (iter.hasNext()) {
+            String s = (String) iter.next();
+            test += ((Double) balances.get(s)).doubleValue();
+        }
+        return test;
     }
 
     public void close() {

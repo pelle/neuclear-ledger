@@ -10,11 +10,17 @@ import java.util.Date;
  * User: pelleb
  * Date: Jan 22, 2003
  * Time: 4:18:35 PM
- * $Id: AbstractLedgerTest.java,v 1.2 2004/03/24 23:12:34 pelle Exp $
+ * $Id: AbstractLedgerTest.java,v 1.3 2004/03/25 16:44:21 pelle Exp $
  * $Log: AbstractLedgerTest.java,v $
+ * Revision 1.3  2004/03/25 16:44:21  pelle
+ * Added getTestBalance() and isBalanced() to Ledger to see if ledger is balanced.
+ * The hibernate implementation has changed the comment size to 255 to work with mysql and now
+ * has included hibernates full hibernate.properties to make it easier to try various databases.
+ * It has now been tested with hsql and mysql.
+ *
  * Revision 1.2  2004/03/24 23:12:34  pelle
  * Working on Hibernate Implementation.
- *
+ * <p/>
  * Revision 1.1  2004/03/22 23:20:51  pelle
  * Working on Hibernate Implementation.
  * <p/>
@@ -177,6 +183,8 @@ public abstract class AbstractLedgerTest extends TestCase {
         ledger.transfer(BOB, ALICE, 5, "Interest");
         System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
         System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
+
+        assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
     public final void testVerifiedTransfer() throws LedgerException {
@@ -204,6 +212,7 @@ public abstract class AbstractLedgerTest extends TestCase {
 
         System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
         System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
+        assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
     public final void testMultiTransfer() throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException {
@@ -216,11 +225,13 @@ public abstract class AbstractLedgerTest extends TestCase {
             assertEquals("BOB AVAILABLE BALANCE", ledger.getBalance(CAROL), ledger.getAvailableBalance(CAROL), 0);
         }
         System.out.println("Bob's Balance: " + ledger.getBalance(CAROL));
+        assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
     public final void testBalance() throws LedgerException {
         System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
         System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
+        assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
     public final void testHoldAndExpireTransfer() throws LowlevelLedgerException, UnBalancedTransactionException, InvalidTransactionException {
@@ -252,6 +263,7 @@ public abstract class AbstractLedgerTest extends TestCase {
 
         System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
         System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
+        assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
     public final void testHoldAndCancelTransfer() throws LowlevelLedgerException, UnBalancedTransactionException, InvalidTransactionException, UnknownTransactionException {
@@ -280,6 +292,7 @@ public abstract class AbstractLedgerTest extends TestCase {
 
         System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
         System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
+        assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
     public final void testHoldAndCompleteTransfer() throws LowlevelLedgerException, UnBalancedTransactionException, InvalidTransactionException, UnknownTransactionException, TransactionExpiredException {
@@ -308,6 +321,7 @@ public abstract class AbstractLedgerTest extends TestCase {
 
         System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
         System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
+        assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
     public final void testHoldAndInsufficientFunds() throws LowlevelLedgerException, UnBalancedTransactionException, InvalidTransactionException, UnknownTransactionException {
@@ -328,25 +342,33 @@ public abstract class AbstractLedgerTest extends TestCase {
 
         System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
         System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
+        assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
     public final void testNaiveBenchmark() throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException {
         final int iterations = 1000;
         final double amount = 50;
         final String book = "benchbook-" + System.currentTimeMillis();
-        final double fundamount = amount * (iterations + 1);
-        ledger.transfer("fund", book, fundamount, "fund the benchmark");
+        final double fundamount = amount * iterations;
+        final String fundbook = "fund-" + System.currentTimeMillis();
+        final double fundbalance = ledger.getBalance(fundbook);
+        ledger.transfer(fundbook, book, fundamount, "fund the benchmark");
         System.out.println("Start Balance: " + ledger.getBalance(book));
         assertEquals(fundamount, ledger.getAvailableBalance(book), 0);
+        assertEquals(fundamount, ledger.getBalance(book), 0);
 
         long start = System.currentTimeMillis();
         for (int i = 0; i < iterations; i++) {
-            ledger.verifiedTransfer(book, "fund", amount, "transaction" + i);
+            ledger.verifiedTransfer(book, fundbook, amount, "transaction" + i);
         }
         final long duration = System.currentTimeMillis() - start;
         System.out.println("" + iterations + " iterations took " + duration + " ms");
         System.out.println("Each iteration took " + duration / iterations + " ms");
-        assertEquals(amount, ledger.getAvailableBalance(book), 0);
+        assertEquals(0, ledger.getAvailableBalance(book), 0);
+        assertEquals(0, ledger.getBalance(book), 0);
+        assertEquals(fundbalance, ledger.getAvailableBalance(fundbook), 0);
+        assertEquals(fundbalance, ledger.getBalance(fundbook), 0);
+        assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 
     protected Ledger ledger;

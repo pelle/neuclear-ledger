@@ -1,8 +1,14 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: Ledger.java,v 1.13 2004/03/23 22:01:43 pelle Exp $
+ * $Id: Ledger.java,v 1.14 2004/03/25 16:44:22 pelle Exp $
  * $Log: Ledger.java,v $
+ * Revision 1.14  2004/03/25 16:44:22  pelle
+ * Added getTestBalance() and isBalanced() to Ledger to see if ledger is balanced.
+ * The hibernate implementation has changed the comment size to 255 to work with mysql and now
+ * has included hibernates full hibernate.properties to make it easier to try various databases.
+ * It has now been tested with hsql and mysql.
+ *
  * Revision 1.13  2004/03/23 22:01:43  pelle
  * Bumped version numbers for commons and xmlsig througout.
  * Updated repositories and webservers to use old.neuclear.org
@@ -263,6 +269,11 @@ public abstract class Ledger {
      */
     public abstract PostedHeldTransaction findHeldTransaction(String idstring) throws LowlevelLedgerException, UnknownTransactionException;
 
+    public abstract double getTestBalance() throws LowlevelLedgerException;
+
+    public final boolean isBalanced() throws LowlevelLedgerException {
+        return getTestBalance() == 0;
+    }
 
     public final PostedTransaction transfer(String req, String id, String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException {
         UnPostedTransaction tran = new UnPostedTransaction(req, id, comment);
