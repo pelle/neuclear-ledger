@@ -1,8 +1,12 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: Ledger.java,v 1.8 2003/12/01 17:11:01 pelle Exp $
+ * $Id: Ledger.java,v 1.9 2003/12/11 23:56:06 pelle Exp $
  * $Log: Ledger.java,v $
+ * Revision 1.9  2003/12/11 23:56:06  pelle
+ * Trying to test the ReceiverServlet with cactus. Still no luck. Need to return a ElementProxy of some sort.
+ * Cleaned up some missing fluff in the ElementProxy interface. getTagName(), getQName() and getNameSpace() have been killed.
+ *
  * Revision 1.8  2003/12/01 17:11:01  pelle
  * Added initial Support for entityengine (OFBiz)
  *
@@ -102,12 +106,10 @@ package org.neuclear.ledger;
  * Time: 5:31:53 PM
  */
 
-import org.neuclear.commons.configuration.Configuration;
-import org.neuclear.commons.configuration.ConfigurationException;
 import org.neuclear.commons.sql.SQLTools;
 
-import javax.transaction.*;
 import javax.naming.NamingException;
+import javax.transaction.*;
 import java.util.Date;
 import java.util.Iterator;
 
@@ -318,20 +320,16 @@ public abstract class Ledger {
 
     public abstract PostedTransaction performCompleteHold(PostedHeldTransaction hold, double amount, Date time, String comment) throws InvalidTransactionException, LowlevelLedgerException, TransactionExpiredException;
 
-    public static Ledger getInstance() throws ConfigurationException {
-        return (Ledger) Configuration.getComponent(Ledger.class, "neuclear-ledger");
-    }
-
     /**
      * Begins a JTA UserTransaction on the ledger. Not to be confused with a Ledger Transaction.
-     *
-     * @throws LowlevelLedgerException
+     * 
+     * @throws LowlevelLedgerException 
      */
 
     public UserTransaction beginUT() throws LowlevelLedgerException {
         try {
-            UserTransaction ut=SQLTools.getUserTransaction();
-            if (ut.getStatus()==Status.STATUS_NO_TRANSACTION)
+            UserTransaction ut = SQLTools.getUserTransaction();
+            if (ut.getStatus() == Status.STATUS_NO_TRANSACTION)
                 ut.begin();
             return ut;
         } catch (NamingException e) {
@@ -345,9 +343,9 @@ public abstract class Ledger {
 
     /**
      * Commits a JTA UserTransaction on the ledger. Not to be confused with a Ledger Transaction.
-     *
-     * @param ut
-     * @throws LowlevelLedgerException
+     * 
+     * @param ut 
+     * @throws LowlevelLedgerException 
      */
     public void commitUT(UserTransaction ut) throws LowlevelLedgerException {
         try {
@@ -365,9 +363,9 @@ public abstract class Ledger {
 
     /**
      * Rolls back a JTA UserTransaction on the ledger. Not to be confused with a Ledger Transaction.
-     *
-     * @param ut
-     * @throws LowlevelLedgerException
+     * 
+     * @param ut 
+     * @throws LowlevelLedgerException 
      */
     public void rollbackUT(UserTransaction ut) throws LowlevelLedgerException {
         try {
