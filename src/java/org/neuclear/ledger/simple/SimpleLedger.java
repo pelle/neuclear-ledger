@@ -1,8 +1,12 @@
 package org.neuclear.ledger.simple;
 
 /**
- * $Id: SimpleLedger.java,v 1.13 2004/04/19 18:57:26 pelle Exp $
+ * $Id: SimpleLedger.java,v 1.14 2004/04/22 23:59:21 pelle Exp $
  * $Log: SimpleLedger.java,v $
+ * Revision 1.14  2004/04/22 23:59:21  pelle
+ * Added various statistics to Ledger as well as AssetController
+ * Improved look and feel in the web app.
+ *
  * Revision 1.13  2004/04/19 18:57:26  pelle
  * Updated Ledger to support more advanced book information.
  * You can now create a book or fetch a book by doing getBook(String id) on the ledger.
@@ -329,6 +333,14 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
      */
     public double getAvailableBalance(final String book) {
         return getBalance(book) + getHeldBalance(book);
+    }
+
+    public long getBookCount() throws LowlevelLedgerException {
+        return books.size();
+    }
+
+    public long getTransactionCount() throws LowlevelLedgerException {
+        return ledger.size();
     }
 
     public boolean transactionExists(String id) throws LowlevelLedgerException {

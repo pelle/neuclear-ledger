@@ -37,8 +37,12 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerBrowserServlet.java,v 1.4 2004/04/21 23:24:17 pelle Exp $
+$Id: LedgerBrowserServlet.java,v 1.5 2004/04/22 23:59:21 pelle Exp $
 $Log: LedgerBrowserServlet.java,v $
+Revision 1.5  2004/04/22 23:59:21  pelle
+Added various statistics to Ledger as well as AssetController
+Improved look and feel in the web app.
+
 Revision 1.4  2004/04/21 23:24:17  pelle
 Integrated Browser with the asset controller
 Updated look and feel
@@ -134,7 +138,9 @@ public class LedgerBrowserServlet extends HttpServlet {
                 else
                     out.print("even");
 
-                out.print("\"><td style=\"size:small\" title=\"");
+                out.print("\" onMouseOver=\"if(this.className=='even') this.class='evenhover' else this.class='oddhover'\" " +
+                        "onMouseOut=\"if(this.class='evenhover') this.class='even' else this.class='odd'\">" +
+                        "<td style=\"size:small\" title=\"");
                 out.print(stmt.getRequestId());
                 out.print("\">");
                 out.print((stmt.getRequestId().length() > 10) ? stmt.getRequestId().substring(0, 10) : stmt.getRequestId());

@@ -1,8 +1,12 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: Ledger.java,v 1.18 2004/04/19 18:57:27 pelle Exp $
+ * $Id: Ledger.java,v 1.19 2004/04/22 23:59:22 pelle Exp $
  * $Log: Ledger.java,v $
+ * Revision 1.19  2004/04/22 23:59:22  pelle
+ * Added various statistics to Ledger as well as AssetController
+ * Improved look and feel in the web app.
+ *
  * Revision 1.18  2004/04/19 18:57:27  pelle
  * Updated Ledger to support more advanced book information.
  * You can now create a book or fetch a book by doing getBook(String id) on the ledger.
@@ -269,6 +273,9 @@ public abstract class Ledger {
 
     public abstract double getAvailableBalance(String book) throws LowlevelLedgerException;
 
+    public abstract long getBookCount() throws LowlevelLedgerException;
+//    public abstract long getFundedBookCount() throws LowlevelLedgerException;
+    public abstract long getTransactionCount() throws LowlevelLedgerException;
 
     public abstract boolean transactionExists(String id) throws LowlevelLedgerException;
 
