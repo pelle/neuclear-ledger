@@ -453,6 +453,8 @@ public final class SQLLedger extends Ledger {
             con.close();
         } catch (SQLException e) {
             throw new LowlevelLedgerException(this,e);
+        } catch (IOException e) {
+            throw new LowlevelLedgerException(this,e);
         }
     }
 
