@@ -5,8 +5,12 @@ package org.neuclear.ledger;
  * User: pelleb
  * Date: Jan 25, 2003
  * Time: 12:48:26 PM
- * $Id: PostedTransaction.java,v 1.7 2004/03/23 22:01:43 pelle Exp $
+ * $Id: PostedTransaction.java,v 1.8 2004/03/25 19:03:23 pelle Exp $
  * $Log: PostedTransaction.java,v $
+ * Revision 1.8  2004/03/25 19:03:23  pelle
+ * PostedTransaction and friend now verify the unpostedtransaction is balanced.
+ * Updated schema for HHeld to include a cancelled field and a completed field. (The latter doesnt yet work right). Need to read more Hibernate docs to find out why.
+ *
  * Revision 1.7  2004/03/23 22:01:43  pelle
  * Bumped version numbers for commons and xmlsig througout.
  * Updated repositories and webservers to use old.neuclear.org
@@ -74,9 +78,12 @@ public class PostedTransaction extends Transaction {
      *
      * @param orig
      */
-    public PostedTransaction(final UnPostedTransaction orig, final Date time) throws InvalidTransactionException {
+    public PostedTransaction(final UnPostedTransaction orig, final Date time) throws InvalidTransactionException, UnBalancedTransactionException {
         super(orig.getRequestId(), orig.getId(), orig.getComment(), orig.getItemList());
+        if (!orig.isBalanced())
+            throw new UnBalancedTransactionException(null, orig);
         this.transactionTime = time;
+
     }
 
     public PostedTransaction(final PostedHeldTransaction orig, final Date time, final double amount, final String comment) throws InvalidTransactionException {

@@ -8,7 +8,7 @@ import java.util.Date;
  * Time: 3:17:16 PM
  */
 public final class PostedHeldTransaction extends PostedTransaction implements HeldTransaction {
-    public PostedHeldTransaction(final UnPostedHeldTransaction orig, Date time) throws InvalidTransactionException {
+    public PostedHeldTransaction(final UnPostedHeldTransaction orig, Date time) throws InvalidTransactionException, UnBalancedTransactionException {
         super(orig, time);
         this.expiryTime = orig.getExpiryTime();
     }

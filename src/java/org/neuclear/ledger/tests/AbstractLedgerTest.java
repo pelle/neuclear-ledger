@@ -10,14 +10,18 @@ import java.util.Date;
  * User: pelleb
  * Date: Jan 22, 2003
  * Time: 4:18:35 PM
- * $Id: AbstractLedgerTest.java,v 1.3 2004/03/25 16:44:21 pelle Exp $
+ * $Id: AbstractLedgerTest.java,v 1.4 2004/03/25 19:03:23 pelle Exp $
  * $Log: AbstractLedgerTest.java,v $
+ * Revision 1.4  2004/03/25 19:03:23  pelle
+ * PostedTransaction and friend now verify the unpostedtransaction is balanced.
+ * Updated schema for HHeld to include a cancelled field and a completed field. (The latter doesnt yet work right). Need to read more Hibernate docs to find out why.
+ *
  * Revision 1.3  2004/03/25 16:44:21  pelle
  * Added getTestBalance() and isBalanced() to Ledger to see if ledger is balanced.
  * The hibernate implementation has changed the comment size to 255 to work with mysql and now
  * has included hibernates full hibernate.properties to make it easier to try various databases.
  * It has now been tested with hsql and mysql.
- *
+ * <p/>
  * Revision 1.2  2004/03/24 23:12:34  pelle
  * Working on Hibernate Implementation.
  * <p/>
@@ -346,7 +350,7 @@ public abstract class AbstractLedgerTest extends TestCase {
     }
 
     public final void testNaiveBenchmark() throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException {
-        final int iterations = 1000;
+        final int iterations = 100;
         final double amount = 50;
         final String book = "benchbook-" + System.currentTimeMillis();
         final double fundamount = amount * iterations;
