@@ -41,8 +41,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerBrowserServlet.java,v 1.9 2004/06/06 21:26:29 pelle Exp $
+$Id: LedgerBrowserServlet.java,v 1.10 2004/06/08 17:45:47 pelle Exp $
 $Log: LedgerBrowserServlet.java,v $
+Revision 1.10  2004/06/08 17:45:47  pelle
+Minor fixes and cleanups
+
 Revision 1.9  2004/06/06 21:26:29  pelle
 Localized LedgerBrowserServlet to Spanish
 
@@ -133,8 +136,8 @@ public class LedgerBrowserServlet extends HttpServlet {
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        response.setContentType("text/html");
-        response.setCharacterEncoding("UTF-8");
+        response.setContentType("text/html; charset=UTF-8");
+//        response.setCharacterEncoding("UTF-8");
         System.setProperty("file.encoding", "UTF-8");
         ResourceBundle messages = ServletMessages.getMessages(request);
         NumberFormat numbers = NumberFormat.getNumberInstance(request.getLocale());
