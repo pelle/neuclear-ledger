@@ -7,7 +7,6 @@ import org.neuclear.ledger.Book;
 import org.neuclear.ledger.LowlevelLedgerException;
 import org.neuclear.ledger.browser.BookBrowser;
 import org.neuclear.ledger.browser.LedgerBrowser;
-import org.neuclear.ledger.simple.PopulatedSimpleLedger;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -38,8 +37,16 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerBrowserServlet.java,v 1.3 2004/04/19 18:57:26 pelle Exp $
+$Id: LedgerBrowserServlet.java,v 1.4 2004/04/21 23:24:17 pelle Exp $
 $Log: LedgerBrowserServlet.java,v $
+Revision 1.4  2004/04/21 23:24:17  pelle
+Integrated Browser with the asset controller
+Updated look and feel
+Added ServletLedgerFactory
+Added ServletAssetControllerFactory
+Created issue.jsp file
+Fixed many smaller issues
+
 Revision 1.3  2004/04/19 18:57:26  pelle
 Updated Ledger to support more advanced book information.
 You can now create a book or fetch a book by doing getBook(String id) on the ledger.
@@ -87,11 +94,12 @@ Added LedgerServlet and friends
 public class LedgerBrowserServlet extends HttpServlet {
     public void init(ServletConfig config) throws ServletException {
         serviceid = ServletTools.getInitParam("serviceid", config);
+        title = ServletTools.getInitParam("title", config);
 
         try {
 //            ConfigurableContainer pico=(ConfigurableContainer) getServletContext().getAttribute("pico");
 //            ledger = (LedgerBrowser) pico.getComponentInstance(Ledger.class) ;
-            ledger = new PopulatedSimpleLedger(serviceid);
+            ledger = (LedgerBrowser) ServletLedgerFactory.getInstance().createLedger(config);
         } catch (Exception e) {
             e.printStackTrace();
             throw new ServletException(e);
@@ -102,15 +110,11 @@ public class LedgerBrowserServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType("text/html");
         PrintWriter out = response.getWriter();
-        ServletTools.printHeader(out, request, "Account Browser");
+        Principal user = request.getUserPrincipal();
+        ServletTools.printHeader(out, request, title, "Account Browser for " + Utility.denullString(user.getName()));
         String url = ServletTools.getAbsoluteURL(request, request.getServletPath());
         try {
-            Principal user = request.getUserPrincipal();
-            String book = request.getPathInfo();
-            if (Utility.isEmpty(book))
-                book = serviceid;
-            else
-                book = book.substring(1);
+            String book = user.getName();
             System.out.println("Browsing: " + book);
 
             String fromStr = request.getParameter("from");
@@ -121,29 +125,41 @@ public class LedgerBrowserServlet extends HttpServlet {
 
             BookBrowser stmt = browse(book, from, to);
             out.println("<table><tr><th>Transaction ID</th><th>Time</th><th>Counterparty</th><th>Comment</th><th>Amount</th></tr>");
+            int linecount = 0;
             while (stmt.next()) {
                 final double amount = stmt.getAmount();
-                out.print("<tr");
-                if (amount < 0)
-                    out.print(" class=\"negative\"");
-                out.print("><td style=\"size:small\">");
+                out.print("<tr class=\"");
+                if ((linecount++) % 2 == 1)
+                    out.print("odd");
+                else
+                    out.print("even");
+
+                out.print("\"><td style=\"size:small\" title=\"");
                 out.print(stmt.getRequestId());
+                out.print("\">");
+                out.print((stmt.getRequestId().length() > 10) ? stmt.getRequestId().substring(0, 10) : stmt.getRequestId());
                 out.print("</td><td>");
                 out.print(TimeTools.formatTimeStampShort(stmt.getValuetime()));
-                out.print("</td><td><a href=\"");
-                out.print(url);
-                Book counterparty = stmt.getCounterparty();
-                out.println(counterparty.getId());
-                out.println("\">");
-                out.print(counterparty.getNickname());
-                out.print("</a></td><td>");
-                out.print(stmt.getComment());
                 out.print("</td><td>");
+                Book counterparty = stmt.getCounterparty();
+//                out.println("\">");
+                out.print(Utility.denullString(counterparty.getNickname(), counterparty.getId()));
+                out.print("</td><td>");
+                out.print(stmt.getComment());
+                out.print("</td><td class=\"");
+                if (amount < 0)
+                    out.print("negative");
+                else
+                    out.print("positive");
+                out.print("\">");
                 out.print(amount);
                 out.print("</td></tr>");
 
             }
-            out.println("</table>");
+            out.println("</table><a href=\"");
+            out.println(ServletTools.getAbsoluteURL(request, "/"));
+            out.println("\">Return to Main Menu</a>");
+            out.println("</body></html>");
         } catch (LowlevelLedgerException e) {
             e.printStackTrace();
         }
@@ -170,4 +186,5 @@ public class LedgerBrowserServlet extends HttpServlet {
 
     private String serviceid;
     private LedgerBrowser ledger;
+    private String title;
 }

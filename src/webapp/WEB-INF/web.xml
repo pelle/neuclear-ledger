@@ -3,8 +3,12 @@
 <web-app>
     <context-param>
         <param-name>serviceid</param-name>
-        <param-value>neu://test/bux</param-value>
+        <param-value>bux</param-value>
         <description>NeuClear id of Service</description>
+    </context-param>
+    <context-param>
+        <param-name>ledger</param-name>
+        <param-name>hibernate</param-name>
     </context-param>
     <context-param>
         <param-name>title</param-name>

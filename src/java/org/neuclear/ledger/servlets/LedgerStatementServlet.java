@@ -2,14 +2,8 @@ package org.neuclear.ledger.servlets;
 
 import org.neuclear.commons.Utility;
 import org.neuclear.commons.servlets.ServletTools;
-import org.neuclear.commons.time.TimeTools;
-import org.neuclear.id.InvalidNamedObjectException;
-import org.neuclear.id.NSTools;
-import org.neuclear.ledger.LowlevelLedgerException;
 import org.neuclear.ledger.Ledger;
-import org.neuclear.ledger.browser.BookBrowser;
-import org.neuclear.ledger.browser.LedgerBrowser;
-import org.neuclear.ledger.simple.PopulatedSimpleLedger;
+import org.neuclear.ledger.LowlevelLedgerException;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -19,9 +13,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.Principal;
-import java.util.Date;
-import java.sql.Timestamp;
-import java.text.ParseException;
 
 /*
 NeuClear Distributed Transaction Clearing Platform
@@ -41,8 +32,16 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerStatementServlet.java,v 1.1 2004/03/29 23:43:30 pelle Exp $
+$Id: LedgerStatementServlet.java,v 1.2 2004/04/21 23:24:18 pelle Exp $
 $Log: LedgerStatementServlet.java,v $
+Revision 1.2  2004/04/21 23:24:18  pelle
+Integrated Browser with the asset controller
+Updated look and feel
+Added ServletLedgerFactory
+Added ServletAssetControllerFactory
+Created issue.jsp file
+Fixed many smaller issues
+
 Revision 1.1  2004/03/29 23:43:30  pelle
 The servlets now work and display the ledger contents.
 
@@ -79,7 +78,8 @@ public class LedgerStatementServlet extends HttpServlet {
     public void init(ServletConfig config) throws ServletException {
         serviceid = ServletTools.getInitParam("serviceid", config);
         try {
-            ledger = new PopulatedSimpleLedger(serviceid);
+            ledger = ServletLedgerFactory.getInstance().createLedger(config);
+
         } catch (Exception e) {
             throw new ServletException(e);
         }
@@ -89,15 +89,11 @@ public class LedgerStatementServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType("text/html");
         PrintWriter out = response.getWriter();
-        ServletTools.printHeader(out, request, "Account Statement");
+        Principal user = request.getUserPrincipal();
+        ServletTools.printHeader(out, request, "Account Statement for " + Utility.denullString(user.getName()));
         String url = ServletTools.getAbsoluteURL(request, request.getServletPath());
         try {
-            Principal user = request.getUserPrincipal();
-            String book = request.getPathInfo();
-            if (Utility.isEmpty(book))
-                book = user.getName();
-            else
-                book = book.substring(1);
+            String book = user.getName();
 
             out.println("<h1>Statement</h1>");
             out.print("<h3>");
