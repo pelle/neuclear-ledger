@@ -11,11 +11,14 @@ import java.util.Date;
  * User: pelleb
  * Date: Jan 22, 2003
  * Time: 4:18:35 PM
- * $Id: AbstractLedgerTest.java,v 1.8 2004/04/06 22:50:14 pelle Exp $
+ * $Id: AbstractLedgerTest.java,v 1.9 2004/04/12 19:26:37 pelle Exp $
  * $Log: AbstractLedgerTest.java,v $
+ * Revision 1.9  2004/04/12 19:26:37  pelle
+ * Hibernate and Pervayler implementations of the Ledger all pass now for both currency and ledger tests.
+ *
  * Revision 1.8  2004/04/06 22:50:14  pelle
  * Updated Unit Tests
- *
+ * <p/>
  * Revision 1.7  2004/04/05 22:06:46  pelle
  * added setHeldReceiptId() method to ledger
  * <p/>
@@ -451,7 +454,7 @@ public abstract class AbstractLedgerTest extends TestCase {
             assertTrue(false);
         }
         PostedHeldTransaction t2 = ledger.findHeldTransaction(tran.getRequestId());
-        assertEquals("1234", t2.getReceiptId());
+        assertEquals(t2.getRequestId(), "1234", t2.getReceiptId());
         assertEquals(aliceBalance, ledger.getBalance(ALICE), 0);
         assertEquals(aliceBalance - 100, ledger.getAvailableBalance(ALICE), 0);
         assertEquals(bobBalance, ledger.getBalance(BOB), 0);
