@@ -3,6 +3,7 @@ package org.neuclear.ledger;
 import junit.framework.TestCase;
 import org.neuclear.commons.NeuClearException;
 import org.neuclear.commons.sql.DefaultConnectionSource;
+import org.neuclear.commons.sql.DefaultXAConnectionSource;
 import org.neuclear.ledger.implementations.SQLLedger;
 
 import javax.naming.NamingException;
@@ -19,8 +20,15 @@ import java.util.Random;
  * User: pelleb
  * Date: Jan 22, 2003
  * Time: 4:18:35 PM
- * $Id: LedgerTest.java,v 1.6 2003/12/03 23:21:43 pelle Exp $
+ * $Id: LedgerTest.java,v 1.7 2003/12/24 00:24:33 pelle Exp $
  * $Log: LedgerTest.java,v $
+ * Revision 1.7  2003/12/24 00:24:33  pelle
+ * Created a kind of poor man's version of ofbiz.org's EntityEngine. It doesnt use xml to configure it, but code.
+ * Should mainly be used to create tables. Can also insert rows, but hasnt been thoroughly tested.
+ * At some point I will improve that part and add some kind of smart querying engine to it. Similar to EntityEngine. But I dont
+ * need that myself right now.
+ * SQLLedger now uses this to create its tables. It is not fully working yet, but will be shortly.
+ *
  * Revision 1.6  2003/12/03 23:21:43  pelle
  * Got rid of ofbiz support. Way over the top for our use.
  *
@@ -113,7 +121,7 @@ public abstract class LedgerTest extends TestCase {
 
     public LedgerTest(final String s) throws LowlevelLedgerException, UnknownLedgerException, SQLException, NamingException, IOException, NeuClearException {
         super(s);
-        ledger = new SQLLedger(new DefaultConnectionSource(), "neu://superbux/reserve");
+        ledger = new SQLLedger(new DefaultXAConnectionSource(), "neu://superbux/reserve");
 
     }
 

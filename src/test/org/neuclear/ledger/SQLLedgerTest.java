@@ -1,6 +1,9 @@
 package org.neuclear.ledger;
 
 import org.neuclear.commons.NeuClearException;
+import org.neuclear.commons.sql.SQLTools;
+import org.neuclear.commons.sql.DefaultConnectionSource;
+import org.neuclear.ledger.implementations.SQLLedger;
 
 import javax.naming.NamingException;
 import java.io.IOException;
@@ -16,7 +19,7 @@ import java.sql.SQLException;
 public final class SQLLedgerTest extends LedgerTest {
     public SQLLedgerTest(final String s) throws LowlevelLedgerException, UnknownLedgerException, SQLException, NamingException, IOException, NeuClearException {
         super(s);
-
+        SQLLedger.create(new DefaultConnectionSource());
     }
 
     public final Ledger createLedger() {

@@ -9,6 +9,8 @@ package org.neuclear.ledger.implementations;
 import org.neuclear.commons.sql.ConnectionSource;
 import org.neuclear.commons.sql.SQLTools;
 import org.neuclear.commons.sql.SQLContext;
+import org.neuclear.commons.sql.DefaultConnectionSource;
+import org.neuclear.commons.sql.entities.EntityModel;
 import org.neuclear.commons.NeuClearException;
 import org.neuclear.ledger.*;
 import org.neuclear.ledger.InvalidTransactionException;
@@ -41,10 +43,69 @@ public final class SQLLedger extends Ledger {
     }
 */
     public SQLLedger(final ConnectionSource con, final String id) throws LowlevelLedgerException, UnknownLedgerException {
-        super(id, getLedgerName(con, id));
+        super(id, "sql ledger");
         this.con = new SQLContext(con);
+//        create(this.con);
+
+        createLedger(id);
+
     }
 
+    public void createLedger(String name) throws LowlevelLedgerException {
+        try {
+             final PreparedStatement stmt = prepQuery("insert into ledger (id,title,created) values (?,?,now())");
+             stmt.setString(1, name);
+             stmt.setString(2, name);
+             stmt.execute();
+         } catch (SQLException e) {
+             rollbackUT();
+             throw new LowlevelLedgerException(this, e);
+         }
+
+    }
+    public static void create(ConnectionSource con) {
+        try {
+            Connection connection=con.getConnection();
+            EntityModel ledgerModel=new EntityModel("ledger",true);
+            ledgerModel.addTitle();
+//            ledgerModel.addComment();
+            ledgerModel.addTimeStamp();
+            EntityModel bookModel=new EntityModel("book",true);
+            bookModel.addTitle();
+            bookModel.addTimeStamp();
+            EntityModel xactModel=new EntityModel("transaction",true);
+            xactModel.addComment();
+            xactModel.addValueTime();
+            xactModel.addReference(ledgerModel);
+            EntityModel entryModel=new EntityModel("entry",false);
+            entryModel.addMoney();
+            entryModel.addReference(bookModel);
+            entryModel.addReference(xactModel);
+
+            EntityModel hxactModel=new EntityModel("held_transaction",true);
+            hxactModel.addComment();
+            hxactModel.addValueTime();
+            hxactModel.addTimeStamp("held_until");
+            hxactModel.addReference(ledgerModel);
+            hxactModel.addReference(xactModel);
+            hxactModel.addBoolean("cancelled");
+            EntityModel hentryModel=new EntityModel("held_entry",false);
+            hentryModel.addMoney();
+            hentryModel.addReference(bookModel);
+            hentryModel.addReference(hxactModel);
+            entryModel.create(connection);
+            hentryModel.create(connection);
+            connection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+    public static void main(String args[]){
+        create(new DefaultConnectionSource());
+    }
     private static String getLedgerName(final ConnectionSource con, final String id) throws UnknownLedgerException, LowlevelLedgerException {
         try {
             final PreparedStatement stmt = con.getConnection().prepareStatement("select title from ledger where id=?");
@@ -72,7 +133,7 @@ public final class SQLLedger extends Ledger {
 
     public final boolean bookExists(final String bookID) throws LowlevelLedgerException {
         try {
-            final PreparedStatement stmt = prepQuery("select id from account where id=?");
+            final PreparedStatement stmt = prepQuery("select id from book where id=?");
             stmt.setString(1, bookID);
             final ResultSet rs = stmt.executeQuery();
             return rs.next();
@@ -85,7 +146,7 @@ public final class SQLLedger extends Ledger {
         if (bookExists(bookID))
             throw new BookExistsException(this, bookID);
        try {
-            final PreparedStatement stmt = prepQuery("insert into account values (?,?,3)");
+            final PreparedStatement stmt = prepQuery("insert into book values (?,?,now())");
             stmt.setString(1, bookID);
             stmt.setString(2, title);
             stmt.execute();
@@ -213,7 +274,7 @@ public final class SQLLedger extends Ledger {
     }
 
     private long insertTransaction(final UnPostedTransaction transaction) throws SQLException, LowlevelLedgerException {
-        final PreparedStatement tranInsert = prepQuery("insert into transaction (value_date,comment,ledgerid) values (?,?,?)");
+        final PreparedStatement tranInsert = prepQuery("insert into transaction (valuetime,comment,ledgerid) values (?,?,?)");
         tranInsert.setTimestamp(1, SQLTools.toTimestamp(transaction.getTransactionTime()));
         tranInsert.setString(2, transaction.getComment());
         tranInsert.setString(3, getId());
@@ -229,7 +290,7 @@ public final class SQLLedger extends Ledger {
     }
 
     private long insertHeldTransaction(final UnPostedHeldTransaction transaction) throws SQLException, LowlevelLedgerException {
-        final PreparedStatement tranInsert = prepQuery("insert into held_transaction (value_date,comment,held_until,ledgerid) values (?,?,?,?)");
+        final PreparedStatement tranInsert = prepQuery("insert into held_transaction (valuetime,comment,held_until,ledgerid) values (?,?,?,?)");
         tranInsert.setTimestamp(3, SQLTools.toTimestamp(transaction.getExpiryTime()));
 
         tranInsert.setTimestamp(1, SQLTools.toTimestamp(transaction.getTransactionTime()));
@@ -247,7 +308,7 @@ public final class SQLLedger extends Ledger {
     }
 
     private void insertTransactionItem(final long xid, final TransactionItem item) throws SQLException, LowlevelLedgerException {
-        final PreparedStatement itemInsert = prepQuery("insert into entry (transactionid,accountid,amount,ack) values (?,?,?,1)");
+        final PreparedStatement itemInsert = prepQuery("insert into entry (transactionid,bookid,amount) values (?,?,?)");
         itemInsert.setLong(1, xid);
         itemInsert.setString(2, item.getBook().getBookID());
         itemInsert.setDouble(3, item.getAmount());
@@ -255,7 +316,7 @@ public final class SQLLedger extends Ledger {
     }
 
     private void insertHeldTransactionItem(final long xid, final TransactionItem item) throws SQLException, LowlevelLedgerException {
-        final PreparedStatement itemInsert = prepQuery("insert into held_entry (held_transactionid,accountid,amount,ack) values (?,?,?,1)");
+        final PreparedStatement itemInsert = prepQuery("insert into held_entry (held_transactionid,bookid,amount,ack) values (?,?,?,1)");
         itemInsert.setLong(1, xid);
         itemInsert.setString(2, item.getBook().getBookID());
         itemInsert.setDouble(3, item.getAmount());
@@ -272,7 +333,7 @@ public final class SQLLedger extends Ledger {
         final long id = Long.parseLong(idstring);
         try {
 
-            PreparedStatement stmt = prepQuery("select value_date,comment from transaction where id=? and ledgerid=?");
+            PreparedStatement stmt = prepQuery("select valuetime,comment from transaction where id=? and ledgerid=?");
             stmt.setLong(1, id);
             stmt.setString(2, getId());
             ResultSet rs = stmt.executeQuery();
@@ -283,7 +344,7 @@ public final class SQLLedger extends Ledger {
             final String comment = rs.getString(2);
 
             final UnPostedTransaction transaction = new UnPostedTransaction(this, comment, started);
-            stmt = prepQuery("select accountid,amount from entry where transactionid=?");
+            stmt = prepQuery("select bookid,amount from entry where transactionid=?");
             stmt.setLong(1, id);
             rs = stmt.executeQuery();
             while (rs.next())
@@ -310,7 +371,7 @@ public final class SQLLedger extends Ledger {
         final long id = Long.parseLong(idstring);
         try {
 
-            PreparedStatement stmt = prepQuery("select value_date,held_until,comment from held_transaction where id=? and ledgerid=?");
+            PreparedStatement stmt = prepQuery("select valuetime,held_until,comment from held_transaction where id=? and ledgerid=?");
             stmt.setLong(1, id);
             stmt.setString(2, getId());
             ResultSet rs = stmt.executeQuery();
@@ -322,7 +383,7 @@ public final class SQLLedger extends Ledger {
             final String comment = rs.getString(3);
 
             final UnPostedHeldTransaction transaction = new UnPostedHeldTransaction(this, comment, started, ended);
-            stmt = prepQuery("select accountid,amount from held_entry where held_transactionid=?");
+            stmt = prepQuery("select bookid,amount from held_entry where held_transactionid=?");
             stmt.setLong(1, id);
             rs = stmt.executeQuery();
             while (rs.next())
@@ -348,7 +409,7 @@ public final class SQLLedger extends Ledger {
      */
     public final double getBalance(final Book book, final Date time) throws LowlevelLedgerException {
         try {
-            final PreparedStatement stmt = prepQuery("select sum(e.amount) from entry e,transaction t where e.transactionid=t.id and e.accountid=? and t.value_date<= ? and t.ledgerid=?");
+            final PreparedStatement stmt = prepQuery("select sum(e.amount) from entry e,transaction t where e.transactionid=t.id and e.bookid=? and t.valuetime<= ? and t.ledgerid=?");
 
             stmt.setString(1, book.getBookID());
             stmt.setTimestamp(2, new Timestamp(time.getTime()));
@@ -376,11 +437,11 @@ public final class SQLLedger extends Ledger {
         try {
             final PreparedStatement stmt = prepQuery("select sum(u.amount) from (" +
                     "select  sum( e.amount) as amount from entry e,transaction t " +
-                    "where e.transactionid=t.id and e.accountid=? and t.value_date<= ? and t.ledgerid=?"
+                    "where e.transactionid=t.id and e.bookid=? and t.valuetime<= ? and t.ledgerid=?"
                     + "union " +
                     "select sum( e.amount) as amount from held_entry e, held_transaction t " +
                     "where " +
-                    "e.held_transactionid=t.id and e.accountid=? and t.value_date<= ? " +
+                    "e.held_transactionid=t.id and e.bookid=? and t.valuetime<= ? " +
                     "and e.amount<0 and t.held_until>= ? and t.cancelled=0 and t.transactionid is null and t.ledgerid=?"
                     + ") u "
             );
@@ -431,7 +492,7 @@ public final class SQLLedger extends Ledger {
 
     public final Book getBook(final String bookID) throws UnknownBookException, LowlevelLedgerException {
         try {
-            final PreparedStatement stmt = prepQuery("select screenname from account where id=?");
+            final PreparedStatement stmt = prepQuery("select comment from book where id=?");
             stmt.setString(1, bookID);
             final ResultSet rs = stmt.executeQuery();
             if (rs.next())
