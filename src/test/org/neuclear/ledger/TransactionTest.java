@@ -22,8 +22,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: TransactionTest.java,v 1.2 2004/04/19 18:57:27 pelle Exp $
+$Id: TransactionTest.java,v 1.3 2004/05/01 00:23:40 pelle Exp $
 $Log: TransactionTest.java,v $
+Revision 1.3  2004/05/01 00:23:40  pelle
+Added Ledger field to Transaction as well as to getBalance() and friends.
+
 Revision 1.2  2004/04/19 18:57:27  pelle
 Updated Ledger to support more advanced book information.
 You can now create a book or fetch a book by doing getBook(String id) on the ledger.
@@ -49,7 +52,7 @@ public class TransactionTest extends TestCase {
     }
 
     public void testUnposted() throws InvalidTransactionException {
-        UnPostedTransaction tran = new UnPostedTransaction("1234", "test");
+        UnPostedTransaction tran = new UnPostedTransaction(null, "1234", "test");
         assertNotNull(tran);
         assertEquals("1234", tran.getRequestId());
         assertEquals("test", tran.getComment());
@@ -73,7 +76,7 @@ public class TransactionTest extends TestCase {
     }
 
     public void testPostedBalanced() throws InvalidTransactionException {
-        UnPostedTransaction tran = new UnPostedTransaction("1234", "test");
+        UnPostedTransaction tran = new UnPostedTransaction(null, "1234", "test");
         assertNotNull(tran);
         assertEquals("1234", tran.getRequestId());
         assertEquals("test", tran.getComment());
@@ -102,7 +105,7 @@ public class TransactionTest extends TestCase {
     }
 
     public void testPostedUnBalancedDoesFail() throws InvalidTransactionException {
-        UnPostedTransaction tran = new UnPostedTransaction("1234", "test");
+        UnPostedTransaction tran = new UnPostedTransaction(null, "1234", "test");
         assertNotNull(tran);
         assertEquals("1234", tran.getRequestId());
         assertEquals("test", tran.getComment());
@@ -127,7 +130,7 @@ public class TransactionTest extends TestCase {
     public void testUnpostedHeld() throws InvalidTransactionException {
 
         final Date time = new Date();
-        UnPostedHeldTransaction tran = new UnPostedHeldTransaction("1234", "test", time);
+        UnPostedHeldTransaction tran = new UnPostedHeldTransaction(null, "1234", "test", time);
         assertNotNull(tran);
         assertEquals("1234", tran.getRequestId());
         assertEquals("test", tran.getComment());
@@ -155,7 +158,7 @@ public class TransactionTest extends TestCase {
 
     public void testPosteHelddBalanced() throws InvalidTransactionException {
         final Date time = new Date();
-        UnPostedHeldTransaction tran = new UnPostedHeldTransaction("1234", "test", time);
+        UnPostedHeldTransaction tran = new UnPostedHeldTransaction(null, "1234", "test", time);
         assertNotNull(tran);
         assertEquals("1234", tran.getRequestId());
         assertEquals("test", tran.getComment());
@@ -188,7 +191,7 @@ public class TransactionTest extends TestCase {
 
     public void testPostedHeldUnBalancedDoesFail() throws InvalidTransactionException {
         final Date time = new Date();
-        UnPostedHeldTransaction tran = new UnPostedHeldTransaction("1234", "test", time);
+        UnPostedHeldTransaction tran = new UnPostedHeldTransaction(null, "1234", "test", time);
         assertNotNull(tran);
         assertEquals("1234", tran.getRequestId());
         assertEquals("test", tran.getComment());
@@ -214,7 +217,7 @@ public class TransactionTest extends TestCase {
 
     public void testPostedHeldCompleted() throws InvalidTransactionException {
         final Date time = new Date();
-        UnPostedHeldTransaction tran = new UnPostedHeldTransaction("1234", "test", time);
+        UnPostedHeldTransaction tran = new UnPostedHeldTransaction(null, "1234", "test", time);
         assertNotNull(tran);
         assertEquals("1234", tran.getRequestId());
         assertEquals("test", tran.getComment());

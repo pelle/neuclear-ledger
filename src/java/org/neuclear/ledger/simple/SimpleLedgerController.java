@@ -1,8 +1,11 @@
 package org.neuclear.ledger.simple;
 
 /**
- * $Id: SimpleLedgerController.java,v 1.1 2004/04/27 15:23:54 pelle Exp $
+ * $Id: SimpleLedgerController.java,v 1.2 2004/05/01 00:23:40 pelle Exp $
  * $Log: SimpleLedgerController.java,v $
+ * Revision 1.2  2004/05/01 00:23:40  pelle
+ * Added Ledger field to Transaction as well as to getBalance() and friends.
+ *
  * Revision 1.1  2004/04/27 15:23:54  pelle
  * Due to a new API change in 0.5 I have changed the name of Ledger and it's implementers to LedgerController.
  *
@@ -144,6 +147,10 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
 
     }
 
+    public boolean existsLedger(String id) {
+        return false;
+    }
+
     /**
      * The basic interface for creating Transactions in the database.
      * The implementing class takes this transacion information and stores it with an automatically generated uniqueid.
@@ -201,7 +208,7 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
         Iterator iter = trans.getItems();
         while (iter.hasNext()) {
             TransactionItem item = (TransactionItem) iter.next();
-            if (item.getAmount() < 0 && getAvailableBalance(item.getBook().getId()) + item.getAmount() < 0)
+            if (item.getAmount() < 0 && getAvailableBalance(null, item.getBook().getId()) + item.getAmount() < 0)
                 throw new InsufficientFundsException(this, item.getBook().getId(), item.getAmount());
         }
         return performTransaction(trans);
@@ -219,7 +226,7 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
         Iterator iter = trans.getItems();
         while (iter.hasNext()) {
             TransactionItem item = (TransactionItem) iter.next();
-            if (item.getAmount() < 0 && getAvailableBalance(item.getBook().getId()) + item.getAmount() < 0)
+            if (item.getAmount() < 0 && getAvailableBalance(null, item.getBook().getId()) + item.getAmount() < 0)
                 throw new InsufficientFundsException(this, item.getBook().getId(), item.getAmount());
         }
 
@@ -289,7 +296,7 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
      *
      * @return the balance as a double
      */
-    public double getBalance(final String book) {
+    public double getBalance(String ledger, final String book) {
         if (books.containsKey(book))
             return ((SimpleBook) books.get(book)).getBalance();
         return 0;
@@ -334,16 +341,16 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
      *
      * @return the balance as a double
      */
-    public double getAvailableBalance(final String book) {
-        return getBalance(book) + getHeldBalance(book);
+    public double getAvailableBalance(String ledger, final String book) {
+        return getBalance(null, book) + getHeldBalance(book);
     }
 
-    public long getBookCount() throws LowlevelLedgerException {
+    public long getBookCount(String ledger) throws LowlevelLedgerException {
         return books.size();
     }
 
-    public long getTransactionCount() throws LowlevelLedgerException {
-        return ledger.size();
+    public long getTransactionCount(String ledger) throws LowlevelLedgerException {
+        return this.ledger.size();
     }
 
     public boolean transactionExists(String id) throws LowlevelLedgerException {
@@ -419,7 +426,7 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
 
     }
 
-    public double getTestBalance() throws LowlevelLedgerException {
+    public double getTestBalance(String ledger) throws LowlevelLedgerException {
         Iterator iter = books.keySet().iterator();
         double test = 0;
         while (iter.hasNext()) {

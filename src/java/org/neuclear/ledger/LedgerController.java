@@ -1,8 +1,11 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: LedgerController.java,v 1.3 2004/04/27 15:23:55 pelle Exp $
+ * $Id: LedgerController.java,v 1.4 2004/05/01 00:23:40 pelle Exp $
  * $Log: LedgerController.java,v $
+ * Revision 1.4  2004/05/01 00:23:40  pelle
+ * Added Ledger field to Transaction as well as to getBalance() and friends.
+ *
  * Revision 1.3  2004/04/27 15:23:55  pelle
  * Due to a new API change in 0.5 I have changed the name of Ledger and it's implementers to LedgerController.
  *
@@ -174,6 +177,7 @@ public abstract class LedgerController {
         this.id = id;
     }
 
+    public abstract boolean existsLedger(final String id);
 
     /**
      * The basic interface for creating Transactions in the database.
@@ -255,7 +259,12 @@ public abstract class LedgerController {
      * @return the balance as a double
      */
 
-    public abstract double getBalance(String book) throws LowlevelLedgerException;
+    public abstract double getBalance(String ledger, String book) throws LowlevelLedgerException;
+
+    public double getBalance(String book) throws LowlevelLedgerException {
+        return getBalance(id, book);
+    }
+
 
     /**
      * Calculate the available balance at a given time. This DOES take into account any held transactions.
@@ -277,11 +286,25 @@ public abstract class LedgerController {
      * @return the balance as a double
      */
 
-    public abstract double getAvailableBalance(String book) throws LowlevelLedgerException;
+    public abstract double getAvailableBalance(String ledger, String book) throws LowlevelLedgerException;
 
-    public abstract long getBookCount() throws LowlevelLedgerException;
+    public double getAvailableBalance(String book) throws LowlevelLedgerException {
+        return getAvailableBalance(id, book);
+    }
+
+    public abstract long getBookCount(String ledger) throws LowlevelLedgerException;
+
+    public long getBookCount() throws LowlevelLedgerException {
+        return getBookCount(id);
+    }
+
+
 //    public abstract long getFundedBookCount() throws LowlevelLedgerException;
-    public abstract long getTransactionCount() throws LowlevelLedgerException;
+    public abstract long getTransactionCount(String ledger) throws LowlevelLedgerException;
+
+    public long getTransactionCount() throws LowlevelLedgerException {
+        return getTransactionCount(id);
+    }
 
     public abstract boolean transactionExists(String id) throws LowlevelLedgerException;
 
@@ -324,21 +347,25 @@ public abstract class LedgerController {
 
     public abstract void setHeldReceiptId(String id, String receipt) throws LowlevelLedgerException, UnknownTransactionException;
 
-    public abstract double getTestBalance() throws LowlevelLedgerException;
+    public abstract double getTestBalance(String ledger) throws LowlevelLedgerException;
 
-    public final boolean isBalanced() throws LowlevelLedgerException {
-        return getTestBalance() == 0;
+    public final double getTestBalance() throws LowlevelLedgerException {
+        return getTestBalance(id);
     }
 
-    public final PostedTransaction transfer(String req, String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, UnknownBookException {
-        UnPostedTransaction tran = new UnPostedTransaction(req, comment);
+    public final boolean isBalanced() throws LowlevelLedgerException {
+        return getTestBalance("ledgerid") == 0;
+    }
+
+    public final PostedTransaction transfer(String ledger, String req, String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, UnknownBookException {
+        UnPostedTransaction tran = new UnPostedTransaction(ledger, req, comment);
         tran.addItem(getBook(from), -amount);
         tran.addItem(getBook(to), amount);
         return performTransaction(tran);
     }
 
     public final PostedTransaction transfer(String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, UnknownBookException {
-        final PostedTransaction tran = transfer(CryptoTools.createRandomID(), from, to, amount, comment);
+        final PostedTransaction tran = transfer(id, CryptoTools.createRandomID(), from, to, amount, comment);
         try {
             setReceiptId(tran.getRequestId(), CryptoTools.createRandomID());
         } catch (UnknownTransactionException e) {
@@ -347,15 +374,15 @@ public abstract class LedgerController {
         return tran;
     }
 
-    public final PostedTransaction verifiedTransfer(String req, String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException, UnknownBookException {
-        UnPostedTransaction tran = new UnPostedTransaction(req, comment);
+    public final PostedTransaction verifiedTransfer(String ledger, String req, String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException, UnknownBookException {
+        UnPostedTransaction tran = new UnPostedTransaction(null, req, comment);
         tran.addItem(getBook(from), -amount);
         tran.addItem(getBook(to), amount);
         return performVerifiedTransfer(tran);
     }
 
     public final PostedTransaction verifiedTransfer(String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException, UnknownBookException {
-        final PostedTransaction tran = verifiedTransfer(CryptoTools.createRandomID(), from, to, amount, comment);
+        final PostedTransaction tran = verifiedTransfer(id, CryptoTools.createRandomID(), from, to, amount, comment);
         try {
             setReceiptId(tran.getRequestId(), CryptoTools.createRandomID());
         } catch (UnknownTransactionException e) {
@@ -364,17 +391,17 @@ public abstract class LedgerController {
         return tran;
     }
 
-    public final PostedHeldTransaction hold(String req, String from, String to, Date expiry, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException, UnknownBookException {
-        UnPostedHeldTransaction tran = new UnPostedHeldTransaction(req, comment, expiry);
+    public final PostedHeldTransaction hold(String ledger, String req, String from, String to, Date expiry, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException, UnknownBookException {
+        UnPostedHeldTransaction tran = new UnPostedHeldTransaction(ledger, req, comment, expiry);
         tran.addItem(getBook(from), -amount);
         tran.addItem(getBook(to), amount);
         return performHeldTransfer(tran);
     }
 
     public final PostedHeldTransaction hold(String from, String to, Date expiry, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException, UnknownBookException {
-        if (getAvailableBalance(from) - amount < 0)
+        if (getAvailableBalance(null, from) - amount < 0)
             throw new InsufficientFundsException(this, from, amount);
-        return hold(CryptoTools.createRandomID(), from, to, expiry, amount, comment);
+        return hold(id, CryptoTools.createRandomID(), from, to, expiry, amount, comment);
     }
 
     public final Date cancel(String id) throws LowlevelLedgerException, UnknownTransactionException {

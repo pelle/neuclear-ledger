@@ -1,8 +1,11 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: Transaction.java,v 1.7 2004/03/31 23:11:10 pelle Exp $
+ * $Id: Transaction.java,v 1.8 2004/05/01 00:23:40 pelle Exp $
  * $Log: Transaction.java,v $
+ * Revision 1.8  2004/05/01 00:23:40  pelle
+ * Added Ledger field to Transaction as well as to getBalance() and friends.
+ *
  * Revision 1.7  2004/03/31 23:11:10  pelle
  * Reworked the ID's of the transactions. The primary ID is now the request ID.
  * Receipt ID's are optional and added using a separate set method.
@@ -73,10 +76,11 @@ import java.util.List;
  * Ledger and returned as imutable PostedTransaction objects.
  */
 public abstract class Transaction implements Serializable {
-    protected Transaction(final String req, final String comment, List items) {
+    protected Transaction(String ledger, final String req, final String comment, List items) {
         this.comment = comment;
         this.req = req;
         this.items = items;
+        this.ledger = ledger;
     }
 
     public final String getComment() {
@@ -113,9 +117,14 @@ public abstract class Transaction implements Serializable {
         return amount;
     }
 
+    public String getLedger() {
+        return ledger;
+    }
+
     private final String comment;
     private final String req;
 
     protected final List items;
+    protected final String ledger;
 
 }

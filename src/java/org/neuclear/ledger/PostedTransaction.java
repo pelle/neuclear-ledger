@@ -5,8 +5,11 @@ package org.neuclear.ledger;
  * User: pelleb
  * Date: Jan 25, 2003
  * Time: 12:48:26 PM
- * $Id: PostedTransaction.java,v 1.9 2004/03/31 23:11:10 pelle Exp $
+ * $Id: PostedTransaction.java,v 1.10 2004/05/01 00:23:40 pelle Exp $
  * $Log: PostedTransaction.java,v $
+ * Revision 1.10  2004/05/01 00:23:40  pelle
+ * Added Ledger field to Transaction as well as to getBalance() and friends.
+ *
  * Revision 1.9  2004/03/31 23:11:10  pelle
  * Reworked the ID's of the transactions. The primary ID is now the request ID.
  * Receipt ID's are optional and added using a separate set method.
@@ -84,7 +87,7 @@ public class PostedTransaction extends Transaction {
      * @param orig
      */
     public PostedTransaction(final UnPostedTransaction orig, final Date time) throws InvalidTransactionException, UnBalancedTransactionException {
-        super(orig.getRequestId(), orig.getComment(), orig.getItemList());
+        super(orig.getLedger(), orig.getRequestId(), orig.getComment(), orig.getItemList());
         if (!orig.isBalanced())
             throw new UnBalancedTransactionException(null, orig, orig.getBalance());
         this.transactionTime = time;
@@ -92,7 +95,7 @@ public class PostedTransaction extends Transaction {
     }
 
     public PostedTransaction(final PostedHeldTransaction orig, final Date time, final double amount, final String comment) throws ExceededHeldAmountException, UnBalancedTransactionException {
-        super(orig.getRequestId(), comment, orig.getAdjustedItems(amount));
+        super(orig.getLedger(), orig.getRequestId(), comment, orig.getAdjustedItems(amount));
         this.transactionTime = time;
     }
 

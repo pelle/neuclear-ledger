@@ -5,8 +5,11 @@ package org.neuclear.ledger;
  * User: pelleb
  * Date: Jan 25, 2003
  * Time: 12:54:28 PM
- * $Id: UnPostedTransaction.java,v 1.10 2004/04/19 18:57:27 pelle Exp $
+ * $Id: UnPostedTransaction.java,v 1.11 2004/05/01 00:23:40 pelle Exp $
  * $Log: UnPostedTransaction.java,v $
+ * Revision 1.11  2004/05/01 00:23:40  pelle
+ * Added Ledger field to Transaction as well as to getBalance() and friends.
+ *
  * Revision 1.10  2004/04/19 18:57:27  pelle
  * Updated Ledger to support more advanced book information.
  * You can now create a book or fetch a book by doing getBook(String id) on the ledger.
@@ -92,10 +95,11 @@ public class UnPostedTransaction extends Transaction {
      * <li>if there is an expiryTime it must not be before the transactionTime
      * </ul>
      *
+     * @param ledger
      * @param comment
      */
-    public UnPostedTransaction(final String req, final String comment) throws InvalidTransactionException {
-        super(req, comment, new ArrayList(2));
+    public UnPostedTransaction(String ledger, final String req, final String comment) throws InvalidTransactionException {
+        super(ledger, req, comment, new ArrayList(2));
 
         balance = 0;
     }

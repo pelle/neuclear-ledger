@@ -32,8 +32,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerStatementServlet.java,v 1.3 2004/04/27 15:23:40 pelle Exp $
+$Id: LedgerStatementServlet.java,v 1.4 2004/05/01 00:23:39 pelle Exp $
 $Log: LedgerStatementServlet.java,v $
+Revision 1.4  2004/05/01 00:23:39  pelle
+Added Ledger field to Transaction as well as to getBalance() and friends.
+
 Revision 1.3  2004/04/27 15:23:40  pelle
 Due to a new API change in 0.5 I have changed the name of Ledger and it's implementers to LedgerController.
 
@@ -103,9 +106,9 @@ public class LedgerStatementServlet extends HttpServlet {
             out.print(book);
             out.println("</h3><hr>");
             out.println("Balance: ");
-            out.println(ledger.getBalance(book));
+            out.println(ledger.getBalance(null, book));
             out.println("<br/>Available: ");
-            out.println(ledger.getAvailableBalance(book));
+            out.println(ledger.getAvailableBalance(null, book));
             out.print("<hr><a href=\"../browse/");
             out.print(book);
             out.print("\">View Transactions</a>");

@@ -5,8 +5,11 @@ package org.neuclear.ledger;
  * User: pelleb
  * Date: Jan 25, 2003
  * Time: 12:54:28 PM
- * $Id: UnPostedHeldTransaction.java,v 1.6 2004/03/31 23:11:10 pelle Exp $
+ * $Id: UnPostedHeldTransaction.java,v 1.7 2004/05/01 00:23:40 pelle Exp $
  * $Log: UnPostedHeldTransaction.java,v $
+ * Revision 1.7  2004/05/01 00:23:40  pelle
+ * Added Ledger field to Transaction as well as to getBalance() and friends.
+ *
  * Revision 1.6  2004/03/31 23:11:10  pelle
  * Reworked the ID's of the transactions. The primary ID is now the request ID.
  * Receipt ID's are optional and added using a separate set method.
@@ -71,11 +74,12 @@ public final class UnPostedHeldTransaction extends UnPostedTransaction implement
      * <li>if there is an expiryTime it must not be before the transactionTime
      * </ul>
      *
+     * @param ledger
      * @param comment
      * @param expiryTime
      */
-    public UnPostedHeldTransaction(final String req, final String comment, final Date expiryTime) throws InvalidTransactionException {
-        super(req, comment);
+    public UnPostedHeldTransaction(final String ledger, final String req, final String comment, final Date expiryTime) throws InvalidTransactionException {
+        super(ledger, req, comment);
         this.expiryTime = expiryTime;
     }
 
