@@ -1,8 +1,11 @@
 package org.neuclear.ledger.simple;
 
 /**
- * $Id: SimpleLedger.java,v 1.9 2004/03/31 23:11:09 pelle Exp $
+ * $Id: SimpleLedger.java,v 1.10 2004/04/05 22:06:46 pelle Exp $
  * $Log: SimpleLedger.java,v $
+ * Revision 1.10  2004/04/05 22:06:46  pelle
+ * added setHeldReceiptId() method to ledger
+ *
  * Revision 1.9  2004/03/31 23:11:09  pelle
  * Reworked the ID's of the transactions. The primary ID is now the request ID.
  * Receipt ID's are optional and added using a separate set method.
@@ -331,6 +334,13 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
         if (!ledger.containsKey(id))
             throw new UnknownTransactionException(this, id);
         ((PostedTransaction) ledger.get(id)).setReceiptId(receipt);
+    }
+
+    public void setHeldReceiptId(String id, String receipt) throws LowlevelLedgerException, UnknownTransactionException {
+        if (!held.containsKey(id))
+            throw new UnknownTransactionException(this, id);
+        ((PostedTransaction) held.get(id)).setReceiptId(receipt);
+
     }
 
     public double getTestBalance() throws LowlevelLedgerException {

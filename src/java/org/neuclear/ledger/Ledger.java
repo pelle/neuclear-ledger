@@ -1,8 +1,11 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: Ledger.java,v 1.15 2004/03/31 23:11:10 pelle Exp $
+ * $Id: Ledger.java,v 1.16 2004/04/05 22:06:46 pelle Exp $
  * $Log: Ledger.java,v $
+ * Revision 1.16  2004/04/05 22:06:46  pelle
+ * added setHeldReceiptId() method to ledger
+ *
  * Revision 1.15  2004/03/31 23:11:10  pelle
  * Reworked the ID's of the transactions. The primary ID is now the request ID.
  * Receipt ID's are optional and added using a separate set method.
@@ -275,6 +278,8 @@ public abstract class Ledger {
     public abstract PostedHeldTransaction findHeldTransaction(String idstring) throws LowlevelLedgerException, UnknownTransactionException;
 
     public abstract void setReceiptId(String id, String receipt) throws LowlevelLedgerException, UnknownTransactionException;
+
+    public abstract void setHeldReceiptId(String id, String receipt) throws LowlevelLedgerException, UnknownTransactionException;
 
     public abstract double getTestBalance() throws LowlevelLedgerException;
 

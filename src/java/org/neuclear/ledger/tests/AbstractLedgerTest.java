@@ -10,13 +10,16 @@ import java.util.Date;
  * User: pelleb
  * Date: Jan 22, 2003
  * Time: 4:18:35 PM
- * $Id: AbstractLedgerTest.java,v 1.6 2004/03/31 23:11:09 pelle Exp $
+ * $Id: AbstractLedgerTest.java,v 1.7 2004/04/05 22:06:46 pelle Exp $
  * $Log: AbstractLedgerTest.java,v $
+ * Revision 1.7  2004/04/05 22:06:46  pelle
+ * added setHeldReceiptId() method to ledger
+ *
  * Revision 1.6  2004/03/31 23:11:09  pelle
  * Reworked the ID's of the transactions. The primary ID is now the request ID.
  * Receipt ID's are optional and added using a separate set method.
  * The various interactive passphrase agents now have shell methods for the new interactive approach.
- *
+ * <p/>
  * Revision 1.5  2004/03/25 21:39:43  pelle
  * Modified expire tests a bit to eliminate one cause for an error
  * <p/>
@@ -255,14 +258,14 @@ public abstract class AbstractLedgerTest extends TestCase {
         System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
         System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
 
-        ledger.hold(ALICE, BOB, new Date(System.currentTimeMillis() + 10000), amount, "LOAN");
+        ledger.hold(ALICE, BOB, new Date(System.currentTimeMillis() + 5000), amount, "LOAN");
         assertEquals("ALICE Available BALANCE", aliceBalance - amount, ledger.getAvailableBalance(ALICE), 0);
         assertEquals("BOB Available BALANCE", bobBalance, ledger.getAvailableBalance(BOB), 0);
         assertEquals("ALICE BALANCE", aliceBalance, ledger.getBalance(ALICE), 0);
         assertEquals("BOB BALANCE", bobBalance, ledger.getBalance(BOB), 0);
 
         try {
-            Thread.currentThread().sleep(10000);
+            Thread.currentThread().sleep(5000);
         } catch (InterruptedException e) {
             ;
         }
