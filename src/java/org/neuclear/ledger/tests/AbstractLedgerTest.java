@@ -10,11 +10,16 @@ import java.util.Date;
  * User: pelleb
  * Date: Jan 22, 2003
  * Time: 4:18:35 PM
- * $Id: AbstractLedgerTest.java,v 1.5 2004/03/25 21:39:43 pelle Exp $
+ * $Id: AbstractLedgerTest.java,v 1.6 2004/03/31 23:11:09 pelle Exp $
  * $Log: AbstractLedgerTest.java,v $
+ * Revision 1.6  2004/03/31 23:11:09  pelle
+ * Reworked the ID's of the transactions. The primary ID is now the request ID.
+ * Receipt ID's are optional and added using a separate set method.
+ * The various interactive passphrase agents now have shell methods for the new interactive approach.
+ *
  * Revision 1.5  2004/03/25 21:39:43  pelle
  * Modified expire tests a bit to eliminate one cause for an error
- *
+ * <p/>
  * Revision 1.4  2004/03/25 19:03:23  pelle
  * PostedTransaction and friend now verify the unpostedtransaction is balanced.
  * Updated schema for HHeld to include a cancelled field and a completed field. (The latter doesnt yet work right). Need to read more Hibernate docs to find out why.
@@ -226,7 +231,7 @@ public abstract class AbstractLedgerTest extends TestCase {
         final double bobBalance = ledger.getBalance(CAROL);
         int cumulative = 0;
         for (int i = 0; i < 100; i++) {
-            ledger.transfer("req" + i + System.currentTimeMillis(), "x" + i + System.currentTimeMillis(), "Issuer", CAROL, i, "fund it");
+            ledger.transfer("req" + i + System.currentTimeMillis(), "Issuer", CAROL, i, "fund it");
             cumulative += i;
             assertEquals("BOB BALANCE", bobBalance + cumulative, ledger.getBalance(CAROL), 0);
             assertEquals("BOB AVAILABLE BALANCE", ledger.getBalance(CAROL), ledger.getAvailableBalance(CAROL), 0);
@@ -350,6 +355,20 @@ public abstract class AbstractLedgerTest extends TestCase {
         System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
         System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
         assertTrue("Ledger is balanced", ledger.isBalanced());
+    }
+
+    public final void testSetReceiptId() throws LedgerException {
+        final double aliceBalance = ledger.getBalance(ALICE);
+        final double bobBalance = ledger.getBalance(BOB);
+
+        PostedTransaction tran = ledger.transfer(ALICE, BOB, 100, "LOAN");
+        assertNull(tran.getReceiptId());
+        try {
+            ledger.setReceiptId(tran.getRequestId(), "1234");
+        } catch (UnknownTransactionException e) {
+            assertTrue(true);
+        }
+
     }
 
     public final void testNaiveBenchmark() throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException {

@@ -10,8 +10,13 @@ import org.neuclear.ledger.browser.LedgerBrowser;
 import java.util.Date;
 
 /*
-$Id: AbstractLedgerBrowserTest.java,v 1.3 2004/03/29 16:56:26 pelle Exp $
+$Id: AbstractLedgerBrowserTest.java,v 1.4 2004/03/31 23:11:09 pelle Exp $
 $Log: AbstractLedgerBrowserTest.java,v $
+Revision 1.4  2004/03/31 23:11:09  pelle
+Reworked the ID's of the transactions. The primary ID is now the request ID.
+Receipt ID's are optional and added using a separate set method.
+The various interactive passphrase agents now have shell methods for the new interactive approach.
+
 Revision 1.3  2004/03/29 16:56:26  pelle
 AbstractLedgerBrowserTest has been extended to test date ranges
 SimpleLedger now passes all tests.
@@ -181,8 +186,7 @@ public abstract class AbstractLedgerBrowserTest extends TestCase {
             assertEquals("counterparty", counterparty, bb.getCounterparty());
             assertEquals("amount", amount, bb.getAmount(), 0);
             assertEquals("comment", "test" + total, bb.getComment());
-            assertNotNull("id", bb.getId());
-            assertNotNull("reqid", bb.getRequestId());
+            assertNotNull("request", bb.getRequestId());
             assertNotNull("valuetime", bb.getValuetime());
             assertNull("expiry", bb.getExpirytime());
             assertNull("cancelled", bb.getCancelled());

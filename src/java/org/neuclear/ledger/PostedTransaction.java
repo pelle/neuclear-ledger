@@ -5,8 +5,13 @@ package org.neuclear.ledger;
  * User: pelleb
  * Date: Jan 25, 2003
  * Time: 12:48:26 PM
- * $Id: PostedTransaction.java,v 1.8 2004/03/25 19:03:23 pelle Exp $
+ * $Id: PostedTransaction.java,v 1.9 2004/03/31 23:11:10 pelle Exp $
  * $Log: PostedTransaction.java,v $
+ * Revision 1.9  2004/03/31 23:11:10  pelle
+ * Reworked the ID's of the transactions. The primary ID is now the request ID.
+ * Receipt ID's are optional and added using a separate set method.
+ * The various interactive passphrase agents now have shell methods for the new interactive approach.
+ *
  * Revision 1.8  2004/03/25 19:03:23  pelle
  * PostedTransaction and friend now verify the unpostedtransaction is balanced.
  * Updated schema for HHeld to include a cancelled field and a completed field. (The latter doesnt yet work right). Need to read more Hibernate docs to find out why.
@@ -79,15 +84,15 @@ public class PostedTransaction extends Transaction {
      * @param orig
      */
     public PostedTransaction(final UnPostedTransaction orig, final Date time) throws InvalidTransactionException, UnBalancedTransactionException {
-        super(orig.getRequestId(), orig.getId(), orig.getComment(), orig.getItemList());
+        super(orig.getRequestId(), orig.getComment(), orig.getItemList());
         if (!orig.isBalanced())
-            throw new UnBalancedTransactionException(null, orig);
+            throw new UnBalancedTransactionException(null, orig, orig.getBalance());
         this.transactionTime = time;
 
     }
 
-    public PostedTransaction(final PostedHeldTransaction orig, final Date time, final double amount, final String comment) throws InvalidTransactionException {
-        super(orig.getRequestId(), orig.getId(), comment, orig.getItemList());
+    public PostedTransaction(final PostedHeldTransaction orig, final Date time, final double amount, final String comment) throws ExceededHeldAmountException, UnBalancedTransactionException {
+        super(orig.getRequestId(), comment, orig.getAdjustedItems(amount));
         this.transactionTime = time;
     }
 
@@ -95,7 +100,21 @@ public class PostedTransaction extends Transaction {
         return transactionTime;
     }
 
+    /**
+     * The ID of the Receipt generated after a Transaction has been posted
+     *
+     * @return
+     */
+    public String getReceiptId() {
+        return receipt;
+    }
+
+    public void setReceiptId(String receipt) {
+        this.receipt = receipt;
+    }
+
 
     private final Date transactionTime;
+    private String receipt;
 
 }

@@ -5,8 +5,13 @@ package org.neuclear.ledger;
  * User: pelleb
  * Date: Jan 25, 2003
  * Time: 12:54:28 PM
- * $Id: UnPostedTransaction.java,v 1.8 2004/03/21 00:48:36 pelle Exp $
+ * $Id: UnPostedTransaction.java,v 1.9 2004/03/31 23:11:10 pelle Exp $
  * $Log: UnPostedTransaction.java,v $
+ * Revision 1.9  2004/03/31 23:11:10  pelle
+ * Reworked the ID's of the transactions. The primary ID is now the request ID.
+ * Receipt ID's are optional and added using a separate set method.
+ * The various interactive passphrase agents now have shell methods for the new interactive approach.
+ *
  * Revision 1.8  2004/03/21 00:48:36  pelle
  * The problem with Enveloped signatures has now been fixed. It was a problem in the way transforms work. I have bandaided it, but in the future if better support for transforms need to be made, we need to rethink it a bit. Perhaps using the new crypto channel's in neuclear-commons.
  *
@@ -82,8 +87,8 @@ public class UnPostedTransaction extends Transaction {
      *
      * @param comment
      */
-    public UnPostedTransaction(final String req, final String id, final String comment) throws InvalidTransactionException {
-        super(req, id, comment, new ArrayList(2));
+    public UnPostedTransaction(final String req, final String comment) throws InvalidTransactionException {
+        super(req, comment, new ArrayList(2));
 
         balance = 0;
     }

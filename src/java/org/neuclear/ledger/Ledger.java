@@ -1,8 +1,13 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: Ledger.java,v 1.14 2004/03/25 16:44:22 pelle Exp $
+ * $Id: Ledger.java,v 1.15 2004/03/31 23:11:10 pelle Exp $
  * $Log: Ledger.java,v $
+ * Revision 1.15  2004/03/31 23:11:10  pelle
+ * Reworked the ID's of the transactions. The primary ID is now the request ID.
+ * Receipt ID's are optional and added using a separate set method.
+ * The various interactive passphrase agents now have shell methods for the new interactive approach.
+ *
  * Revision 1.14  2004/03/25 16:44:22  pelle
  * Added getTestBalance() and isBalanced() to Ledger to see if ledger is balanced.
  * The hibernate implementation has changed the comment size to 255 to work with mysql and now
@@ -269,36 +274,38 @@ public abstract class Ledger {
      */
     public abstract PostedHeldTransaction findHeldTransaction(String idstring) throws LowlevelLedgerException, UnknownTransactionException;
 
+    public abstract void setReceiptId(String id, String receipt) throws LowlevelLedgerException, UnknownTransactionException;
+
     public abstract double getTestBalance() throws LowlevelLedgerException;
 
     public final boolean isBalanced() throws LowlevelLedgerException {
         return getTestBalance() == 0;
     }
 
-    public final PostedTransaction transfer(String req, String id, String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException {
-        UnPostedTransaction tran = new UnPostedTransaction(req, id, comment);
+    public final PostedTransaction transfer(String req, String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException {
+        UnPostedTransaction tran = new UnPostedTransaction(req, comment);
         tran.addItem(from, -amount);
         tran.addItem(to, amount);
         return performTransaction(tran);
     }
 
     public final PostedTransaction transfer(String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException {
-        return transfer(CryptoTools.createRandomID(), CryptoTools.createRandomID(), from, to, amount, comment);
+        return transfer(CryptoTools.createRandomID(), from, to, amount, comment);
     }
 
-    public final PostedTransaction verifiedTransfer(String req, String id, String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException {
-        UnPostedTransaction tran = new UnPostedTransaction(req, id, comment);
+    public final PostedTransaction verifiedTransfer(String req, String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException {
+        UnPostedTransaction tran = new UnPostedTransaction(req, comment);
         tran.addItem(from, -amount);
         tran.addItem(to, amount);
         return performVerifiedTransfer(tran);
     }
 
     public final PostedTransaction verifiedTransfer(String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException {
-        return verifiedTransfer(CryptoTools.createRandomID(), CryptoTools.createRandomID(), from, to, amount, comment);
+        return verifiedTransfer(CryptoTools.createRandomID(), from, to, amount, comment);
     }
 
-    public final PostedHeldTransaction hold(String req, String id, String from, String to, Date expiry, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException {
-        UnPostedHeldTransaction tran = new UnPostedHeldTransaction(req, id, comment, expiry);
+    public final PostedHeldTransaction hold(String req, String from, String to, Date expiry, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException {
+        UnPostedHeldTransaction tran = new UnPostedHeldTransaction(req, comment, expiry);
         tran.addItem(from, -amount);
         tran.addItem(to, amount);
         return performHeldTransfer(tran);
@@ -307,7 +314,7 @@ public abstract class Ledger {
     public final PostedHeldTransaction hold(String from, String to, Date expiry, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException {
         if (getAvailableBalance(from) - amount < 0)
             throw new InsufficientFundsException(this, from, amount);
-        return hold(CryptoTools.createRandomID(), CryptoTools.createRandomID(), from, to, expiry, amount, comment);
+        return hold(CryptoTools.createRandomID(), from, to, expiry, amount, comment);
     }
 
     public final void cancel(String id) throws LowlevelLedgerException, UnknownTransactionException {

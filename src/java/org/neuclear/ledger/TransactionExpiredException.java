@@ -20,6 +20,6 @@ public final class TransactionExpiredException extends LedgerException {
     }
 
     public final String getSubMessage() {
-        return "Transaction: " + transaction.getId() + " expired: " + transaction.getExpiryTime();
+        return "Transaction: " + transaction.getRequestId() + " expired: " + transaction.getExpiryTime();
     }
 }

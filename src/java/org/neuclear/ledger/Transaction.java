@@ -1,8 +1,13 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: Transaction.java,v 1.6 2004/03/23 22:01:43 pelle Exp $
+ * $Id: Transaction.java,v 1.7 2004/03/31 23:11:10 pelle Exp $
  * $Log: Transaction.java,v $
+ * Revision 1.7  2004/03/31 23:11:10  pelle
+ * Reworked the ID's of the transactions. The primary ID is now the request ID.
+ * Receipt ID's are optional and added using a separate set method.
+ * The various interactive passphrase agents now have shell methods for the new interactive approach.
+ *
  * Revision 1.6  2004/03/23 22:01:43  pelle
  * Bumped version numbers for commons and xmlsig througout.
  * Updated repositories and webservers to use old.neuclear.org
@@ -68,9 +73,8 @@ import java.util.List;
  * Ledger and returned as imutable PostedTransaction objects.
  */
 public abstract class Transaction implements Serializable {
-    protected Transaction(final String req, final String id, final String comment, List items) throws InvalidTransactionException {
+    protected Transaction(final String req, final String comment, List items) {
         this.comment = comment;
-        this.id = id;
         this.req = req;
         this.items = items;
     }
@@ -84,10 +88,11 @@ public abstract class Transaction implements Serializable {
     }
 
 
-    public String getId() {
-        return id;
-    }
-
+    /**
+     * The ID of the Request.
+     *
+     * @return
+     */
     public String getRequestId() {
         return req;
     }
@@ -96,9 +101,21 @@ public abstract class Transaction implements Serializable {
         return new ArrayList(items);
     }
 
+    public final double getAmount() {
+
+        double amount = 0;
+        for (int i = 0; i < items.size(); i++) {
+            TransactionItem item = (TransactionItem) items.get(i);
+            if (item.getAmount() >= 0) {
+                amount += item.getAmount();
+            }
+        }
+        return amount;
+    }
+
     private final String comment;
-    private final String id;
     private final String req;
+
     protected final List items;
 
 }

@@ -1,13 +1,11 @@
 package org.neuclear.ledger.servlets;
 
 import org.neuclear.commons.Utility;
-import org.neuclear.commons.configuration.ConfigurableContainer;
 import org.neuclear.commons.servlets.ServletTools;
 import org.neuclear.commons.time.TimeTools;
 import org.neuclear.id.InvalidNamedObjectException;
 import org.neuclear.id.NSTools;
 import org.neuclear.ledger.LowlevelLedgerException;
-import org.neuclear.ledger.Ledger;
 import org.neuclear.ledger.browser.BookBrowser;
 import org.neuclear.ledger.browser.LedgerBrowser;
 import org.neuclear.ledger.simple.PopulatedSimpleLedger;
@@ -20,9 +18,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.Principal;
-import java.util.Date;
-import java.sql.Timestamp;
 import java.text.ParseException;
+import java.util.Date;
 
 /*
 NeuClear Distributed Transaction Clearing Platform
@@ -42,8 +39,13 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerBrowserServlet.java,v 1.1 2004/03/29 23:43:30 pelle Exp $
+$Id: LedgerBrowserServlet.java,v 1.2 2004/03/31 23:11:09 pelle Exp $
 $Log: LedgerBrowserServlet.java,v $
+Revision 1.2  2004/03/31 23:11:09  pelle
+Reworked the ID's of the transactions. The primary ID is now the request ID.
+Receipt ID's are optional and added using a separate set method.
+The various interactive passphrase agents now have shell methods for the new interactive approach.
+
 Revision 1.1  2004/03/29 23:43:30  pelle
 The servlets now work and display the ledger contents.
 
@@ -83,7 +85,7 @@ public class LedgerBrowserServlet extends HttpServlet {
         try {
 //            ConfigurableContainer pico=(ConfigurableContainer) getServletContext().getAttribute("pico");
 //            ledger = (LedgerBrowser) pico.getComponentInstance(Ledger.class) ;
-            ledger=new PopulatedSimpleLedger(serviceid);
+            ledger = new PopulatedSimpleLedger(serviceid);
         } catch (Exception e) {
             e.printStackTrace();
             throw new ServletException(e);
@@ -105,13 +107,13 @@ public class LedgerBrowserServlet extends HttpServlet {
                 book = book.substring(1);
             System.out.println("Browsing: " + book);
 
-            String fromStr=request.getParameter("from");
-            String toStr=request.getParameter("to");
+            String fromStr = request.getParameter("from");
+            String toStr = request.getParameter("to");
 
-            Date from=parseDate(fromStr);
-            Date to=parseDate(toStr);
+            Date from = parseDate(fromStr);
+            Date to = parseDate(toStr);
 
-            BookBrowser stmt = browse(book,from,to);
+            BookBrowser stmt = browse(book, from, to);
             out.println("<table><tr><th>Transaction ID</th><th>Time</th><th>Counterparty</th><th>Comment</th><th>Amount</th></tr>");
             while (stmt.next()) {
                 final double amount = stmt.getAmount();
@@ -119,7 +121,7 @@ public class LedgerBrowserServlet extends HttpServlet {
                 if (amount < 0)
                     out.print(" class=\"negative\"");
                 out.print("><td style=\"size:small\">");
-                out.print(stmt.getId());
+                out.print(stmt.getRequestId());
                 out.print("</td><td>");
                 out.print(TimeTools.formatTimeStampShort(stmt.getValuetime()));
                 out.print("</td><td><a href=\"");
@@ -145,16 +147,16 @@ public class LedgerBrowserServlet extends HttpServlet {
         }
     }
 
-    private BookBrowser browse(String book,Date from, Date to) throws LowlevelLedgerException {
-        if (from!=null){
-            if (to!=null)
-                return ledger.browseRange(book,from,to);
-            return ledger.browseFrom(book,from);
+    private BookBrowser browse(String book, Date from, Date to) throws LowlevelLedgerException {
+        if (from != null) {
+            if (to != null)
+                return ledger.browseRange(book, from, to);
+            return ledger.browseFrom(book, from);
         }
         return ledger.browse(book);
     }
 
-    private Date parseDate(String fromStr)  {
+    private Date parseDate(String fromStr) {
         if (Utility.isEmpty(fromStr))
             return null;
         try {

@@ -1,8 +1,13 @@
 package org.neuclear.ledger.simple;
 
 /**
- * $Id: SimpleLedger.java,v 1.8 2004/03/29 20:05:17 pelle Exp $
+ * $Id: SimpleLedger.java,v 1.9 2004/03/31 23:11:09 pelle Exp $
  * $Log: SimpleLedger.java,v $
+ * Revision 1.9  2004/03/31 23:11:09  pelle
+ * Reworked the ID's of the transactions. The primary ID is now the request ID.
+ * Receipt ID's are optional and added using a separate set method.
+ * The various interactive passphrase agents now have shell methods for the new interactive approach.
+ *
  * Revision 1.8  2004/03/29 20:05:17  pelle
  * LedgerServlet works now at least for a straight non date restricted browse.
  *
@@ -124,14 +129,12 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
      * @ If there was a problem with the Transaction
      */
     public PostedTransaction performTransaction(final UnPostedTransaction trans) throws UnBalancedTransactionException, InvalidTransactionException {
-        if (!trans.isBalanced())
-            throw new UnBalancedTransactionException(this, trans);
         final PostedTransaction posted = new PostedTransaction(trans, new Date());
         return post(posted);
     }
 
     private PostedTransaction post(final PostedTransaction posted) {
-        ledger.put(posted.getId(), posted);
+        ledger.put(posted.getRequestId(), posted);
         postToBook(posted);
         updateBalances(posted);
         return posted;
@@ -190,10 +193,8 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
      * @return Unique ID
      */
     public PostedHeldTransaction performHeldTransfer(final UnPostedHeldTransaction trans) throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException {
-        if (!trans.isBalanced())
-            throw new UnBalancedTransactionException(this, trans);
         final PostedHeldTransaction posted = new PostedHeldTransaction(trans, new Date());
-        held.put(posted.getId(), posted);
+        held.put(posted.getRequestId(), posted);
         postToBook(posted);
         return posted;
     }
@@ -208,8 +209,8 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
      *
      */
     public void performCancelHold(PostedHeldTransaction hold) throws LowlevelLedgerException, UnknownTransactionException {
-        if (held.containsKey(hold.getId()))
-            held.remove(hold.getId());
+        if (held.containsKey(hold.getRequestId()))
+            held.remove(hold.getRequestId());
     }
 
     /**
@@ -228,11 +229,11 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
      *
      */
     public PostedTransaction performCompleteHold(PostedHeldTransaction hold, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, TransactionExpiredException, UnknownTransactionException {
-        if (!held.containsKey(hold.getId()))
-            throw new UnknownTransactionException(this, hold.getId());
+        if (!held.containsKey(hold.getRequestId()))
+            throw new UnknownTransactionException(this, hold.getRequestId());
         if (hold.getExpiryTime().before(new Date()))
             throw new TransactionExpiredException(this, hold);
-        held.remove(hold.getId());
+        held.remove(hold.getRequestId());
         PostedTransaction posted = new PostedTransaction(hold, new Date(), amount, comment);
         return post(posted);
     }
@@ -324,6 +325,12 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
      */
     public PostedHeldTransaction findHeldTransaction(String idstring) throws LowlevelLedgerException, UnknownTransactionException {
         return (PostedHeldTransaction) held.get(idstring);
+    }
+
+    public void setReceiptId(String id, String receipt) throws LowlevelLedgerException, UnknownTransactionException {
+        if (!ledger.containsKey(id))
+            throw new UnknownTransactionException(this, id);
+        ((PostedTransaction) ledger.get(id)).setReceiptId(receipt);
     }
 
     public double getTestBalance() throws LowlevelLedgerException {
@@ -425,7 +432,7 @@ public class SimpleLedger extends Ledger implements LedgerBrowser {
                 }
             }
 
-            setRow(tran.getId(), tran.getRequestId(), counterparty, tran.getComment(), tran.getTransactionTime(), item.getAmount(), null, null, null);
+            setRow(tran.getRequestId(), counterparty, tran.getComment(), tran.getTransactionTime(), item.getAmount(), null, null, null);
         }
 
         private final Iterator iter;
