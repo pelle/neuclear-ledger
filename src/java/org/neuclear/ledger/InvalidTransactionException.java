@@ -7,14 +7,15 @@ package org.neuclear.ledger;
  * Time: 1:12:31 PM
  * To change this template use Options | File Templates.
  */
-public final class InvalidTransactionException extends LedgerException{
+public class InvalidTransactionException extends LedgerException {
     public InvalidTransactionException(final Ledger ledger, final String message) {
         super(ledger);
     }
 
     public final String getSubMessage() {
-        return "Validation Error: "+message;
+        return "Validation Error: " + message;
 
     }
+
     private String message;
 }

@@ -1,7 +1,6 @@
 package org.neuclear.ledger;
 
 import java.util.Date;
-import java.util.Iterator;
 
 /**
  * User: pelleb
@@ -9,8 +8,8 @@ import java.util.Iterator;
  * Time: 3:17:16 PM
  */
 public final class PostedHeldTransaction extends PostedTransaction implements HeldTransaction {
-    public PostedHeldTransaction(final UnPostedHeldTransaction orig, final String xid) throws InvalidTransactionException {
-        super(orig, xid);
+    public PostedHeldTransaction(final UnPostedHeldTransaction orig, Date time) throws InvalidTransactionException {
+        super(orig, time);
         this.expiryTime = orig.getExpiryTime();
     }
 
@@ -19,31 +18,5 @@ public final class PostedHeldTransaction extends PostedTransaction implements He
     }
 
     final private Date expiryTime;
-
-    /**
-     * Implements a held assetName
-     * 
-     * @param actualAmount    
-     * @param transactionTime 
-     * @param comment         
-     * @return New Version
-     */
-    public final PostedTransaction complete(final double actualAmount, final Date transactionTime, final String comment) throws TransactionExpiredException, InvalidTransactionException, LowlevelLedgerException {
-        return getLedger().performCompleteHold(this, actualAmount, transactionTime, comment);
-    }
-
-    public final void cancel() throws UnknownTransactionException, LowlevelLedgerException {
-        getLedger().performCancelHold(this);
-    }
-
-    final PostedTransaction reverse(final String comment) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
-        final UnPostedHeldTransaction reverse = new UnPostedHeldTransaction(getLedger(), "REVERSAL of " + getXid(), getTransactionTime(), getExpiryTime(), false);
-        final Iterator iter = getItems();
-        while (iter.hasNext()) {
-            final TransactionItem item = (TransactionItem) iter.next();
-            reverse.addItem(item.getBook(), -item.getAmount());
-        }
-        return reverse.post();
-    }
 
 }

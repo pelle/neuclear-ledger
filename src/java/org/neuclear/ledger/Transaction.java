@@ -1,7 +1,11 @@
 package org.neuclear.ledger;
+
 /**
- * $Id: Transaction.java,v 1.4 2003/11/21 04:43:20 pelle Exp $
+ * $Id: Transaction.java,v 1.5 2004/03/21 00:48:36 pelle Exp $
  * $Log: Transaction.java,v $
+ * Revision 1.5  2004/03/21 00:48:36  pelle
+ * The problem with Enveloped signatures has now been fixed. It was a problem in the way transforms work. I have bandaided it, but in the future if better support for transforms need to be made, we need to rethink it a bit. Perhaps using the new crypto channel's in neuclear-commons.
+ *
  * Revision 1.4  2003/11/21 04:43:20  pelle
  * EncryptedFileStore now works. It uses the PBECipher with DES3 afair.
  * Otherwise You will Finaliate.
@@ -49,82 +53,48 @@ package org.neuclear.ledger;
  *
  */
 
-import java.util.Date;
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Class implemting information about a Transaction. Programs initially create UnPostedTransaction's which get Posted to the
  * Ledger and returned as imutable PostedTransaction objects.
  */
-public abstract class Transaction {
+public abstract class Transaction implements Serializable {
 
-    Transaction(final Ledger ledger,final Date transactionTime,final String comment) throws InvalidTransactionException {
-        if (ledger==null)
-            throw new InvalidTransactionException(ledger,"Transaction must have an associated ledger");
-        this.ledger=ledger;
-        this.transactionTime=transactionTime;
-        this.comment=comment;
+    protected Transaction(final String req, final String id, final String comment, List items) throws InvalidTransactionException {
+        this.comment = comment;
+        this.id = id;
+        this.req = req;
+        this.items = items;
     }
-
-    /**
-     * Creates a simple Transfer Transaction between two accounts and posts it.
-     * @param ledger
-     * @param debit
-     * @param credit
-     * @param amount Must be positive
-     * @param comment
-     * @param transactionTime
-     * @return
-     */
-
-    public static PostedTransaction createTransfer(final Ledger ledger, final Book debit, final Book credit, final double amount, final String comment, final Date transactionTime) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
-        if (amount<0)
-            throw new InvalidTransactionException(ledger,"The amount must be positive in a Transfer");
-        final UnPostedTransaction transfer=new UnPostedTransaction(ledger,comment,transactionTime);
-        transfer.addItem(debit,-amount);
-        transfer.addItem(credit,amount);
-        return transfer.post();
-
-    }
-    /**
-     * Creates a simple Transfer Transaction between two accounts and posts it.
-     * @param ledger
-     * @param debit
-     * @param credit
-     * @param amount Must be positive
-     * @param comment
-     * @param transactionTime
-     * @return
-     */
-
-    public static PostedHeldTransaction createHeldTransfer(final Ledger ledger, final Book debit, final Book credit, final double amount, final String comment, final Date transactionTime,final Date heldUntil) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
-        if (amount<0)
-            throw new InvalidTransactionException(ledger,"The amount must be positive in a Transfer");
-        final UnPostedTransaction transfer=new UnPostedHeldTransaction(ledger,comment,transactionTime,heldUntil);
-        transfer.addItem(debit,-amount);
-        transfer.addItem(credit,amount);
-        return (PostedHeldTransaction)transfer.post();
-
-    }
-
-
-    public final Date getTransactionTime() {
-        return transactionTime;
-    }
-
 
     public final String getComment() {
         return comment;
     }
-    public abstract Iterator getItems();
 
-
-    protected final Ledger getLedger() {
-        return ledger;
+    public final Iterator getItems() {
+        return items.iterator();
     }
 
-    final private Ledger ledger;
-    private final Date transactionTime;
+
+    public String getId() {
+        return id;
+    }
+
+    public String getRequestId() {
+        return req;
+    }
+
+    final List getItemList() {
+        return new ArrayList(items);
+    }
+
     private final String comment;
+    private final String id;
+    private final String req;
+    protected final List items;
 
 }

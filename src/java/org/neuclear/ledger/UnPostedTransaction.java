@@ -5,8 +5,11 @@ package org.neuclear.ledger;
  * User: pelleb
  * Date: Jan 25, 2003
  * Time: 12:54:28 PM
- * $Id: UnPostedTransaction.java,v 1.7 2003/12/01 17:11:01 pelle Exp $
+ * $Id: UnPostedTransaction.java,v 1.8 2004/03/21 00:48:36 pelle Exp $
  * $Log: UnPostedTransaction.java,v $
+ * Revision 1.8  2004/03/21 00:48:36  pelle
+ * The problem with Enveloped signatures has now been fixed. It was a problem in the way transforms work. I have bandaided it, but in the future if better support for transforms need to be made, we need to rethink it a bit. Perhaps using the new crypto channel's in neuclear-commons.
+ *
  * Revision 1.7  2003/12/01 17:11:01  pelle
  * Added initial Support for entityengine (OFBiz)
  *
@@ -63,10 +66,7 @@ package org.neuclear.ledger;
  *
  */
 
-import java.util.Date;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Class for building Transactions
@@ -79,44 +79,15 @@ public class UnPostedTransaction extends Transaction {
      * <li>transactionTime must not be null
      * <li>if there is an expiryTime it must not be before the transactionTime
      * </ul>
-     * 
-     * @param ledger          
-     * @param comment         
-     * @param transactionTime 
+     *
+     * @param comment
      */
-    public UnPostedTransaction(final Ledger ledger, final String comment, final Date transactionTime) throws InvalidTransactionException {
-        this(ledger, comment, transactionTime, false);
-    }
-
-    UnPostedTransaction(final Ledger ledger, final String comment, final Date transactionTime, final boolean posted) throws InvalidTransactionException {
-        super(ledger, transactionTime, comment);
-//        if (amount<0)
-//            throw new TransactionException("Negative Transactions are not allowed");
-        if (transactionTime == null)
-            throw new InvalidTransactionException(ledger, "Transaction must have a Transaction Time");
+    public UnPostedTransaction(final String req, final String id, final String comment) throws InvalidTransactionException {
+        super(req, id, comment, new ArrayList(2));
 
         balance = 0;
-        items = new LinkedList();
     }
 
-    /**
-     * Posts a Transaction permanently to it's ledger.
-     * Remeber a Transaction must be balanced to be posted.
-     * 
-     * @return A Unique Transaction ID
-     */
-    public final synchronized PostedTransaction post() throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException {
-        PostedTransaction postTransaction = null;
-        if (isBalanced()) {
-            postTransaction = postTransaction();
-        } else
-            throw new UnBalancedTransactionException(getLedger(), this);
-        return postTransaction;
-    }
-
-    protected PostedTransaction postTransaction() throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException {
-        return getLedger().performTransaction(this);
-    }
 
     /**
      * Is the Transaction Balanced
@@ -136,19 +107,6 @@ public class UnPostedTransaction extends Transaction {
         return balance;
     }
 
-    public final Iterator getItems() {
-        return items.iterator();
-    }
-
-    final TransactionItem[] getItemArray() {
-        final TransactionItem[] itemarray = new TransactionItem[items.size()];
-        for (int i = 0; i < items.size(); i++) {
-            itemarray[i] = (org.neuclear.ledger.TransactionItem) items.get(i);
-
-        }
-        return itemarray;
-    }
-
 
     /**
      * Adds an item to an unposted Transaction.
@@ -163,16 +121,13 @@ public class UnPostedTransaction extends Transaction {
      * @param amount 
      * @return the new balance
      */
-    public final synchronized double addItem(final Book book, final double amount) throws InvalidTransactionException {
+    public final synchronized double addItem(final String book, final double amount) throws InvalidTransactionException {
         if (book == null)
-            throw new InvalidTransactionException(getLedger(), "You must supply a valid Book");
-        if (!book.getLedger().equals(getLedger()))
-            throw new InvalidTransactionException(getLedger(), "The book must be part of the same Ledger as the Transaction");
+            throw new InvalidTransactionException(null, "You must supply a valid Book");
         items.add(new TransactionItem(book, amount));
         balance += amount;
         return balance;
     }
 
-    private List items;
     private double balance;
 }

@@ -1,15 +1,10 @@
 package org.neuclear.ledger.browser;
 
 import org.neuclear.commons.configuration.Configuration;
-import org.neuclear.commons.sql.statements.StatementFactory;
-import org.neuclear.commons.sql.statements.SimpleStatementFactory;
 import org.neuclear.commons.sql.ConnectionSource;
-import org.neuclear.commons.sql.DefaultXAConnectionSource;
 import org.neuclear.commons.sql.TestCaseXAConnectionSource;
-import org.neuclear.ledger.implementations.SQLLedger;
-import org.neuclear.ledger.Ledger;
-import org.picocontainer.Parameter;
-import org.picocontainer.defaults.ConstantParameter;
+import org.neuclear.commons.sql.statements.SimpleStatementFactory;
+import org.neuclear.commons.sql.statements.StatementFactory;
 
 /*
 NeuClear Distributed Transaction Clearing Platform
@@ -29,8 +24,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerConfiguration.java,v 1.1 2004/01/02 23:18:34 pelle Exp $
+$Id: LedgerConfiguration.java,v 1.2 2004/03/21 00:48:35 pelle Exp $
 $Log: LedgerConfiguration.java,v $
+Revision 1.2  2004/03/21 00:48:35  pelle
+The problem with Enveloped signatures has now been fixed. It was a problem in the way transforms work. I have bandaided it, but in the future if better support for transforms need to be made, we need to rethink it a bit. Perhaps using the new crypto channel's in neuclear-commons.
+
 Revision 1.1  2004/01/02 23:18:34  pelle
 Added StatementFactory pattern and refactored the ledger to use it.
 
@@ -43,9 +41,9 @@ Added StatementFactory pattern and refactored the ledger to use it.
  */
 public class LedgerConfiguration implements Configuration {
     public void configure(org.picocontainer.MutablePicoContainer pico) {
-        pico.registerComponentImplementation(ConnectionSource.class,TestCaseXAConnectionSource.class);
-        pico.registerComponentImplementation(StatementFactory.class,SimpleStatementFactory.class);
-        pico.registerComponentImplementation(Ledger.class,SQLLedger.class,new Parameter[] {new ConstantParameter("neu://test/bux")});
+        pico.registerComponentImplementation(ConnectionSource.class, TestCaseXAConnectionSource.class);
+        pico.registerComponentImplementation(StatementFactory.class, SimpleStatementFactory.class);
+//        pico.registerComponentImplementation(Ledger.class,SQLLedger.class,new Parameter[] {new ConstantParameter("neu://test/bux")});
 
     }
 }

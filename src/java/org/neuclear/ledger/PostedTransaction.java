@@ -1,11 +1,15 @@
 package org.neuclear.ledger;
+
 /**
  * (C) 2003 Antilles Software Ventures SA
  * User: pelleb
  * Date: Jan 25, 2003
  * Time: 12:48:26 PM
- * $Id: PostedTransaction.java,v 1.5 2003/12/01 17:11:01 pelle Exp $
+ * $Id: PostedTransaction.java,v 1.6 2004/03/21 00:48:36 pelle Exp $
  * $Log: PostedTransaction.java,v $
+ * Revision 1.6  2004/03/21 00:48:36  pelle
+ * The problem with Enveloped signatures has now been fixed. It was a problem in the way transforms work. I have bandaided it, but in the future if better support for transforms need to be made, we need to rethink it a bit. Perhaps using the new crypto channel's in neuclear-commons.
+ *
  * Revision 1.5  2003/12/01 17:11:01  pelle
  * Added initial Support for entityengine (OFBiz)
  *
@@ -51,10 +55,8 @@ package org.neuclear.ledger;
  *
  */
 
-import javax.transaction.UserTransaction;
 import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
+
 /**
  * This class defines the type of Transactions that have been posted. They are therefore immutable.
  * They are created by the Ledger normally based on an UnPostedTransaction.
@@ -64,103 +66,24 @@ public class PostedTransaction extends Transaction {
 
     /**
      * Standard Constructor.
+     *
      * @param orig
-     * @param xid
      */
-    PostedTransaction(final UnPostedTransaction orig,final String xid) throws InvalidTransactionException {
-        super(orig.getLedger(),orig.getTransactionTime(),orig.getComment());
-        this.xid=xid;
-        this.items=orig.getItemArray();
+    public PostedTransaction(final UnPostedTransaction orig, final Date time) throws InvalidTransactionException {
+        super(orig.getRequestId(), orig.getId(), orig.getComment(), orig.getItemList());
+        this.transactionTime = time;
     }
 
-/*
-   PostedTransaction(Ledger ledger, String comment, Date transactionTime, Date expiryTime,String xid) throws TransactionException {
-        this(new UnPostedTransaction(ledger,comment,transactionTime,expiryTime,true),xid);
-    }
-*/
-
-    /**
-     * Creates an identical but reverse entry of a transaction. Use this to recredit a transaction.
-     * Note! The original Transaction must be posted.
-     * @param comment Comment Describing the Reversal
-     * @return Unique Transaction ID
-      */
-    PostedTransaction reverse(final String comment) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
-        final UnPostedTransaction reverse=new UnPostedTransaction(getLedger(),"REVERSAL of "+getXid(),getTransactionTime(),false);
-        final Iterator iter=getItems();
-        while (iter.hasNext()){
-            final TransactionItem item=(TransactionItem)iter.next();
-            reverse.addItem(item.getBook(),-item.getAmount());
-        }
-        return reverse.post();
+    public PostedTransaction(final PostedHeldTransaction orig, final Date time, final double amount, final String comment) throws InvalidTransactionException {
+        super(orig.getRequestId(), orig.getId(), comment, orig.getItemList());
+        this.transactionTime = time;
     }
 
-    /**
-     * Create a copy of a Transaction with new transaction times and comment
-     * @param transactionTime
-     * @param comment
-     * @return
-     */
-    final PostedTransaction copy(final Date transactionTime, final String comment) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
-        final UnPostedTransaction copy=new UnPostedTransaction(getLedger(),comment,transactionTime);
-        final Iterator iter=getItems();
-        while (iter.hasNext()){
-            final TransactionItem item=(TransactionItem)iter.next();
-            copy.addItem(item.getBook(),item.getAmount());
-        }
-        return copy.post();
-    }
-    /**
-     * Creates a new Version of a Transaction. This is useful when you want to only change the times of the transaction.
-     * @param transactionTime
-     * @param comment
-     * @return New Version
-     */
-    final PostedTransaction revise(final Date transactionTime, final String comment) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
-        final PostedTransaction rev=reverse(comment);
-        final UnPostedTransaction tran=new UnPostedTransaction(getLedger(),comment,transactionTime,false);
-        final Iterator iter=getItems();
-        while (iter.hasNext()){
-            final TransactionItem item=(TransactionItem)iter.next();
-            tran.addItem(item.getBook(),item.getAmount());
-        }
-        return tran.post();
-    }
-
-    /**
-     * Creates a new version of a Transaction, based on the UnPostedTransaction in the Parameter
-     * @param revised
-     * @return New Version
-     */
-    final PostedTransaction revise(final UnPostedTransaction revised) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
-        reverse("REVERSE"+revised.getComment());
-        final PostedTransaction tran=revised.post();
-        return tran;
+    public Date getTransactionTime() {
+        return transactionTime;
     }
 
 
-    public final Iterator getItems() {
-        return new Iterator() {
-            int i=0;
-            public boolean hasNext() {
-                return i<items.length;
-            }
-
-            public Object next() {
-                return items[i++];
-            }
-
-            public void remove() {
-
-            }
-
-        };
-    }
-
-    public final String getXid() {
-        return xid;
-    }
-    private final TransactionItem[] items;
-    private final String xid;
+    private final Date transactionTime;
 
 }

@@ -1,8 +1,11 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: Ledger.java,v 1.9 2003/12/11 23:56:06 pelle Exp $
+ * $Id: Ledger.java,v 1.10 2004/03/21 00:48:36 pelle Exp $
  * $Log: Ledger.java,v $
+ * Revision 1.10  2004/03/21 00:48:36  pelle
+ * The problem with Enveloped signatures has now been fixed. It was a problem in the way transforms work. I have bandaided it, but in the future if better support for transforms need to be made, we need to rethink it a bit. Perhaps using the new crypto channel's in neuclear-commons.
+ *
  * Revision 1.9  2003/12/11 23:56:06  pelle
  * Trying to test the ReceiverServlet with cactus. Still no luck. Need to return a ElementProxy of some sort.
  * Cleaned up some missing fluff in the ElementProxy interface. getTagName(), getQName() and getNameSpace() have been killed.
@@ -106,12 +109,9 @@ package org.neuclear.ledger;
  * Time: 5:31:53 PM
  */
 
-import org.neuclear.commons.sql.SQLTools;
+import org.neuclear.commons.crypto.CryptoTools;
 
-import javax.naming.NamingException;
-import javax.transaction.*;
 import java.util.Date;
-import java.util.Iterator;
 
 /**
  * This is the abstract Ledger class that implementators of the NeuClear Ledger need to implement.
@@ -123,35 +123,8 @@ public abstract class Ledger {
      * 
      * @param id 
      */
-    public Ledger(final String id, final String name) {
-        this.name = name;
+    public Ledger(final String id) {
         this.id = id;
-    }
-
-    /**
-     * Default implementation allows for new Books to be created on the fly. If you need control over this. Over ride.
-     * 
-     * @param bookID 
-     * @return 
-     */
-    public abstract Book getBook(String bookID) throws UnknownBookException, LowlevelLedgerException;
-
-    /**
-     * Used by implementations to securely create Book Instances
-     * 
-     * @param bookID 
-     * @return Valid Book instance
-     */
-    protected final Book createBookInstance(final String bookID, final String name) {
-        return new Book(bookID, name, this);
-    }
-
-    public abstract boolean bookExists(String bookID) throws LowlevelLedgerException;
-
-    public abstract Book createNewBook(String bookID, String title) throws BookExistsException, LowlevelLedgerException;
-
-    public final Book createNewBook(final String bookID) throws BookExistsException, LowlevelLedgerException {
-        return createNewBook(bookID, "Unnamed Account");
     }
 
 
@@ -181,7 +154,7 @@ public abstract class Ledger {
      * @param id A valid ID
      * @return The Transaction object
      */
-    public abstract PostedTransaction findTransaction(String id) throws LowlevelLedgerException, UnknownTransactionException, InvalidTransactionException, UnknownBookException;
+    public abstract Date getTransactionTime(String id) throws LowlevelLedgerException, UnknownTransactionException, InvalidTransactionException, UnknownBookException;
 
     /**
      * Calculate the true accounting balance at a given time. This does not take into account any held transactions, thus may not necessarily
@@ -191,22 +164,20 @@ public abstract class Ledger {
      *      (
      *          select sum(amount) as credit
      *          from ledger
-     *          where transactiondate <= sysdate and end_date is null and credit= 'neu://bob'
+     *          where transactiondate <= sysdate and end_date is null and credit= 'neu://BOB'
      *       ) c,
      *      (
      *          select sum(amount) as debit
      *          from ledger
-     *          where transactiondate <= sysdate and end_date is null and debit= 'neu://bob'
+     *          where transactiondate <= sysdate and end_date is null and debit= 'neu://BOB'
      *       ) d
      * <p/>
      * </pre>
      * 
-     * @param balancedate 
      * @return the balance as a double
      */
-    public abstract double getBalance(Book book, Date balancedate) throws LowlevelLedgerException;
 
-    public abstract double getBalance(Book book) throws LowlevelLedgerException;
+    public abstract double getBalance(String book) throws LowlevelLedgerException;
 
     /**
      * Calculate the available balance at a given time. This DOES take into account any held transactions.
@@ -215,88 +186,29 @@ public abstract class Ledger {
      *      (
      *          select sum(amount) as credit
      *          from ledger
-     *          where transactiondate <= sysdate and (end_date is null or end_date>= sysdate) and credit= 'neu://bob'
+     *          where transactiondate <= sysdate and (end_date is null or end_date>= sysdate) and credit= 'neu://BOB'
      *       ) c,
      *      (
      *          select sum(amount) as debit
      *          from ledger
-     *          where transactiondate <= sysdate and end_date is null and debit= 'neu://bob'
+     *          where transactiondate <= sysdate and end_date is null and debit= 'neu://BOB'
      *       ) d
      * <p/>
      * </pre>
      * 
-     * @param balancedate 
      * @return the balance as a double
      */
-    public abstract double getAvailableBalance(Book book, Date balancedate) throws LowlevelLedgerException;
 
-    public abstract double getAvailableBalance(Book book) throws LowlevelLedgerException;
-
-    /**
-     * Ledger Implementations use this to create Transactions.
-     * The reason for this kind of round the way contructions is that we dont want dodgy Implementations to cause security problems for
-     * other implementations.
-     * 
-     * @param transaction An Unposted Transaction containing the Transaction details
-     * @param xid         Unique Transaction ID
-     * @return PostedTransaction
-     */
-    protected final PostedTransaction createTransaction(final UnPostedTransaction transaction, final String xid) throws InvalidTransactionException {
-        return new PostedTransaction(transaction, xid);
-    }
-
-    /**
-     * Ledger Implementations use this to create Transactions.
-     * The reason for this kind of round the way contructions is that we dont want dodgy Implementations to cause security problems for
-     * other implementations.
-     * 
-     * @param transaction An Unposted Transaction containing the Transaction details
-     * @param xid         Unique Transaction ID
-     * @return PostedTransaction
-     */
-    protected final PostedHeldTransaction createHeldTransaction(final UnPostedHeldTransaction transaction, final String xid) throws InvalidTransactionException {
-        return new PostedHeldTransaction(transaction, xid);
-    }
-
-    protected final PostedTransaction createHeldComplete(final PostedHeldTransaction hold, final double amount, final Date time, final String comment) throws TransactionExpiredException, InvalidTransactionException, LowlevelLedgerException {
-        //TODO Rework these Exception
-        if (hold.getTransactionTime().after(hold.getExpiryTime()))
-            throw new TransactionExpiredException(this, hold);
-        if (amount < 0)
-            throw new InvalidTransactionException(this, "The amount must be positive");
-
-        try {
-            //PostedTransaction rev=hold.reverse(comment); // We dont need to reverse this
-            final UnPostedTransaction tran = new UnPostedTransaction(this, comment, time);
-            final Iterator iter = hold.getItems();
-            while (iter.hasNext()) {
-                final TransactionItem item = (TransactionItem) iter.next();
-                if (item.getAmount() >= 0)
-                    tran.addItem(item.getBook(), amount);
-                else
-                    tran.addItem(item.getBook(), -amount);
-            }
-            final PostedTransaction postedTransaction = tran.post();
-            return postedTransaction;
-        } catch (UnBalancedTransactionException e) {
-            rollbackUT();
-            throw new LowlevelLedgerException(this, e);
-        }
-    }
+    public abstract double getAvailableBalance(String book) throws LowlevelLedgerException;
 
     public String toString() {
-        return name;
-    }
-
-    public final String getName() {
-        return name;
+        return id;
     }
 
     public final String getId() {
         return id;
     }
 
-    private final String name;
     private final String id;
 
     /**
@@ -318,70 +230,40 @@ public abstract class Ledger {
      */
     public abstract void performCancelHold(PostedHeldTransaction hold) throws LowlevelLedgerException, UnknownTransactionException;
 
-    public abstract PostedTransaction performCompleteHold(PostedHeldTransaction hold, double amount, Date time, String comment) throws InvalidTransactionException, LowlevelLedgerException, TransactionExpiredException;
+    public abstract PostedTransaction performCompleteHold(PostedHeldTransaction hold, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, TransactionExpiredException;
 
-    /**
-     * Begins a JTA UserTransaction on the ledger. Not to be confused with a Ledger Transaction.
-     * 
-     * @throws LowlevelLedgerException 
-     */
-
-    public UserTransaction beginUT() throws LowlevelLedgerException {
-        try {
-            UserTransaction ut = SQLTools.getUserTransaction();
-            if (ut.getStatus() == Status.STATUS_NO_TRANSACTION)
-                ut.begin();
-            return ut;
-        } catch (NamingException e) {
-            throw new LowlevelLedgerException(this, e);
-        } catch (SystemException e) {
-            throw new LowlevelLedgerException(this, e);
-        } catch (NotSupportedException e) {
-            throw new LowlevelLedgerException(this, e);
-        }
+    public final PostedTransaction transfer(String req, String id, String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException {
+        UnPostedTransaction tran = new UnPostedTransaction(req, id, comment);
+        tran.addItem(from, -amount);
+        tran.addItem(to, amount);
+        return performTransaction(tran);
     }
 
-    /**
-     * Commits a JTA UserTransaction on the ledger. Not to be confused with a Ledger Transaction.
-     * 
-     * @param ut 
-     * @throws LowlevelLedgerException 
-     */
-    public void commitUT(UserTransaction ut) throws LowlevelLedgerException {
-        try {
-            ut.commit();
-        } catch (RollbackException e) {
-            throw new LowlevelLedgerException(this, e);
-        } catch (HeuristicMixedException e) {
-            throw new LowlevelLedgerException(this, e);
-        } catch (HeuristicRollbackException e) {
-            throw new LowlevelLedgerException(this, e);
-        } catch (SystemException e) {
-            throw new LowlevelLedgerException(this, e);
-        }
+    public final PostedTransaction transfer(String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException {
+        return transfer(CryptoTools.createRandomID(), CryptoTools.createRandomID(), from, to, amount, comment);
     }
 
-    /**
-     * Rolls back a JTA UserTransaction on the ledger. Not to be confused with a Ledger Transaction.
-     * 
-     * @param ut 
-     * @throws LowlevelLedgerException 
-     */
-    public void rollbackUT(UserTransaction ut) throws LowlevelLedgerException {
-        try {
-            ut.rollback();
-        } catch (SystemException e) {
-            throw new LowlevelLedgerException(this, e);
-        }
+    public final PostedHeldTransaction hold(String req, String id, String from, String to, Date expiry, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException {
+        UnPostedHeldTransaction tran = new UnPostedHeldTransaction(req, id, comment, expiry);
+        tran.addItem(from, -amount);
+        tran.addItem(to, amount);
+        return performHeldTransaction(tran);
     }
 
-    public void rollbackUT() throws LowlevelLedgerException {
-        try {
-            rollbackUT(SQLTools.getUserTransaction());
-        } catch (NamingException e) {
-            throw new LowlevelLedgerException(this, e);
-        } catch (SystemException e) {
-            throw new LowlevelLedgerException(this, e);
-        }
+    public final PostedHeldTransaction hold(String from, String to, Date expiry, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException {
+        return hold(CryptoTools.createRandomID(), CryptoTools.createRandomID(), from, to, expiry, amount, comment);
     }
+
+    public final void cancel(String id) throws LowlevelLedgerException, UnknownTransactionException {
+        PostedHeldTransaction tran = findHeldTransaction(id);
+        performCancelHold(tran);
+    }
+
+    public final PostedTransaction complete(String id, double amount, String comment) throws LowlevelLedgerException, UnknownTransactionException, TransactionExpiredException, InvalidTransactionException {
+        PostedHeldTransaction tran = findHeldTransaction(id);
+        return performCompleteHold(tran, amount, comment);
+    }
+
+
+    public abstract void close();
 }

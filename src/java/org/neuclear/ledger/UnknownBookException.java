@@ -8,20 +8,18 @@ package org.neuclear.ledger;
  * To change this template use Options | File Templates.
  */
 public final class UnknownBookException extends LedgerException {
-    public UnknownBookException(final Ledger ledger,final String bookID) {
+    public UnknownBookException(final Ledger ledger, final String bookID) {
         super(ledger);
-        this.bookID=bookID;
+        this.bookID = bookID;
     }
+
     public final String getBookID() {
         return bookID;
     }
 
-    public final Book createBook() throws BookExistsException,LowlevelLedgerException {
-        return getLedger().createNewBook(bookID);
-    }
     private final String bookID;
 
     public final String getSubMessage() {
-        return "Unknown Book: "+bookID;
+        return "Unknown Book: " + bookID;
     }
 }

@@ -1,11 +1,9 @@
 package org.neuclear.ledger.browser;
 
-import org.neuclear.ledger.Book;
 import org.neuclear.ledger.LowlevelLedgerException;
 
-import java.util.Iterator;
-import java.sql.Timestamp;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 
 /*
 NeuClear Distributed Transaction Clearing Platform
@@ -25,8 +23,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: BookBrowser.java,v 1.1 2004/01/02 23:18:34 pelle Exp $
+$Id: BookBrowser.java,v 1.2 2004/03/21 00:48:35 pelle Exp $
 $Log: BookBrowser.java,v $
+Revision 1.2  2004/03/21 00:48:35  pelle
+The problem with Enveloped signatures has now been fixed. It was a problem in the way transforms work. I have bandaided it, but in the future if better support for transforms need to be made, we need to rethink it a bit. Perhaps using the new crypto channel's in neuclear-commons.
+
 Revision 1.1  2004/01/02 23:18:34  pelle
 Added StatementFactory pattern and refactored the ledger to use it.
 
@@ -42,21 +43,22 @@ Added BookBrowser pattern to ledger, simplifying the statement writing process.
  * Time: 4:26:52 PM
  */
 public abstract class BookBrowser {
-    public BookBrowser(Book book){
-        this.book=book;
+    public BookBrowser(String book) {
+        this.book = book;
     }
 
     public abstract boolean next() throws LowlevelLedgerException;
 
 
-    protected final void setRow(String xid,String counterparty,String comment,Timestamp valuetime, BigDecimal amount) {
-        this.xid=xid;
-        this.counterparty=counterparty;
-        this.comment=comment;
-        this.valuetime=valuetime;
-        this.amount=amount;
+    protected final void setRow(String xid, String counterparty, String comment, Timestamp valuetime, BigDecimal amount) {
+        this.xid = xid;
+        this.counterparty = counterparty;
+        this.comment = comment;
+        this.valuetime = valuetime;
+        this.amount = amount;
     }
-    public Book getBook() {
+
+    public String getBook() {
         return book;
     }
 
@@ -80,7 +82,7 @@ public abstract class BookBrowser {
         return amount;
     }
 
-    private final Book book;
+    private final String book;
 
     private String xid;
     private String counterparty;
