@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <document>
 
-	<properties>
-		<title>The Busy Developer's Guide to the NeuClear Ledger API</title>
-		<author email="pelle@neubia.com">Pelle Braendgaard</author>
-	</properties>
+    <properties>
+        <title>The Busy Developer's Guide to the NeuClear Ledger API</title>
+        <author email="pelle@neubia.com">Pelle Braendgaard</author>
+    </properties>
 
-	<body>
-		<section name="Introduction">
+    <body>
+        <section name="Introduction">
 
             <h3>Scope</h3>
             <p>
@@ -16,12 +16,12 @@
                 <a href="apidocs/index.html">Project Java Docs</a>.
             </p>
             <h3>Purpose</h3>
-                <p>
+            <p>
                     The main purpose of the NeuClear Ledger API is to provide a simple API for applications in need of Financial Ledger
                     functionality. This could be Payment Systems, Sales Ledgers or General Ledger (accounting) systems. I'm sure there are
                     many other applications. The main idea behind the API is to hide the implementation of such Ledgers from the front ends such as GUI's
                     and web services.
-                </p>
+            </p>
         </section>
         <section name="Creating a Ledger">
             <p>
@@ -29,7 +29,7 @@
                 Ledger's at any given time. Each identified by a name.
             </p>
             <source> <![CDATA[
-            Ledger testLedger=LedgerFactory.getInstance().getLedger("test");
+LedgerController controller=new SimpleLedgerController("test");
             ]]></source>
             <p>
                 The above simply gets an instance of the LedgerFactory and returns a Ledger called "test" from the default implementation.
@@ -42,15 +42,15 @@
                 behaviour, so bear this in mind.
             </p>
             <source><![CDATA[
-            Ledger testLedger=LedgerFactory.getInstance().getLedger("test");
-            Book bob=testLedger.getBook("Bob");
+LedgerController controller=new SimpleLedgerController("test");
+Book bob=controller.getBook("Bob");
             ]]></source>
         </section>
         <section name="Viewing a Book's Balance">
             <source><![CDATA[
-            Ledger testLedger=LedgerFactory.getInstance().getLedger("test");
-            Book bob=testLedger.getBook("Bob");
-            double bobsBalance=bob.getBalance();
+LedgerController controller=new SimpleLedgerController("test");
+Book bob=controller.getBook("Bob");
+double bobsBalance=controller.getBalance(bob);
             ]]></source>
         </section>
         <section name="Creating a Simple Transfer">
@@ -58,10 +58,10 @@
                 A Transfer consists of a Debit (A subtraction) from one book and a Credit (an addition) to another book.
             </p>
             <source><![CDATA[
-            Ledger testLedger=LedgerFactory.getInstance().getLedger("test");
-            Book bob=testLedger.getBook("Bob");
-            Book alice=testLedger.getBook("Alice");
-            bob.transfer(alice,100,"Loan",new Date());
+LedgerController controller=new SimpleLedgerController("test");
+Book bob=controller.getBook("Bob");
+Book alice=controller.getBook("Alice");
+controller.transfer(bob,alice,100,"Loan");
             ]]></source>
             <p>
                 For this example we had to create 2 Books. We transfered 100 from Bob's account to Alice's Account.
@@ -75,21 +75,21 @@
                 post a Transaction that doesnt balance.
             </p>
             <source><![CDATA[
-            Ledger testLedger=LedgerFactory.getInstance().getLedger("test");
-            Book bob=testLedger.getBook("Bob");
-            Book alice=testLedger.getBook("Alice");
-            Book fees=testLedger.getBook("Fees");
+LedgerController controller=new SimpleLedgerController("test");
+Book bob=controller.getBook("Bob");
+Book alice=controller.getBook("Alice");
+Book fees=controller.getBook("Fees");
 
-            UnPostedTransaction tran=new UnPostedTransaction(testLedger,"Thanks",new Date());
+UnPostedTransaction tran=new UnPostedTransaction(uniqueid,"Thanks");
 
-            double amount=100;
-            double fee=100*.01; // Charge a 1% fee
-            if (alice.getBalance()<(amount+fee))
-                // throw error Insufficient Funds
-            tran.addItem(alice,-(amount+fee)); // Subtract amount+fee's from Alice's account
-            tran.additem(bob,amount); // Add amount to Bob's account
-            tran.additem(fees,fee);   // Add Fee's to Fee account
-            tran.post(); // Post Transaction to the Ledger
+double amount=100;
+double fee=100*.01; // Charge a 1% fee
+if (alice.getBalance()<(amount+fee))
+    // throw error Insufficient Funds
+tran.addItem(alice,-(amount+fee)); // Subtract amount+fee's from Alice's account
+tran.additem(bob,amount); // Add amount to Bob's account
+tran.additem(fees,fee);   // Add Fee's to Fee account
+PostedTransaction posted=controller.performTransaction(tran); // Post Transaction to the Ledger
             ]]></source>
             <p>
                 You can add as many items to a transaction as you wish as long as they balance when it gets posted. Once a transaction
@@ -97,40 +97,10 @@
             </p>
 
         </section>
-        <section name="Working with Transactions">
-            <p>
-                Posted Transactions are stored in the PostedTransaction class. Any operation that creates a new Posted Transaction
-                returns the Transaction.
-            </p>
-            <p>
-                Posted Transactions also have an id which can be found using the getXid() method. If you have this id you can ask the
-                ledger for the Posted Transaction using the findTransaction() method.
-            </p>
-            <source><![CDATA[
-            PostedTransaction tran=bob.transfer(alice,100,"Loan",new Date());
-            PostedTransaction tran2=testLedger.findTransaction("0020021");
-            ]]></source>
-            <p>
-                Once you have a transaction you can do several things with it. Such as reversing, copying or revising.
-            </p>
-            <source><![CDATA[
-            PostedTransaction tran=bob.transfer(alice,100,"Loan",new Date());
-            PostedTransaction reverse=tran.reverse("Was a mistake.");
-
-            PostedTransaction copy=tran.copy(new Date(),null,"Was a mistake.");
-
-            tran=tran.revise(new Date(),null,"Lets not call it a loan, lets call it a gift");
-            ]]></source>
-            <p>
-                Since there is a full audit trail within the API. You dont delete Posted Transactions. You reverse them.
-                If you want to make a change to a transaction, you revise it.
-            </p>
-
-        </section>
         <section name="Held Transactions">
             <p>
-                Held Transactions are mainly useful in Payment Systems and not so much in Accounts. This means you can pretty much
-                ignore it if you're not working on payment systems.
+                Held Transactions are mainly useful in Payment Systems and not so much in Account normal accounting systems.
+                This means you can pretty much ignore it if you're not working on payment systems.
             </p>
             <p>
                 Held Transactions are what happens when your credit card get's authorized at a hotel for example. A hotel might
@@ -145,25 +115,28 @@
                 of the debit books. Important! It never affects the balance or available balance of the credit side.
             </p>
             <source><![CDATA[
-            Calendar cal=Calendar.getInstance();
-            Date t1=cal.getTime();
-            cal.add(Calendar.DAY_OF_YEAR,1);
-            Date t2=cal.getTime(); // Tomorrow
+Calendar cal=Calendar.getInstance();
+Date t1=cal.getTime();
+cal.add(Calendar.DAY_OF_YEAR,1);
+Date t2=cal.getTime(); // Tomorrow
 
-            Book plaza=ledger.getBook("Plaza Hotel");
-            Book bob=ledger.getBook("Bob");
+Book plaza=controller.getBook("Plaza Hotel");
+Book bob=controller.getBook("Bob");
 
-            // We are holding 200 from today to tomorrow
-            PostedTransaction held=bob.hold(plaza,200,"Hold",t1,t2);
-            double available=bob.getAvailableBalance();
+// We are holding 200 from today to tomorrow
+PostedTransaction held=controller.hold(bob,plaza,200,"Hold",t1,t2);
+double available=controller.getAvailableBalance(bob);
 
-            // Lets implement it
-            PostedTransaction revised=held.implementHeld(165.43,new Date(),"Thank you for your business");
+// Lets complete it
+PostedTransaction revised=controller.complete(held.getRequestId(),165.43,,"Thank you for your business");
+
+// alternatively you could cancel it
+controller.complete(held.getRequestId());
 
             ]]></source>
         </section>
 
 
-	</body>
+    </body>
 
 </document>

@@ -1,37 +1,72 @@
 <?xml version="1.0"?>
 <document>
 
-	<properties>
-		<title>NeuClear Ledger API</title>
-		<author email="pelle@neubia.com">Pelle Braendgaard</author>
-	</properties>
+    <properties>
+        <title>NeuClear Ledger API</title>
+        <author email="pelle@neubia.com">Pelle Braendgaard</author>
+    </properties>
 
-	<body>
-        <section name="Major upcoming release of NeuClear Ledger API - Release 0.3">
+    <body>
+        <section name="Major new release of NeuClear Ledger 0.4">
             <p>
-                [August 4th, 2003]
-                Major new release is in the works. It is mostly workable in CVS at the moment, but needs
-                some cleaning up and improved documentation. Major new features:
-
+                [Panama City, Panama, 29th of April, 2004]
+                New milestone release available. With support for multiple database types:
             </p>
             <ul>
-                <li>SQL Database support</li>
-                <li>Improved model of HeldTransactions now seperated out from actual ledger.</li>
+                <li>
+                    <a href="http://prevayler.org">Prevalyer Support</a>
+                </li>
+                <li>
+                    <a href="http://hibernate.org">Hibernate Support</a>
+                </li>
             </ul>
-        </section>
-        <section name="New Release of NeuClear Ledger API - Release 0.2">
-            <p>
-                [January 26th, 2003] New Release Available. New Release contains a working implementation using Java Collections API.
-                Several changes to the API including 2 distinct Transaction classes. Also much improved documentation.
-            </p>
+            <h2>New Features</h2>
+            <ul>
+                <li>[
+                    <a href='http://jira.neuclear.org//browse/GL-4'>GL-4</a>] - High speed prevalent ledger implementation.
+                </li>
+                <li>[
+                    <a href='http://jira.neuclear.org//browse/GL-16'>GL-16</a>] - Create LedgerBrowserServlet
+                </li>
+                <li>[
+                    <a href='http://jira.neuclear.org//browse/GL-17'>GL-17</a>] - Create LedgerStatementServlet
+                </li>
+                <li>[
+                    <a href='http://jira.neuclear.org//browse/GL-19'>GL-19</a>] - Hibernate Ledger Implementation
+                </li>
+                <li>[
+                    <a href='http://jira.neuclear.org//browse/GL-20'>GL-20</a>] - Add VerifiedTransfer
+                </li>
+                <li>[
+                    <a href='http://jira.neuclear.org//browse/GL-22'>GL-22</a>] - Create SimpleLedger for testing purposes
+                </li>
+                <li>[
+                    <a href='http://jira.neuclear.org//browse/GL-23'>GL-23</a>] - Create Hibernate Book Browser
+                </li>
+                <li>[
+                    <a href='http://jira.neuclear.org//browse/GL-24'>GL-24</a>] - Add LedgerController
+                </li>
+                <li>[
+                    <a href='http://jira.neuclear.org//browse/GL-25'>GL-25</a>] - Move implementation code LedgerController
+                </li>
+                <li>[
+                    <a href='http://jira.neuclear.org//browse/GL-28'>GL-28</a>] - Add getAmount() to Transaction
+                </li>
+                <li>[
+                    <a href='http://jira.neuclear.org//browse/GL-29'>GL-29</a>] - add setHeldReceiptId() to Ledger and implementations
+                </li>
+                <li>[
+                    <a href='http://jira.neuclear.org//browse/GL-39'>GL-39</a>] - add Account feature to ledger
+                </li>
+            </ul>
         </section>
         <section name="New Busy Developer Guide to the NeuClear API" href="/bdg.html">
             <p>
                 [January 26th, 2003] New improved documentation includes a Busy Developer Guide to get developers started quickly.
             </p>
         </section>
-		<section name="Introduction">
-			<p>
+        <section name="Introduction">
+            <p>
                 Many applications in business need access to a double entry ledger. This could be a General Ledger for a company
                 or an account system in a bank. NeuClear as a framework for creating financial clearing system needed a standardized api
                 for integrating with existing ledgers or creating new ledgers.
@@ -40,7 +75,7 @@
                 The API is very simple and it should be very easy to implement it. Everything has been written with security in mind. This
                 is not to say that it is secure, as it hasn't been properly reviewed. Reviews should also take the underlying implementations into account.
             </p>
-		</section>
+        </section>
         <section name="Features">
             <p>The following is what the main feature list is:</p>
             <ul>
@@ -50,6 +85,6 @@
                 <li>Small and secure</li>
             </ul>
         </section>
-	</body>
+    </body>
 
 </document>
