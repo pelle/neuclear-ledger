@@ -27,8 +27,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: QueryBookBrowser.java,v 1.2 2004/03/21 00:48:35 pelle Exp $
+$Id: QueryBookBrowser.java,v 1.3 2004/03/25 22:04:46 pelle Exp $
 $Log: QueryBookBrowser.java,v $
+Revision 1.3  2004/03/25 22:04:46  pelle
+The first shell for the HibernateBookBrowser
+
 Revision 1.2  2004/03/21 00:48:35  pelle
 The problem with Enveloped signatures has now been fixed. It was a problem in the way transforms work. I have bandaided it, but in the future if better support for transforms need to be made, we need to rethink it a bit. Perhaps using the new crypto channel's in neuclear-commons.
 
@@ -100,7 +103,7 @@ public class QueryBookBrowser extends BookBrowser {
         try {
             if (!rs.next())
                 return false;
-            setRow(rs.getString(1), rs.getString(3), rs.getString(4), rs.getTimestamp(2), rs.getBigDecimal(5));
+            setRow(rs.getString(1), rs.getString(2), rs.getString(4), rs.getString(5), rs.getTimestamp(3), rs.getBigDecimal(6));
             return true;
         } catch (SQLException e) {
             throw new LowlevelLedgerException(ledger, e);
@@ -110,7 +113,7 @@ public class QueryBookBrowser extends BookBrowser {
     private final ResultSet rs;
     private final Ledger ledger;
     private boolean next;
-    private static final String BASE_QUERY = "select t.id,t.valuetime, r.bookid,t.comment,s.amount from entry s,entry r, transaction t where s.transactionid=t.id and r.transactionid=t.id and r.id<>s.id\nand s.bookid = ? and t.ledgerid=?";
+    private static final String BASE_QUERY = "select t.id,t.request_id, t.valuetime, r.bookid,t.comment,s.amount from entry s,entry r, transaction t where s.transactionid=t.id and r.transactionid=t.id and r.id<>s.id\nand s.bookid = ? and t.ledgerid=?";
     private static final String UNTIL_CLAUSE = " AND t.valuetime<=?";
     private static final String FROM_CLAUSE = " AND t.valuetime>?";
     private static final String ORDERBY = " order by t.valuetime,t.id";

@@ -41,8 +41,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerServlet.java,v 1.4 2004/03/21 00:48:36 pelle Exp $
+$Id: LedgerServlet.java,v 1.5 2004/03/25 22:04:46 pelle Exp $
 $Log: LedgerServlet.java,v $
+Revision 1.5  2004/03/25 22:04:46  pelle
+The first shell for the HibernateBookBrowser
+
 Revision 1.4  2004/03/21 00:48:36  pelle
 The problem with Enveloped signatures has now been fixed. It was a problem in the way transforms work. I have bandaided it, but in the future if better support for transforms need to be made, we need to rethink it a bit. Perhaps using the new crypto channel's in neuclear-commons.
 
@@ -101,7 +104,7 @@ public class LedgerServlet extends HttpServlet {
                 if (amount.compareTo(ZERO) < 0)
                     out.print(" class=\"negative\"");
                 out.print("><td style=\"size:small\">");
-                out.print(stmt.getXid());
+                out.print(stmt.getId());
                 out.print("</td><td>");
                 out.print(TimeTools.formatTimeStampShort(stmt.getValuetime()));
                 out.print("</td><td><a href=\"");
