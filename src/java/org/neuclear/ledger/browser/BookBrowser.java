@@ -1,7 +1,9 @@
 package org.neuclear.ledger.browser;
 
 import org.neuclear.ledger.Book;
+import org.neuclear.ledger.LowlevelLedgerException;
 
+import java.util.Iterator;
 import java.sql.Timestamp;
 import java.math.BigDecimal;
 
@@ -23,23 +25,31 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: StatementEntry.java,v 1.1 2003/12/31 00:39:04 pelle Exp $
-$Log: StatementEntry.java,v $
+$Id: BookBrowser.java,v 1.1 2004/01/02 23:18:34 pelle Exp $
+$Log: BookBrowser.java,v $
+Revision 1.1  2004/01/02 23:18:34  pelle
+Added StatementFactory pattern and refactored the ledger to use it.
+
 Revision 1.1  2003/12/31 00:39:04  pelle
 Added Drivers for handling different Database dialects in the entity model.
-Added Statement pattern to ledger, simplifying the statement writing process.
+Added BookBrowser pattern to ledger, simplifying the statement writing process.
 
 */
 
 /**
- * This class is used exclusively by the Browser to Generate rows in a ledger statement
+ * User: pelleb
+ * Date: Dec 30, 2003
+ * Time: 4:26:52 PM
  */
-public final class StatementEntry {
-    StatementEntry(Book book) {
-        this.book = book;
+public abstract class BookBrowser {
+    public BookBrowser(Book book){
+        this.book=book;
     }
 
-    void setRow(String xid,String counterparty,String comment,Timestamp valuetime, BigDecimal amount) {
+    public abstract boolean next() throws LowlevelLedgerException;
+
+
+    protected final void setRow(String xid,String counterparty,String comment,Timestamp valuetime, BigDecimal amount) {
         this.xid=xid;
         this.counterparty=counterparty;
         this.comment=comment;
@@ -48,10 +58,6 @@ public final class StatementEntry {
     }
     public Book getBook() {
         return book;
-    }
-
-    public String getLedgerid() {
-        return book.getLedger().getId();
     }
 
     public String getXid() {
@@ -81,5 +87,4 @@ public final class StatementEntry {
     private String comment;
     private Timestamp valuetime;
     private BigDecimal amount;
-
 }

@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 <project>
-
   <name>NeuClear Ledger</name>
   <id>neuclear-ledger</id>
   <currentVersion>0.4-SNAPSHOT</currentVersion>
@@ -62,22 +61,16 @@
   <!-- Need to mark these as compile-time/run-time -->
    <dependencies>
        <dependency>
-<<<<<<< project.xml
-            <id>hsqldb</id>
-            <version>1.7.1</version>
-        </dependency>
-=======
            <id>hsqldb</id>
            <version>1.7.1</version>
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>
        </dependency>
->>>>>>> 1.12
        <dependency>
            <id>neuclear-id</id>
            <version>0.8.1</version>
-<properties>
+            <properties>
                 <war.bundle>true</war.bundle>
             </properties>       </dependency>
        <dependency>
@@ -109,13 +102,8 @@
             </properties>
         </dependency>
        <dependency>
-<<<<<<< project.xml
-           <id>neuclear-commons</id>
-           <version>0.6-SNAPSHOT</version>
-=======
            <id>servletapi</id>
            <version>2.3</version>
->>>>>>> 1.12
        </dependency>
    <dependency>
       <id>junit</id>

@@ -3,6 +3,7 @@ package org.neuclear.ledger.browser;
 import org.neuclear.ledger.Book;
 import org.neuclear.ledger.LowlevelLedgerException;
 import org.neuclear.commons.Utility;
+import org.neuclear.commons.sql.statements.StatementFactory;
 
 import java.sql.*;
 import java.security.Principal;
@@ -25,11 +26,14 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: QueryStatement.java,v 1.1 2003/12/31 00:39:04 pelle Exp $
-$Log: QueryStatement.java,v $
+$Id: QueryBookBrowser.java,v 1.1 2004/01/02 23:18:34 pelle Exp $
+$Log: QueryBookBrowser.java,v $
+Revision 1.1  2004/01/02 23:18:34  pelle
+Added StatementFactory pattern and refactored the ledger to use it.
+
 Revision 1.1  2003/12/31 00:39:04  pelle
 Added Drivers for handling different Database dialects in the entity model.
-Added Statement pattern to ledger, simplifying the statement writing process.
+Added BookBrowser pattern to ledger, simplifying the statement writing process.
 
 */
 
@@ -38,40 +42,40 @@ Added Statement pattern to ledger, simplifying the statement writing process.
  * Date: Dec 30, 2003
  * Time: 4:30:19 PM
  */
-public class QueryStatement extends Statement {
-    public QueryStatement(Book book,Connection con) throws SQLException {
-        this(book,executeQuery(con,book));
+public class QueryBookBrowser extends BookBrowser {
+    public QueryBookBrowser(Book book,StatementFactory fact) throws SQLException {
+        this(book,executeQuery(fact,book));
     }
-    public QueryStatement(Book book,Connection con,Timestamp from, Timestamp until) throws SQLException {
-        this(book,executeRangeQuery(con,book,from,until));
+    public QueryBookBrowser(Book book,StatementFactory fact,Timestamp from, Timestamp until) throws SQLException {
+        this(book,executeRangeQuery(fact,book,from,until));
     }
-    public QueryStatement(Book book,Connection con,Timestamp from) throws SQLException {
-        this(book,executeFromQuery(con,book,from));
+    public QueryBookBrowser(Book book,StatementFactory fact,Timestamp from) throws SQLException {
+        this(book,executeFromQuery(fact,book,from));
     }
-    private QueryStatement(Book book,ResultSet rs) throws SQLException {
+    private QueryBookBrowser(Book book,ResultSet rs) throws SQLException {
         super(book);
         this.rs=rs;
         next=rs.next();
     }
 
-    private static ResultSet executeRangeQuery(Connection con,Book book,Timestamp from, Timestamp until) throws SQLException {
-        final PreparedStatement stmt = con.prepareStatement(RANGE_QUERY);
+    private static ResultSet executeRangeQuery(StatementFactory fact,Book book,Timestamp from, Timestamp until) throws SQLException {
+        final PreparedStatement stmt = fact.prepareStatement(RANGE_QUERY);
         stmt.setTimestamp(3,from);
         stmt.setTimestamp(4,until);
         return executeQuery(stmt,book);
     }
-    private static ResultSet executeFromQuery(Connection con,Book book,Timestamp from) throws SQLException {
-        final PreparedStatement stmt = con.prepareStatement(FROM_QUERY);
+    private static ResultSet executeFromQuery(StatementFactory fact,Book book,Timestamp from) throws SQLException {
+        final PreparedStatement stmt = fact.prepareStatement(FROM_QUERY);
         stmt.setTimestamp(3,from);
         return executeQuery(stmt,book);
     }
-    private static ResultSet executeUntilQuery(Connection con,Book book, Timestamp until) throws SQLException {
-        final PreparedStatement stmt = con.prepareStatement(UNTIL_QUERY);
+    private static ResultSet executeUntilQuery(StatementFactory fact,Book book, Timestamp until) throws SQLException {
+        final PreparedStatement stmt = fact.prepareStatement(UNTIL_QUERY);
         stmt.setTimestamp(3,until);
         return executeQuery(stmt,book);
     }
-    private static ResultSet executeQuery(Connection con,Book book) throws SQLException {
-        return executeQuery(con.prepareStatement(FULL_QUERY),book);
+    private static ResultSet executeQuery(StatementFactory fact,Book book) throws SQLException {
+        return executeQuery(fact.prepareStatement(FULL_QUERY),book);
     }
     private static ResultSet executeQuery(PreparedStatement stmt,Book book) throws SQLException {
         stmt.setString(1,book.getBookID());

@@ -1,33 +1,29 @@
 package org.neuclear.ledger.servlets;
 
-import org.neuclear.commons.servlets.ServletTools;
-import org.neuclear.commons.time.TimeTools;
 import org.neuclear.commons.Utility;
+import org.neuclear.commons.servlets.ServletTools;
 import org.neuclear.commons.sql.JNDIConnectionSource;
-import org.neuclear.id.NSTools;
+import org.neuclear.commons.sql.statements.StatementFactory;
+import org.neuclear.commons.sql.statements.SimpleStatementFactory;
+import org.neuclear.commons.time.TimeTools;
 import org.neuclear.id.InvalidNamedObjectException;
-import org.neuclear.ledger.implementations.SQLLedger;
-import org.neuclear.ledger.browser.Statement;
-import org.neuclear.ledger.browser.StatementEntry;
-import org.neuclear.ledger.UnknownBookException;
+import org.neuclear.id.NSTools;
 import org.neuclear.ledger.LowlevelLedgerException;
+import org.neuclear.ledger.UnknownBookException;
+import org.neuclear.ledger.PopulateLedger;
+import org.neuclear.ledger.browser.BookBrowser;
+import org.neuclear.ledger.implementations.SQLLedger;
 
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
 import javax.sql.DataSource;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.security.Principal;
 import java.math.BigDecimal;
+import java.security.Principal;
 
 /*
 NeuClear Distributed Transaction Clearing Platform
@@ -47,11 +43,14 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerServlet.java,v 1.2 2003/12/31 00:39:04 pelle Exp $
+$Id: LedgerServlet.java,v 1.3 2004/01/02 23:18:34 pelle Exp $
 $Log: LedgerServlet.java,v $
+Revision 1.3  2004/01/02 23:18:34  pelle
+Added StatementFactory pattern and refactored the ledger to use it.
+
 Revision 1.2  2003/12/31 00:39:04  pelle
 Added Drivers for handling different Database dialects in the entity model.
-Added Statement pattern to ledger, simplifying the statement writing process.
+Added BookBrowser pattern to ledger, simplifying the statement writing process.
 
 Revision 1.1  2003/12/29 22:40:15  pelle
 Added LedgerServlet and friends
@@ -68,11 +67,13 @@ public class LedgerServlet extends HttpServlet {
         datasource = ServletTools.getInitParam("datasource",config);
         serviceid = ServletTools.getInitParam("serviceid",config);
         try {
-            consrc = new JNDIConnectionSource(datasource);
+            fact = new SimpleStatementFactory(new JNDIConnectionSource(datasource));
             ledger= new SQLLedger(
-                    consrc,
+                    fact,
                         serviceid
                 );
+            if (!ledger.bookExists("neu://alice@test"))
+                PopulateLedger.main(null);
         } catch (Exception e) {
             throw new ServletException(e);
         }
@@ -91,7 +92,7 @@ public class LedgerServlet extends HttpServlet {
                 book=serviceid;
             else
                 book="neu:/"+book;
-            Statement stmt=ledger.browse(ledger.getBook(book));
+            BookBrowser stmt=ledger.browse(ledger.getBook(book));
             out.println("<table><tr><th>Transaction ID</th><th>Time</th><th>Counterparty</th><th>Comment</th><th>Amount</th></tr>");
             while(stmt.next()){
                 final BigDecimal amount = stmt.getAmount();
@@ -131,5 +132,5 @@ public class LedgerServlet extends HttpServlet {
     private String serviceid;
     private static final BigDecimal ZERO=new BigDecimal(0);
     private SQLLedger ledger;
-    private JNDIConnectionSource consrc;
+    private StatementFactory fact;
 }

@@ -10,6 +10,7 @@ import org.neuclear.commons.sql.ConnectionSource;
 import org.neuclear.commons.sql.SQLTools;
 import org.neuclear.commons.sql.SQLContext;
 import org.neuclear.commons.sql.DefaultConnectionSource;
+import org.neuclear.commons.sql.statements.StatementFactory;
 import org.neuclear.commons.sql.entities.EntityModel;
 import org.neuclear.commons.sql.entities.Schema;
 import org.neuclear.commons.NeuClearException;
@@ -17,8 +18,8 @@ import org.neuclear.commons.crypto.CryptoTools;
 import org.neuclear.ledger.*;
 import org.neuclear.ledger.InvalidTransactionException;
 import org.neuclear.ledger.browser.LedgerBrowser;
-import org.neuclear.ledger.browser.Statement;
-import org.neuclear.ledger.browser.QueryStatement;
+import org.neuclear.ledger.browser.BookBrowser;
+import org.neuclear.ledger.browser.QueryBookBrowser;
 import org.neuclear.id.NSTools;
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.digests.SHA1Digest;
@@ -50,16 +51,10 @@ public final class SQLLedger extends Ledger implements LedgerBrowser {
         this(SQLTools.getConnection(),id);
     }
 */
-    public SQLLedger(final ConnectionSource con, final String id) throws LowlevelLedgerException, UnknownLedgerException {
+    public SQLLedger(final StatementFactory fact, final String id) throws LowlevelLedgerException, UnknownLedgerException {
         super(id, "sql ledger");
-        this.con = new SQLContext(con);
-        try {
-            create(con.getConnection());
-        } catch (SQLException e) {
-            throw new LowlevelLedgerException(this,e);
-        } catch (IOException e) {
-            throw new LowlevelLedgerException(this,e);
-        }
+        this.fact=fact;
+        create(fact);
         createLedger(id);
     }
 
@@ -80,8 +75,8 @@ public final class SQLLedger extends Ledger implements LedgerBrowser {
          }
 
     }
-    public static synchronized void create(Connection con){
-        createSchema().create(con);
+    public static synchronized void create(StatementFactory fact){
+        createSchema().create(fact);
     }
     public static Schema createSchema() {
         Schema schema=new Schema("mysql");
@@ -115,18 +110,9 @@ public final class SQLLedger extends Ledger implements LedgerBrowser {
         hentryModel.addReference(hxactModel);
         return schema;
     }
-    public static void main(String args[]){
+    private static String getLedgerName(final StatementFactory fact, final String id) throws UnknownLedgerException, LowlevelLedgerException {
         try {
-            create(new DefaultConnectionSource().getConnection());
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-    private static String getLedgerName(final ConnectionSource con, final String id) throws UnknownLedgerException, LowlevelLedgerException {
-        try {
-            final PreparedStatement stmt = con.getConnection().prepareStatement("select title from ledger where id=?");
+            final PreparedStatement stmt = fact.prepareStatement("select title from ledger where id=?");
             stmt.setString(1, id);
             final ResultSet rs = stmt.executeQuery();
             if (rs.next())
@@ -134,8 +120,6 @@ public final class SQLLedger extends Ledger implements LedgerBrowser {
             else
                 throw new UnknownLedgerException(id);
         } catch (SQLException e) {
-            throw new LowlevelLedgerException(e);
-        } catch (IOException e) {
             throw new LowlevelLedgerException(e);
         }
     }
@@ -411,7 +395,7 @@ public final class SQLLedger extends Ledger implements LedgerBrowser {
     }
 
     private PreparedStatement prepQuery(final String sql) throws SQLException, LowlevelLedgerException {
-        return getConnection().prepareStatement(sql);
+        return fact.prepareStatement(sql);
     }
 
     /* (non-Javadoc)
@@ -489,17 +473,6 @@ public final class SQLLedger extends Ledger implements LedgerBrowser {
         return "SQL Ledger: " + getName();
     }
 
-    private Connection getConnection() throws LowlevelLedgerException {
-        try {
-            return con.getConnection();
-        } catch (SQLException e) {
-            throw new LowlevelLedgerException(e);
-        } catch (IOException e) {
-            throw new LowlevelLedgerException(e);
-        }
-    }
-
-
     public final Book getBook(final String bookID) throws UnknownBookException, LowlevelLedgerException {
         try {
             final PreparedStatement stmt = prepQuery("select title from book where id=?");
@@ -520,38 +493,31 @@ public final class SQLLedger extends Ledger implements LedgerBrowser {
      */
     public void rollbackUT(UserTransaction ut) throws LowlevelLedgerException {
         super.rollbackUT(ut);
-        try {
-            con.close();
-        } catch (SQLException e) {
-            throw new LowlevelLedgerException(this,e);
-        } catch (IOException e) {
-            throw new LowlevelLedgerException(this,e);
-        }
     }
 
-    public Statement browse(Book book) throws LowlevelLedgerException {
+    public BookBrowser browse(Book book) throws LowlevelLedgerException {
         try {
-            return new QueryStatement(book,getConnection());
+            return new QueryBookBrowser(book,fact);
         } catch (SQLException e) {
             throw new LowlevelLedgerException(this,e);
         }
     }
 
-    public Statement browseFrom(Book book, Timestamp from) throws LowlevelLedgerException {
+    public BookBrowser browseFrom(Book book, Timestamp from) throws LowlevelLedgerException {
         try {
-            return new QueryStatement(book,getConnection(),from);
+            return new QueryBookBrowser(book,fact,from);
         } catch (SQLException e) {
             throw new LowlevelLedgerException(this,e);
         }
     }
 
-    public Statement browseRange(Book book, Timestamp from, Timestamp until) throws LowlevelLedgerException {
+    public BookBrowser browseRange(Book book, Timestamp from, Timestamp until) throws LowlevelLedgerException {
         try {
-            return new QueryStatement(book,getConnection(),from,until);
+            return new QueryBookBrowser(book,fact,from,until);
         } catch (SQLException e) {
             throw new LowlevelLedgerException(this,e);
         }
     }
 
-    private final SQLContext con;
+    private final StatementFactory fact;
 }
