@@ -19,7 +19,7 @@ import java.sql.SQLException;
 public final class SQLLedgerTest extends LedgerTest {
     public SQLLedgerTest(final String s) throws LowlevelLedgerException, UnknownLedgerException, SQLException, NamingException, IOException, NeuClearException {
         super(s);
-        SQLLedger.create(new DefaultConnectionSource());
+        //SQLLedger.create(new DefaultConnectionSource());
     }
 
     public final Ledger createLedger() {

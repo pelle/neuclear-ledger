@@ -3,7 +3,7 @@
 
   <name>NeuClear Ledger</name>
   <id>neuclear-ledger</id>
-  <currentVersion>0.3</currentVersion>
+  <currentVersion>0.4-SNAPSHOT</currentVersion>
   <inceptionYear>2003</inceptionYear>
   <package>org.neuclear.ledger</package>
   <logo>/images/logo.gif</logo>
@@ -62,8 +62,8 @@
   <!-- Need to mark these as compile-time/run-time -->
    <dependencies>
        <dependency>
-           <id>mysql</id>
-           <jar>mysql-connector-java-3.0.8-stable-bin.jar</jar>
+           <id>hsqldb</id>
+           <version>1.7.1</version>
        </dependency>
        <dependency>
            <id>picocontainer</id>
@@ -75,7 +75,7 @@
        </dependency>
        <dependency>
            <id>neuclear-commons</id>
-           <version>0.4</version>
+           <version>0.6-SNAPSHOT</version>
        </dependency>
    <dependency>
       <id>bouncycastle</id>
@@ -107,6 +107,11 @@
             <id>jta-spec</id>
             <version>1.0.1</version>
         </dependency>
+       <dependency>
+           <id>commons-logging</id>
+           <version>1.0.3</version>
+       </dependency>
+
   </dependencies>
   <build>
 

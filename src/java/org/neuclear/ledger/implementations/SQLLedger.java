@@ -12,8 +12,12 @@ import org.neuclear.commons.sql.SQLContext;
 import org.neuclear.commons.sql.DefaultConnectionSource;
 import org.neuclear.commons.sql.entities.EntityModel;
 import org.neuclear.commons.NeuClearException;
+import org.neuclear.commons.crypto.CryptoTools;
 import org.neuclear.ledger.*;
 import org.neuclear.ledger.InvalidTransactionException;
+import org.neuclear.id.NSTools;
+import org.bouncycastle.crypto.Digest;
+import org.bouncycastle.crypto.digests.SHA1Digest;
 
 import javax.transaction.*;
 import javax.naming.NamingException;
@@ -47,23 +51,28 @@ public final class SQLLedger extends Ledger {
         this.con = new SQLContext(con);
 //        create(this.con);
 
+        create(con);
         createLedger(id);
-
     }
 
     public void createLedger(String name) throws LowlevelLedgerException {
         try {
-             final PreparedStatement stmt = prepQuery("insert into ledger (id,title,created) values (?,?,now())");
-             stmt.setString(1, name);
-             stmt.setString(2, name);
-             stmt.execute();
+             final PreparedStatement query=prepQuery("select * from ledger where id= ?");
+             query.setString(1,name);
+             ResultSet rs=query.executeQuery();
+             if (!rs.next()) {
+                 final PreparedStatement stmt = prepQuery("insert into ledger (id,title,created) values (?,?,now())");
+                 stmt.setString(1, name);
+                 stmt.setString(2, name);
+                 stmt.execute();
+             }
          } catch (SQLException e) {
              rollbackUT();
              throw new LowlevelLedgerException(this, e);
          }
 
     }
-    public static void create(ConnectionSource con) {
+    public static synchronized void  create(ConnectionSource con) {
         try {
             Connection connection=con.getConnection();
             EntityModel ledgerModel=new EntityModel("ledger",true);
@@ -162,23 +171,21 @@ public final class SQLLedger extends Ledger {
 	 * @see org.neuclear.ledger.Ledger#performTransaction(org.neuclear.ledger.UnPostedTransaction)
 	 */
     public final PostedTransaction performTransaction(final UnPostedTransaction transaction) throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException {
-        final String newid;
         if (!transaction.isBalanced()) {
             throw new UnBalancedTransactionException(this, transaction);
         }
         try {
-            final long xid = insertTransaction(transaction);
+            final String xid = insertTransaction(transaction);
             final Iterator items = transaction.getItems();
             while (items.hasNext()) {
                 final TransactionItem item = (TransactionItem) items.next();
                 insertTransactionItem(xid, item);
             }
-            newid = Long.toString(xid);
+            return this.createTransaction(transaction, xid);
         } catch (SQLException e) {
             rollbackUT();
             throw new LowlevelLedgerException(this, e);
         }
-        return this.createTransaction(transaction, newid);
     }
 
     /**
@@ -190,25 +197,23 @@ public final class SQLLedger extends Ledger {
      * @return Unique ID
      */
     public final PostedHeldTransaction performHeldTransaction(final UnPostedHeldTransaction transaction) throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException {
-        final String newid;
         if (!transaction.isBalanced()) {
             throw new UnBalancedTransactionException(this, transaction);
         }
         try {
-            final long xid = insertHeldTransaction(transaction);
+            final String xid = insertHeldTransaction(transaction);
             final Iterator items = transaction.getItems();
             while (items.hasNext()) {
                 final TransactionItem item = (TransactionItem) items.next();
                 insertHeldTransactionItem(xid, item);
             }
-            newid = Long.toString(xid);
+            return this.createHeldTransaction(transaction, xid);
         } catch (SQLException e) {
             rollbackUT();
             System.err.println(e.getSQLState());
             e.printStackTrace(System.err);
             throw new LowlevelLedgerException(this, e);
         }
-        return this.createHeldTransaction(transaction, newid);
     }
 
     /**
@@ -273,51 +278,49 @@ public final class SQLLedger extends Ledger {
 
     }
 
-    private long insertTransaction(final UnPostedTransaction transaction) throws SQLException, LowlevelLedgerException {
-        final PreparedStatement tranInsert = prepQuery("insert into transaction (valuetime,comment,ledgerid) values (?,?,?)");
-        tranInsert.setTimestamp(1, SQLTools.toTimestamp(transaction.getTransactionTime()));
-        tranInsert.setString(2, transaction.getComment());
-        tranInsert.setString(3, getId());
-        tranInsert.execute();
-        final PreparedStatement tranID = prepQuery("select last_insert_id()");
-        final ResultSet rs = tranID.executeQuery();
-        if (rs.next())
-            return rs.getLong(1);
-         else {
-            rollbackUT();
-            throw new LowlevelLedgerException(this, "We couldnt get the id of the transaction. Safer to Rollback.");
-        }
+    private String createTransactionID(){
+            final Digest dig = new SHA1Digest();
+            final StringBuffer buffy = new StringBuffer(getId());
+            buffy.append('!');
+            buffy.append(System.currentTimeMillis());
+            buffy.append(CryptoTools.createRandomID());
+            return buffy.toString();
     }
-
-    private long insertHeldTransaction(final UnPostedHeldTransaction transaction) throws SQLException, LowlevelLedgerException {
-        final PreparedStatement tranInsert = prepQuery("insert into held_transaction (valuetime,comment,held_until,ledgerid) values (?,?,?,?)");
-        tranInsert.setTimestamp(3, SQLTools.toTimestamp(transaction.getExpiryTime()));
-
-        tranInsert.setTimestamp(1, SQLTools.toTimestamp(transaction.getTransactionTime()));
-        tranInsert.setString(2, transaction.getComment());
+    private String insertTransaction(final UnPostedTransaction transaction) throws SQLException, LowlevelLedgerException {
+        final PreparedStatement tranInsert = prepQuery("insert into transaction (id,valuetime,comment,ledgerid) values (?,?,?,?)");
+        final String xid = createTransactionID();
+        tranInsert.setString(1,xid);
+        tranInsert.setTimestamp(2, SQLTools.toTimestamp(transaction.getTransactionTime()));
+        tranInsert.setString(3, transaction.getComment());
         tranInsert.setString(4, getId());
         tranInsert.execute();
-        final PreparedStatement tranID = prepQuery("select id from held_transaction where id=last_insert_id()");
-        final ResultSet rs = tranID.executeQuery();
-        if (rs.next())
-            return rs.getLong(1);
-         else {
-            rollbackUT();
-            throw new LowlevelLedgerException(this, "We couldnt get the id of the transaction. Safer to Rollback.");
-        }
+        return xid;
     }
 
-    private void insertTransactionItem(final long xid, final TransactionItem item) throws SQLException, LowlevelLedgerException {
+    private String insertHeldTransaction(final UnPostedHeldTransaction transaction) throws SQLException, LowlevelLedgerException {
+        final String xid = createTransactionID();
+        final PreparedStatement tranInsert = prepQuery("insert into held_transaction (id,valuetime,comment,held_until,ledgerid,cancelled) values (?,?,?,?,?,0)");
+
+        tranInsert.setString(1,xid);
+        tranInsert.setTimestamp(2, SQLTools.toTimestamp(transaction.getTransactionTime()));
+        tranInsert.setString(3, transaction.getComment());
+        tranInsert.setTimestamp(4, SQLTools.toTimestamp(transaction.getExpiryTime()));
+        tranInsert.setString(5, getId());
+        tranInsert.execute();
+        return xid;
+    }
+
+    private void insertTransactionItem(final String xid, final TransactionItem item) throws SQLException, LowlevelLedgerException {
         final PreparedStatement itemInsert = prepQuery("insert into entry (transactionid,bookid,amount) values (?,?,?)");
-        itemInsert.setLong(1, xid);
+        itemInsert.setString(1, xid);
         itemInsert.setString(2, item.getBook().getBookID());
         itemInsert.setDouble(3, item.getAmount());
         itemInsert.execute();
     }
 
-    private void insertHeldTransactionItem(final long xid, final TransactionItem item) throws SQLException, LowlevelLedgerException {
-        final PreparedStatement itemInsert = prepQuery("insert into held_entry (held_transactionid,bookid,amount,ack) values (?,?,?,1)");
-        itemInsert.setLong(1, xid);
+    private void insertHeldTransactionItem(final String xid, final TransactionItem item) throws SQLException, LowlevelLedgerException {
+        final PreparedStatement itemInsert = prepQuery("insert into held_entry (held_transactionid,bookid,amount) values (?,?,?)");
+        itemInsert.setString(1, xid);
         itemInsert.setString(2, item.getBook().getBookID());
         itemInsert.setDouble(3, item.getAmount());
         itemInsert.execute();
@@ -326,31 +329,30 @@ public final class SQLLedger extends Ledger {
     /**
      * Searches for a Transaction based on its Transaction ID
      * 
-     * @param idstring A valid ID
+     * @param xid A valid ID
      * @return The Transaction object
      */
-    public final PostedTransaction findTransaction(final String idstring) throws LowlevelLedgerException, UnknownTransactionException {
-        final long id = Long.parseLong(idstring);
+    public final PostedTransaction findTransaction(final String xid) throws LowlevelLedgerException, UnknownTransactionException {
         try {
 
             PreparedStatement stmt = prepQuery("select valuetime,comment from transaction where id=? and ledgerid=?");
-            stmt.setLong(1, id);
+            stmt.setString(1, xid);
             stmt.setString(2, getId());
             ResultSet rs = stmt.executeQuery();
             if (!rs.next()) {
-                throw new UnknownTransactionException(this, idstring);
+                throw new UnknownTransactionException(this, xid);
             }
             final Date started = rs.getTimestamp(1);
             final String comment = rs.getString(2);
 
             final UnPostedTransaction transaction = new UnPostedTransaction(this, comment, started);
             stmt = prepQuery("select bookid,amount from entry where transactionid=?");
-            stmt.setLong(1, id);
+            stmt.setString(1, xid);
             rs = stmt.executeQuery();
             while (rs.next())
                 transaction.addItem(getBook(rs.getString(1)), rs.getDouble(2));
 
-            return this.createTransaction(transaction, idstring);
+            return this.createTransaction(transaction, xid);
 
         } catch (SQLException e) {
             throw new LowlevelLedgerException(this, e);
@@ -364,19 +366,18 @@ public final class SQLLedger extends Ledger {
     /**
      * Searches for a Held Transaction based on its Transaction ID
      * 
-     * @param idstring A valid ID
+     * @param xid A valid ID
      * @return The Transaction object
      */
-    public final PostedHeldTransaction findHeldTransaction(final String idstring) throws LowlevelLedgerException, UnknownTransactionException {
-        final long id = Long.parseLong(idstring);
+    public final PostedHeldTransaction findHeldTransaction(final String xid) throws LowlevelLedgerException, UnknownTransactionException {
         try {
 
             PreparedStatement stmt = prepQuery("select valuetime,held_until,comment from held_transaction where id=? and ledgerid=?");
-            stmt.setLong(1, id);
+            stmt.setString(1, xid);
             stmt.setString(2, getId());
             ResultSet rs = stmt.executeQuery();
             if (!rs.next()) {
-                throw new UnknownTransactionException(this, idstring);
+                throw new UnknownTransactionException(this, xid);
             }
             final Date started = rs.getTimestamp(1);
             final Date ended = rs.getTimestamp(2);
@@ -384,12 +385,12 @@ public final class SQLLedger extends Ledger {
 
             final UnPostedHeldTransaction transaction = new UnPostedHeldTransaction(this, comment, started, ended);
             stmt = prepQuery("select bookid,amount from held_entry where held_transactionid=?");
-            stmt.setLong(1, id);
+            stmt.setString(1, xid);
             rs = stmt.executeQuery();
             while (rs.next())
                 transaction.addItem(getBook(rs.getString(1)), rs.getDouble(2));
 
-            return this.createHeldTransaction(transaction, idstring);
+            return this.createHeldTransaction(transaction, xid);
 
         } catch (SQLException e) {
             throw new LowlevelLedgerException(this, e);
@@ -412,7 +413,7 @@ public final class SQLLedger extends Ledger {
             final PreparedStatement stmt = prepQuery("select sum(e.amount) from entry e,transaction t where e.transactionid=t.id and e.bookid=? and t.valuetime<= ? and t.ledgerid=?");
 
             stmt.setString(1, book.getBookID());
-            stmt.setTimestamp(2, new Timestamp(time.getTime()));
+            stmt.setTimestamp(2, new Timestamp(time.getTime()+1));
             stmt.setString(3, getId());
 
             final ResultSet rs = stmt.executeQuery();
@@ -445,7 +446,7 @@ public final class SQLLedger extends Ledger {
                     "and e.amount<0 and t.held_until>= ? and t.cancelled=0 and t.transactionid is null and t.ledgerid=?"
                     + ") u "
             );
-            final Timestamp ts = SQLTools.toTimestamp(time);
+            final Timestamp ts = new Timestamp(time.getTime()+1);
             stmt.setString(1, book.getBookID());
             stmt.setTimestamp(2, ts);
             stmt.setString(3, getId());
@@ -492,7 +493,7 @@ public final class SQLLedger extends Ledger {
 
     public final Book getBook(final String bookID) throws UnknownBookException, LowlevelLedgerException {
         try {
-            final PreparedStatement stmt = prepQuery("select comment from book where id=?");
+            final PreparedStatement stmt = prepQuery("select title from book where id=?");
             stmt.setString(1, bookID);
             final ResultSet rs = stmt.executeQuery();
             if (rs.next())
