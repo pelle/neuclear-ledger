@@ -1,8 +1,15 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: Book.java,v 1.5 2003/11/21 04:43:20 pelle Exp $
+ * $Id: Book.java,v 1.6 2003/12/10 23:53:58 pelle Exp $
  * $Log: Book.java,v $
+ * Revision 1.6  2003/12/10 23:53:58  pelle
+ * Did some cleaning up in the builders
+ * Fixed some stuff in IdentityCreator
+ * New maven goal to create executable jarapp
+ * We are close to 0.8 final of ID, 0.11 final of XMLSIG and 0.5 of commons.
+ * Will release shortly.
+ *
  * Revision 1.5  2003/11/21 04:43:20  pelle
  * EncryptedFileStore now works. It uses the PBECipher with DES3 afair.
  * Otherwise You will Finaliate.
@@ -17,7 +24,7 @@ package org.neuclear.ledger;
  *
  * Revision 1.3  2003/11/06 20:01:24  pelle
  * Implemented AuthenticationTicket and friends to comply with the newer model.
- * Created SignatureRequest and friends to send unsigned NamedObjectBuilders to interactive signing services.
+ * Created SignatureRequest and friends to receive unsigned NamedObjectBuilders to interactive signing services.
  *
  * Revision 1.2  2003/10/01 17:35:53  pelle
  * Made as much as possible immutable for security and reliability reasons.
