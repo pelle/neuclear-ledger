@@ -1,9 +1,15 @@
 package org.neuclear.ledger;
 /**
- * $Id: Transaction.java,v 1.1 2003/09/20 23:16:18 pelle Exp $
+ * $Id: Transaction.java,v 1.2 2003/10/01 17:35:53 pelle Exp $
  * $Log: Transaction.java,v $
- * Revision 1.1  2003/09/20 23:16:18  pelle
- * Initial revision
+ * Revision 1.2  2003/10/01 17:35:53  pelle
+ * Made as much as possible immutable for security and reliability reasons.
+ * The only thing that isnt immutable are the items and balance of the
+ * UnpostedTransaction
+ *
+ * Revision 1.1.1.1  2003/09/20 23:16:18  pelle
+ * First revision of neuclear-ledger in /cvsroot/neuclear
+ * Older versions can be found /cvsroot/neudist
  *
  * Revision 1.6  2003/07/29 22:57:44  pelle
  * New version with refactored support for HeldTransactions.
@@ -40,10 +46,12 @@ import java.util.Iterator;
  */
 public abstract class Transaction {
 
-    Transaction(Ledger ledger) throws InvalidTransactionException {
+    Transaction(Ledger ledger,Date transactionTime,String comment) throws InvalidTransactionException {
         if (ledger==null)
             throw new InvalidTransactionException(ledger,"Transaction must have an associated ledger");
         this.ledger=ledger;
+        this.transactionTime=transactionTime;
+        this.comment=comment;
     }
 
     /**
@@ -88,10 +96,14 @@ public abstract class Transaction {
     }
 
 
-    public abstract Date getTransactionTime();
+    public Date getTransactionTime() {
+        return transactionTime;
+    }
 
 
-    public abstract String getComment();
+    public String getComment() {
+        return comment;
+    }
     public abstract Iterator getItems();
 
 
@@ -99,6 +111,8 @@ public abstract class Transaction {
         return ledger;
     }
 
-    private Ledger ledger;
+    final private Ledger ledger;
+    private final Date transactionTime;
+    private final String comment;
 
 }

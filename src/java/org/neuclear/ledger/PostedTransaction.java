@@ -4,10 +4,16 @@ package org.neuclear.ledger;
  * User: pelleb
  * Date: Jan 25, 2003
  * Time: 12:48:26 PM
- * $Id: PostedTransaction.java,v 1.1 2003/09/20 23:16:18 pelle Exp $
+ * $Id: PostedTransaction.java,v 1.2 2003/10/01 17:35:53 pelle Exp $
  * $Log: PostedTransaction.java,v $
- * Revision 1.1  2003/09/20 23:16:18  pelle
- * Initial revision
+ * Revision 1.2  2003/10/01 17:35:53  pelle
+ * Made as much as possible immutable for security and reliability reasons.
+ * The only thing that isnt immutable are the items and balance of the
+ * UnpostedTransaction
+ *
+ * Revision 1.1.1.1  2003/09/20 23:16:18  pelle
+ * First revision of neuclear-ledger in /cvsroot/neuclear
+ * Older versions can be found /cvsroot/neudist
  *
  * Revision 1.5  2003/08/06 16:41:22  pelle
  * Fixed a few implementation bugs with regards to the Held Transactions
@@ -32,6 +38,7 @@ package org.neuclear.ledger;
 
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 /**
  * This class defines the type of Transactions that have been posted. They are therefore immutable.
  * They are created by the Ledger normally based on an UnPostedTransaction.
@@ -45,9 +52,9 @@ public class PostedTransaction extends Transaction {
      * @param xid
      */
     PostedTransaction(UnPostedTransaction orig,String xid) throws InvalidTransactionException {
-        super(orig.getLedger());
-        this.data = orig;
+        super(orig.getLedger(),orig.getTransactionTime(),orig.getComment());
         this.xid=xid;
+        this.items=orig.getItemArray();
     }
 
 /*
@@ -120,24 +127,28 @@ public class PostedTransaction extends Transaction {
     }
 
 
-    public Date getTransactionTime() {
-        return data.getTransactionTime();
-    }
-
-
-
-    public String getComment() {
-        return data.getComment();
-    }
-
     public Iterator getItems() {
-        return data.getItems();
+        return new Iterator() {
+            int i=0;
+            public boolean hasNext() {
+                return i<items.length;
+            }
+
+            public Object next() {
+                return items[i++];
+            }
+
+            public void remove() {
+
+            }
+
+        };
     }
 
     public String getXid() {
         return xid;
     }
-    private UnPostedTransaction data;
-    private String xid;
+    private final TransactionItem[] items;
+    private final String xid;
 
 }

@@ -12,12 +12,12 @@ import java.util.Iterator;
 public class PostedHeldTransaction extends PostedTransaction implements HeldTransaction {
     public PostedHeldTransaction(UnPostedHeldTransaction orig, String xid) throws InvalidTransactionException {
         super(orig, xid);
-        this.data=orig;
+        this.expiryTime=orig.getExpiryTime();
     }
     public Date getExpiryTime() {
-        return data.getExpiryTime();
+        return expiryTime;
     }
-    private UnPostedHeldTransaction data;
+    final private Date expiryTime;
 
     /**
    * Implements a held transfer

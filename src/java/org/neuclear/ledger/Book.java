@@ -1,9 +1,15 @@
 package org.neuclear.ledger;
 /**
- * $Id: Book.java,v 1.1 2003/09/20 23:16:18 pelle Exp $
+ * $Id: Book.java,v 1.2 2003/10/01 17:35:53 pelle Exp $
  * $Log: Book.java,v $
- * Revision 1.1  2003/09/20 23:16:18  pelle
- * Initial revision
+ * Revision 1.2  2003/10/01 17:35:53  pelle
+ * Made as much as possible immutable for security and reliability reasons.
+ * The only thing that isnt immutable are the items and balance of the
+ * UnpostedTransaction
+ *
+ * Revision 1.1.1.1  2003/09/20 23:16:18  pelle
+ * First revision of neuclear-ledger in /cvsroot/neuclear
+ * Older versions can be found /cvsroot/neudist
  *
  * Revision 1.7  2003/07/29 22:57:43  pelle
  * New version with refactored support for HeldTransactions.
@@ -186,8 +192,8 @@ public final class Book {
     }
 
 
-    private String book;
-    private String name;
-    private Ledger ledger;
+    private final String book;
+    private final String name;
+    private final Ledger ledger;
 
 }

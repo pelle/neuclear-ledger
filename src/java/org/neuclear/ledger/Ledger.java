@@ -1,9 +1,15 @@
 package org.neuclear.ledger;
 /**
- * $Id: Ledger.java,v 1.1 2003/09/20 23:16:19 pelle Exp $
+ * $Id: Ledger.java,v 1.2 2003/10/01 17:35:53 pelle Exp $
  * $Log: Ledger.java,v $
- * Revision 1.1  2003/09/20 23:16:19  pelle
- * Initial revision
+ * Revision 1.2  2003/10/01 17:35:53  pelle
+ * Made as much as possible immutable for security and reliability reasons.
+ * The only thing that isnt immutable are the items and balance of the
+ * UnpostedTransaction
+ *
+ * Revision 1.1.1.1  2003/09/20 23:16:19  pelle
+ * First revision of neuclear-ledger in /cvsroot/neuclear
+ * Older versions can be found /cvsroot/neudist
  *
  * Revision 1.13  2003/08/15 22:39:22  pelle
  * Introducing new neuclear-commons project.
@@ -258,8 +264,8 @@ public abstract class Ledger {
         return id;
     }
 
-    private String name;
-    private String id;
+    private final String name;
+    private final String id;
 
     /**
 		 * Searches for a Held Transaction based on its Transaction ID
