@@ -10,11 +10,11 @@ package org.neuclear.ledger;
 public class InvalidTransactionException extends LedgerException {
     public InvalidTransactionException(final Ledger ledger, final String message) {
         super(ledger);
+        this.message = message;
     }
 
     public final String getSubMessage() {
         return "Validation Error: " + message;
-
     }
 
     private String message;

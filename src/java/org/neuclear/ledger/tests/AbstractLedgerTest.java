@@ -10,11 +10,14 @@ import java.util.Date;
  * User: pelleb
  * Date: Jan 22, 2003
  * Time: 4:18:35 PM
- * $Id: AbstractLedgerTest.java,v 1.1 2004/03/22 23:20:51 pelle Exp $
+ * $Id: AbstractLedgerTest.java,v 1.2 2004/03/24 23:12:34 pelle Exp $
  * $Log: AbstractLedgerTest.java,v $
- * Revision 1.1  2004/03/22 23:20:51  pelle
+ * Revision 1.2  2004/03/24 23:12:34  pelle
  * Working on Hibernate Implementation.
  *
+ * Revision 1.1  2004/03/22 23:20:51  pelle
+ * Working on Hibernate Implementation.
+ * <p/>
  * Revision 1.2  2004/03/22 21:59:38  pelle
  * SimpleLedger now passes all unit tests
  * <p/>
@@ -134,6 +137,7 @@ import java.util.Date;
 public abstract class AbstractLedgerTest extends TestCase {
     static final String BOB = "bob";
     static final String ALICE = "alice";
+    static final String CAROL = "carol";
 
 
     public AbstractLedgerTest(final String s) {
@@ -192,7 +196,7 @@ public abstract class AbstractLedgerTest extends TestCase {
         // Now check that it throws InsufficientFundsException
         try {
             ledger.verifiedTransfer(ALICE, BOB, ledger.getAvailableBalance(ALICE) + 10, "To much");
-            assertTrue("InssuficientFundsException should have been thrown", false);
+            assertTrue("InssuficientFundsException should have been thrown. Attempted to transfer: " + (ledger.getAvailableBalance(ALICE) + 10), false);
         } catch (InsufficientFundsException e) {
             ;
         }
@@ -203,15 +207,15 @@ public abstract class AbstractLedgerTest extends TestCase {
     }
 
     public final void testMultiTransfer() throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException {
-        final double bobBalance = ledger.getBalance(BOB);
+        final double bobBalance = ledger.getBalance(CAROL);
         int cumulative = 0;
         for (int i = 0; i < 100; i++) {
-            ledger.transfer("req" + i + System.currentTimeMillis(), "x" + i + System.currentTimeMillis(), "Issuer", "bob", i, "fund it");
+            ledger.transfer("req" + i + System.currentTimeMillis(), "x" + i + System.currentTimeMillis(), "Issuer", CAROL, i, "fund it");
             cumulative += i;
-            assertEquals("BOB BALANCE", bobBalance + cumulative, ledger.getBalance(BOB), 0);
-            assertEquals("BOB AVAILABLE BALANCE", ledger.getBalance(BOB), ledger.getAvailableBalance(BOB), 0);
+            assertEquals("BOB BALANCE", bobBalance + cumulative, ledger.getBalance(CAROL), 0);
+            assertEquals("BOB AVAILABLE BALANCE", ledger.getBalance(CAROL), ledger.getAvailableBalance(CAROL), 0);
         }
-        System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
+        System.out.println("Bob's Balance: " + ledger.getBalance(CAROL));
     }
 
     public final void testBalance() throws LedgerException {
@@ -326,6 +330,24 @@ public abstract class AbstractLedgerTest extends TestCase {
         System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
     }
 
+    public final void testNaiveBenchmark() throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException {
+        final int iterations = 1000;
+        final double amount = 50;
+        final String book = "benchbook-" + System.currentTimeMillis();
+        final double fundamount = amount * (iterations + 1);
+        ledger.transfer("fund", book, fundamount, "fund the benchmark");
+        System.out.println("Start Balance: " + ledger.getBalance(book));
+        assertEquals(fundamount, ledger.getAvailableBalance(book), 0);
+
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < iterations; i++) {
+            ledger.verifiedTransfer(book, "fund", amount, "transaction" + i);
+        }
+        final long duration = System.currentTimeMillis() - start;
+        System.out.println("" + iterations + " iterations took " + duration + " ms");
+        System.out.println("Each iteration took " + duration / iterations + " ms");
+        assertEquals(amount, ledger.getAvailableBalance(book), 0);
+    }
 
     protected Ledger ledger;
 }
