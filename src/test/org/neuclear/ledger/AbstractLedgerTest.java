@@ -13,11 +13,14 @@ import java.util.Date;
  * User: pelleb
  * Date: Jan 22, 2003
  * Time: 4:18:35 PM
- * $Id: AbstractLedgerTest.java,v 1.1 2004/03/22 20:08:24 pelle Exp $
+ * $Id: AbstractLedgerTest.java,v 1.2 2004/03/22 21:59:38 pelle Exp $
  * $Log: AbstractLedgerTest.java,v $
+ * Revision 1.2  2004/03/22 21:59:38  pelle
+ * SimpleLedger now passes all unit tests
+ *
  * Revision 1.1  2004/03/22 20:08:24  pelle
  * Added simple ledger for unit testing and in memory use
- *
+ * <p/>
  * Revision 1.12  2004/03/22 17:33:02  pelle
  * Added a verified transfer to neuclear-ledger.
  * Added InsufficientFundsException to be thrown if transfer isnt verified.
@@ -297,11 +300,11 @@ public abstract class AbstractLedgerTest extends TestCase {
         assertEquals("BOB Available BALANCE", bobBalance, ledger.getAvailableBalance(BOB), 0);
 
         ledger.performCompleteHold(tran, 100, "done");
-        assertEquals("ALICE BALANCE CANCELLED", aliceBalance - amount, ledger.getBalance(ALICE), 0);
-        assertEquals("BOB BALANCE CANCELLED", bobBalance + amount, ledger.getBalance(BOB), 0);
+        assertEquals("ALICE BALANCE COMPLETED", aliceBalance - amount, ledger.getBalance(ALICE), 0);
+        assertEquals("BOB BALANCE COMPLETED", bobBalance + amount, ledger.getBalance(BOB), 0);
 
-        assertEquals("ALICE Available BALANCE CANCELLED", aliceBalance - amount, ledger.getAvailableBalance(ALICE), 0);
-        assertEquals("BOB Available BALANCE CANCELLED", bobBalance + amount, ledger.getAvailableBalance(BOB), 0);
+        assertEquals("ALICE Available BALANCE COMPLETED", aliceBalance - amount, ledger.getAvailableBalance(ALICE), 0);
+        assertEquals("BOB Available BALANCE COMPLETED", bobBalance + amount, ledger.getAvailableBalance(BOB), 0);
 
 
         System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));

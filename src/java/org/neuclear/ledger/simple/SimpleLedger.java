@@ -1,8 +1,11 @@
 package org.neuclear.ledger.simple;
 
 /**
- * $Id: SimpleLedger.java,v 1.1 2004/03/22 20:08:24 pelle Exp $
+ * $Id: SimpleLedger.java,v 1.2 2004/03/22 21:59:37 pelle Exp $
  * $Log: SimpleLedger.java,v $
+ * Revision 1.2  2004/03/22 21:59:37  pelle
+ * SimpleLedger now passes all unit tests
+ *
  * Revision 1.1  2004/03/22 20:08:24  pelle
  * Added simple ledger for unit testing and in memory use
  *
@@ -84,7 +87,8 @@ public final class SimpleLedger extends Ledger {
         id = name;
         ledger = new LinkedHashMap();
         held = new LinkedHashMap();
-        books = new HashMap();
+        balances = new HashMap();
+
     }
 
     /**
@@ -101,7 +105,25 @@ public final class SimpleLedger extends Ledger {
             throw new UnBalancedTransactionException(this, trans);
         final PostedTransaction posted = new PostedTransaction(trans, new Date());
         ledger.put(id, posted);
+        updateBalances(posted);
         return posted;
+    }
+
+    private void updateBalances(final PostedTransaction trans) {
+        synchronized (balances) {
+            Iterator iter = trans.getItems();
+            while (iter.hasNext()) {
+                TransactionItem item = (TransactionItem) iter.next();
+                addTransactionItem(item);
+            }
+        }
+    }
+
+    private void addTransactionItem(TransactionItem item) {
+        if (balances.containsKey(item.getBook()))
+            balances.put(item.getBook(), new Double(((Double) balances.get(item.getBook())).doubleValue() + item.getAmount()));
+        else
+            balances.put(item.getBook(), new Double(item.getAmount()));
     }
 
     /**
@@ -165,12 +187,15 @@ public final class SimpleLedger extends Ledger {
      * @throws org.neuclear.ledger.TransactionExpiredException
      *
      */
-    public PostedTransaction performCompleteHold(PostedHeldTransaction hold, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, TransactionExpiredException {
-        if (!held.containsKey(hold) || hold.getExpiryTime().before(new Date()))
+    public PostedTransaction performCompleteHold(PostedHeldTransaction hold, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, TransactionExpiredException, UnknownTransactionException {
+        if (!held.containsKey(hold.getId()))
+            throw new UnknownTransactionException(this, hold.getId());
+        if (hold.getExpiryTime().before(new Date()))
             throw new TransactionExpiredException(this, hold);
         held.remove(hold.getId());
         PostedTransaction posted = new PostedTransaction(hold, new Date(), amount, comment);
         ledger.put(posted.getId(), posted);
+        updateBalances(posted);
         return posted;
     }
 
@@ -195,21 +220,9 @@ public final class SimpleLedger extends Ledger {
      * @return the balance as a double
      */
     public double getBalance(final String book) {
-        double balance = 0;
-        // Very silly slow and lazy implementation
-        final Iterator iter = ledger.keySet().iterator();
-        final boolean going = true;
-        while (iter.hasNext() && going) {
-            final PostedTransaction tran = (PostedTransaction) ledger.get((String) iter.next());
-            final Iterator items = tran.getItems();
-            while (items.hasNext()) {
-                final TransactionItem item = (TransactionItem) items.next();
-                if (item.getBook().equals(book))
-                    balance += item.getAmount();
-            }
-        }
-        System.out.println("Book: " + book + " has a balance of: " + balance);
-        return balance;
+        if (balances.containsKey(book))
+            return ((Double) balances.get(book)).doubleValue();
+        return 0;
     }
 
     /**
@@ -227,16 +240,16 @@ public final class SimpleLedger extends Ledger {
         Date now = new Date();
         // Very silly slow and lazy implementation
         final Iterator iter = held.keySet().iterator();
-        final boolean going = true;
-        while (iter.hasNext() && going) {
-            final PostedHeldTransaction tran = (PostedHeldTransaction) ledger.get((String) iter.next());
+        while (iter.hasNext()) {
+            final Object o = held.get(iter.next());
+            final PostedHeldTransaction tran = (PostedHeldTransaction) o;
             if (now.after(tran.getExpiryTime())) {
                 iter.remove();
             } else {
                 final Iterator items = tran.getItems();
                 while (items.hasNext()) {
                     final TransactionItem item = (TransactionItem) items.next();
-                    if (item.getBook().equals(book))
+                    if (item.getBook().equals(book) && item.getAmount() < 0)
                         balance += item.getAmount();
                 }
             }
@@ -283,6 +296,7 @@ public final class SimpleLedger extends Ledger {
     private final LinkedHashMap ledger;
     private final LinkedHashMap held;
     private final String id;
+    private final HashMap balances;
 
 
 }

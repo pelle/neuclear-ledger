@@ -1,8 +1,11 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: Ledger.java,v 1.11 2004/03/22 17:33:02 pelle Exp $
+ * $Id: Ledger.java,v 1.12 2004/03/22 21:59:37 pelle Exp $
  * $Log: Ledger.java,v $
+ * Revision 1.12  2004/03/22 21:59:37  pelle
+ * SimpleLedger now passes all unit tests
+ *
  * Revision 1.11  2004/03/22 17:33:02  pelle
  * Added a verified transfer to neuclear-ledger.
  * Added InsufficientFundsException to be thrown if transfer isnt verified.
@@ -182,7 +185,7 @@ public abstract class Ledger {
      * @throws LowlevelLedgerException
      * @throws TransactionExpiredException
      */
-    public abstract PostedTransaction performCompleteHold(PostedHeldTransaction hold, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, TransactionExpiredException;
+    public abstract PostedTransaction performCompleteHold(PostedHeldTransaction hold, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, TransactionExpiredException, UnknownTransactionException;
 
     /**
      * Searches for a Transaction based on its Transaction ID
@@ -286,6 +289,8 @@ public abstract class Ledger {
     }
 
     public final PostedHeldTransaction hold(String from, String to, Date expiry, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, InsufficientFundsException {
+        if (getAvailableBalance(from) - amount < 0)
+            throw new InsufficientFundsException(this, from, amount);
         return hold(CryptoTools.createRandomID(), CryptoTools.createRandomID(), from, to, expiry, amount, comment);
     }
 
