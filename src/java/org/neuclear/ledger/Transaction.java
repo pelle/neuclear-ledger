@@ -1,8 +1,13 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: Transaction.java,v 1.5 2004/03/21 00:48:36 pelle Exp $
+ * $Id: Transaction.java,v 1.6 2004/03/23 22:01:43 pelle Exp $
  * $Log: Transaction.java,v $
+ * Revision 1.6  2004/03/23 22:01:43  pelle
+ * Bumped version numbers for commons and xmlsig througout.
+ * Updated repositories and webservers to use old.neuclear.org
+ * Various other fixes in project.xml and project.properties on misc projects.
+ *
  * Revision 1.5  2004/03/21 00:48:36  pelle
  * The problem with Enveloped signatures has now been fixed. It was a problem in the way transforms work. I have bandaided it, but in the future if better support for transforms need to be made, we need to rethink it a bit. Perhaps using the new crypto channel's in neuclear-commons.
  *
@@ -63,7 +68,6 @@ import java.util.List;
  * Ledger and returned as imutable PostedTransaction objects.
  */
 public abstract class Transaction implements Serializable {
-
     protected Transaction(final String req, final String id, final String comment, List items) throws InvalidTransactionException {
         this.comment = comment;
         this.id = id;
@@ -88,7 +92,7 @@ public abstract class Transaction implements Serializable {
         return req;
     }
 
-    final List getItemList() {
+    public final List getItemList() {
         return new ArrayList(items);
     }
 

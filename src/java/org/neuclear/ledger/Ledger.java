@@ -1,8 +1,13 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: Ledger.java,v 1.12 2004/03/22 21:59:37 pelle Exp $
+ * $Id: Ledger.java,v 1.13 2004/03/23 22:01:43 pelle Exp $
  * $Log: Ledger.java,v $
+ * Revision 1.13  2004/03/23 22:01:43  pelle
+ * Bumped version numbers for commons and xmlsig througout.
+ * Updated repositories and webservers to use old.neuclear.org
+ * Various other fixes in project.xml and project.properties on misc projects.
+ *
  * Revision 1.12  2004/03/22 21:59:37  pelle
  * SimpleLedger now passes all unit tests
  *
@@ -305,5 +310,5 @@ public abstract class Ledger {
     }
 
 
-    public abstract void close();
+    public abstract void close() throws LowlevelLedgerException;
 }

@@ -5,8 +5,13 @@ package org.neuclear.ledger;
  * User: pelleb
  * Date: Jan 25, 2003
  * Time: 12:48:26 PM
- * $Id: PostedTransaction.java,v 1.6 2004/03/21 00:48:36 pelle Exp $
+ * $Id: PostedTransaction.java,v 1.7 2004/03/23 22:01:43 pelle Exp $
  * $Log: PostedTransaction.java,v $
+ * Revision 1.7  2004/03/23 22:01:43  pelle
+ * Bumped version numbers for commons and xmlsig througout.
+ * Updated repositories and webservers to use old.neuclear.org
+ * Various other fixes in project.xml and project.properties on misc projects.
+ *
  * Revision 1.6  2004/03/21 00:48:36  pelle
  * The problem with Enveloped signatures has now been fixed. It was a problem in the way transforms work. I have bandaided it, but in the future if better support for transforms need to be made, we need to rethink it a bit. Perhaps using the new crypto channel's in neuclear-commons.
  *
