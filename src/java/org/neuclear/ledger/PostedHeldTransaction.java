@@ -21,7 +21,7 @@ public class PostedHeldTransaction extends PostedTransaction implements HeldTran
     final private Date expiryTime;
 
     /**
-     * Implements a held asset
+     * Implements a held assetName
      * 
      * @param actualAmount    
      * @param transactionTime 
