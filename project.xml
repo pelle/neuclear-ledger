@@ -75,7 +75,7 @@
        </dependency>
        <dependency>
            <id>neuclear-commons</id>
-           <version>0.3</version>
+           <version>0.4</version>
        </dependency>
        <!--    <dependency>
    	<id>neuclearframework</id>
