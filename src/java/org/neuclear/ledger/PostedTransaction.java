@@ -5,8 +5,12 @@ package org.neuclear.ledger;
  * User: pelleb
  * Date: Jan 25, 2003
  * Time: 12:48:26 PM
- * $Id: PostedTransaction.java,v 1.10 2004/05/01 00:23:40 pelle Exp $
+ * $Id: PostedTransaction.java,v 1.11 2004/07/23 18:55:27 pelle Exp $
  * $Log: PostedTransaction.java,v $
+ * Revision 1.11  2004/07/23 18:55:27  pelle
+ * Added an improved complete method which allows you to specify a book to change to another book when completing a transaction.
+ * This is used by the NeuClear Pay Complete Exchange Order process which changes the benificiary book from the agent to the final recipient.
+ *
  * Revision 1.10  2004/05/01 00:23:40  pelle
  * Added Ledger field to Transaction as well as to getBalance() and friends.
  *
@@ -96,6 +100,11 @@ public class PostedTransaction extends Transaction {
 
     public PostedTransaction(final PostedHeldTransaction orig, final Date time, final double amount, final String comment) throws ExceededHeldAmountException, UnBalancedTransactionException {
         super(orig.getLedger(), orig.getRequestId(), comment, orig.getAdjustedItems(amount));
+        this.transactionTime = time;
+    }
+
+    public PostedTransaction(final PostedHeldTransaction orig, final Book origbook, final Book newbook, final Date time, final double amount, final String comment) throws ExceededHeldAmountException, UnBalancedTransactionException {
+        super(orig.getLedger(), orig.getRequestId(), comment, orig.getAdjustedItems(origbook, newbook, amount));
         this.transactionTime = time;
     }
 

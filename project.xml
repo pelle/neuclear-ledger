@@ -2,7 +2,7 @@
 <project>
     <name>NeuClear Ledger</name>
     <id>neuclear-ledger</id>
-    <currentVersion>0.5.5</currentVersion>
+    <currentVersion>0.6</currentVersion>
     <inceptionYear>2003</inceptionYear>
     <package>org.neuclear.ledger</package>
     <logo>/images/logo.gif</logo>

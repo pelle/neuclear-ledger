@@ -84,6 +84,13 @@ public class Book implements Serializable {
         return registrationid;
     }
 
+    public boolean equals(Object o) {
+        return o.getClass().equals(this.getClass()) && id.equals(((Book) o).getId());
+    }
+
+    public int hashCode() {
+        return id.hashCode();
+    }
 
     protected String id;
     protected String nickname;

@@ -11,11 +11,15 @@ import java.util.Date;
  * User: pelleb
  * Date: Jan 22, 2003
  * Time: 4:18:35 PM
- * $Id: AbstractLedgerTest.java,v 1.15 2004/06/17 15:18:32 pelle Exp $
+ * $Id: AbstractLedgerTest.java,v 1.16 2004/07/23 18:55:27 pelle Exp $
  * $Log: AbstractLedgerTest.java,v $
+ * Revision 1.16  2004/07/23 18:55:27  pelle
+ * Added an improved complete method which allows you to specify a book to change to another book when completing a transaction.
+ * This is used by the NeuClear Pay Complete Exchange Order process which changes the benificiary book from the agent to the final recipient.
+ *
  * Revision 1.15  2004/06/17 15:18:32  pelle
  * Added support for Ledger object within the LedgerController. This is only really implemented in the HibernateLedgerController.
- *
+ * <p/>
  * Revision 1.14  2004/05/03 23:54:18  pelle
  * HibernateLedgerController now supports multiple ledgers.
  * Fixed many unit tests.
@@ -396,6 +400,44 @@ public abstract class AbstractLedgerTest extends TestCase {
 
         System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
         System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
+        assertTrue("Ledger is balanced", ledger.isBalanced());
+    }
+
+    public final void testHoldAndCompleteTransferWithBookChange() throws LowlevelLedgerException, UnBalancedTransactionException, InvalidTransactionException, UnknownTransactionException, TransactionExpiredException, UnknownBookException {
+        if (ledger.getAvailableBalance(ALICE) < 100)
+            transfer("MONEY PRESS", ALICE, -ledger.getAvailableBalance(ALICE) + 100, "FUND");
+        final double aliceBalance = ledger.getBalance(ALICE);
+        final double bobBalance = ledger.getBalance(BOB);
+        final double carolBalance = ledger.getBalance(CAROL);
+        final double amount = 100;
+        System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
+        System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
+        System.out.println("Carol's Balance: " + ledger.getBalance(CAROL));
+
+        PostedHeldTransaction tran = hold(ALICE, BOB, new Date(System.currentTimeMillis() + 5000), amount, "LOAN");
+        assertEquals("ALICE BALANCE", aliceBalance, ledger.getBalance(ALICE), 0);
+        assertEquals("BOB BALANCE", bobBalance, ledger.getBalance(BOB), 0);
+        assertEquals("CAROL BALANCE", carolBalance, ledger.getBalance(CAROL), 0);
+
+        assertEquals("ALICE Available BALANCE", aliceBalance - amount, ledger.getAvailableBalance(ALICE), 0);
+        assertEquals("BOB Available BALANCE", bobBalance, ledger.getAvailableBalance(BOB), 0);
+        assertEquals("CAROL Available BALANCE", carolBalance, ledger.getAvailableBalance(CAROL), 0);
+
+        PostedTransaction pstd = ledger.performCompleteHold(tran, ledger.getBook(BOB), ledger.getBook(CAROL), 100, "done");
+        ledger.setReceiptId(pstd.getRequestId(), CryptoTools.createRandomID());
+
+        assertEquals("ALICE BALANCE COMPLETED", aliceBalance - amount, ledger.getBalance(ALICE), 0);
+        assertEquals("BOB BALANCE COMPLETED", bobBalance, ledger.getBalance(BOB), 0);
+        assertEquals("CAROL BALANCE", carolBalance + amount, ledger.getBalance(CAROL), 0);
+
+        assertEquals("ALICE Available BALANCE COMPLETED", aliceBalance - amount, ledger.getAvailableBalance(ALICE), 0);
+        assertEquals("BOB Available BALANCE COMPLETED", bobBalance, ledger.getAvailableBalance(BOB), 0);
+        assertEquals("CAROL Available BALANCE", carolBalance + amount, ledger.getAvailableBalance(CAROL), 0);
+
+
+        System.out.println("Alice's Balance: " + ledger.getBalance(ALICE));
+        System.out.println("Bob's Balance: " + ledger.getBalance(BOB));
+        System.out.println("Carol's Balance: " + ledger.getBalance(CAROL));
         assertTrue("Ledger is balanced", ledger.isBalanced());
     }
 

@@ -5,7 +5,9 @@ import org.neuclear.commons.servlets.ServletMessages;
 import org.neuclear.commons.servlets.ServletTools;
 import org.neuclear.commons.time.TimeTools;
 import org.neuclear.ledger.Book;
+import org.neuclear.ledger.LedgerController;
 import org.neuclear.ledger.LowlevelLedgerException;
+import org.neuclear.ledger.UnknownBookException;
 import org.neuclear.ledger.browser.BookBrowser;
 import org.neuclear.ledger.browser.LedgerBrowser;
 
@@ -41,8 +43,12 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerBrowserServlet.java,v 1.12 2004/06/19 21:18:05 pelle Exp $
+$Id: LedgerBrowserServlet.java,v 1.13 2004/07/23 18:55:26 pelle Exp $
 $Log: LedgerBrowserServlet.java,v $
+Revision 1.13  2004/07/23 18:55:26  pelle
+Added an improved complete method which allows you to specify a book to change to another book when completing a transaction.
+This is used by the NeuClear Pay Complete Exchange Order process which changes the benificiary book from the agent to the final recipient.
+
 Revision 1.12  2004/06/19 21:18:05  pelle
 Fixes to spanish version
 
@@ -153,12 +159,12 @@ public class LedgerBrowserServlet extends HttpServlet {
         DateFormat dateformat = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.SHORT, request.getLocale());
         PrintWriter out = response.getWriter();
         Principal user = request.getUserPrincipal();
-        Book book = (Book) request.getSession(true).getAttribute("book");
-
-        ServletTools.printHeader(out, request, title, messages.getString("accountmovements") + " " + Utility.denullString(book.getNickname()));
-        String url = ServletTools.getAbsoluteURL(request, request.getServletPath());
         try {
             String bookid = user.getName();
+            Book book = ((LedgerController) ledger).getBook(bookid);
+
+            ServletTools.printHeader(out, request, title, messages.getString("accountmovements") + " " + Utility.denullString(book.getNickname()));
+            String url = ServletTools.getAbsoluteURL(request, request.getServletPath());
             System.out.println("Browsing: " + book.getId());
 
             String fromStr = request.getParameter("from");
@@ -219,6 +225,9 @@ public class LedgerBrowserServlet extends HttpServlet {
             out.println("\">" + messages.getString("mainmenu") + "</a>");
             out.println("</body></html>");
         } catch (LowlevelLedgerException e) {
+            e.printStackTrace(out);
+            e.printStackTrace();
+        } catch (UnknownBookException e) {
             e.printStackTrace(out);
             e.printStackTrace();
         }

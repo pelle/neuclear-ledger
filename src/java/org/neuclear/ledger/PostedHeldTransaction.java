@@ -40,6 +40,27 @@ public final class PostedHeldTransaction extends PostedTransaction implements He
         return nl;
     }
 
+    public List getAdjustedItems(final Book origbook, final Book newbook, final double amount) throws ExceededHeldAmountException, UnBalancedTransactionException {
+        final double origAmount = getAmount();
+        if (amount > origAmount)
+            throw new ExceededHeldAmountException(this, amount);
+        final List ol = getItemList();
+
+        final List nl = new ArrayList(ol.size());
+
+        final double ratio = amount / origAmount;
+        double balance = 0;
+        for (int i = 0; i < ol.size(); i++) {
+            TransactionItem item = (TransactionItem) ol.get(i);
+            final double itemamount = item.getAmount() * ratio;
+            nl.add(new TransactionItem((item.getBook().equals(origbook)) ? newbook : item.getBook(), itemamount));
+            balance += itemamount;
+        }
+        if (balance != 0)
+            throw new UnBalancedTransactionException(null, this, balance);
+        return nl;
+    }
+
     final private Date expiryTime;
 
 }

@@ -1,8 +1,12 @@
 package org.neuclear.ledger.simple;
 
 /**
- * $Id: SimpleLedgerController.java,v 1.8 2004/06/17 15:18:32 pelle Exp $
+ * $Id: SimpleLedgerController.java,v 1.9 2004/07/23 18:55:27 pelle Exp $
  * $Log: SimpleLedgerController.java,v $
+ * Revision 1.9  2004/07/23 18:55:27  pelle
+ * Added an improved complete method which allows you to specify a book to change to another book when completing a transaction.
+ * This is used by the NeuClear Pay Complete Exchange Order process which changes the benificiary book from the agent to the final recipient.
+ *
  * Revision 1.8  2004/06/17 15:18:32  pelle
  * Added support for Ledger object within the LedgerController. This is only really implemented in the HibernateLedgerController.
  *
@@ -297,6 +301,17 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
         PostedTransaction posted = new PostedTransaction(hold, new Date(), amount, comment);
         return post(posted);
     }
+
+    public PostedTransaction performCompleteHold(PostedHeldTransaction hold, Book origbook, Book newbook, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, TransactionExpiredException, UnknownTransactionException {
+        if (!held.containsKey(hold.getRequestId()))
+            throw new UnknownTransactionException(this, hold.getRequestId());
+        if (hold.getExpiryTime().before(new Date()))
+            throw new TransactionExpiredException(this, hold);
+        held.remove(hold.getRequestId());
+        PostedTransaction posted = new PostedTransaction(hold, origbook, newbook, new Date(), amount, comment);
+        return post(posted);
+    }
+
 
     /**
      * Searches for a Transaction based on its Transaction ID

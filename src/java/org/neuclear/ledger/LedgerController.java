@@ -1,8 +1,12 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: LedgerController.java,v 1.9 2004/06/17 15:18:33 pelle Exp $
+ * $Id: LedgerController.java,v 1.10 2004/07/23 18:55:27 pelle Exp $
  * $Log: LedgerController.java,v $
+ * Revision 1.10  2004/07/23 18:55:27  pelle
+ * Added an improved complete method which allows you to specify a book to change to another book when completing a transaction.
+ * This is used by the NeuClear Pay Complete Exchange Order process which changes the benificiary book from the agent to the final recipient.
+ *
  * Revision 1.9  2004/06/17 15:18:33  pelle
  * Added support for Ledger object within the LedgerController. This is only really implemented in the HibernateLedgerController.
  *
@@ -187,8 +191,8 @@ public abstract class LedgerController {
 
     /**
      * The unique id of the ledger
-     * 
-     * @param id 
+     *
+     * @param id
      */
     public LedgerController(final String id) {
         this.id = id;
@@ -217,7 +221,7 @@ public abstract class LedgerController {
      * The basic interface for creating Transactions in the database.
      * The implementing class takes this transacion information and stores it with an automatically generated uniqueid.
      * This transaction guarantees to not leave a negative balance in any account.
-     * 
+     *
      * @param trans Transaction to perform
      */
     public abstract PostedHeldTransaction performHeldTransfer(UnPostedHeldTransaction trans) throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException;
@@ -248,8 +252,24 @@ public abstract class LedgerController {
     public abstract PostedTransaction performCompleteHold(PostedHeldTransaction hold, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, TransactionExpiredException, UnknownTransactionException;
 
     /**
+     * Completes a held transaction. Which means:
+     * cancelling the hold and performing the transfer with the given updated amount, comment and payee.
+     *
+     * @param hold     HeldTransaction to complete
+     * @param origbook Book to change
+     * @param newbook  The new book
+     * @param amount   The updatd amount. It must be <= than the amount of the hold
+     * @param comment
+     * @return
+     * @throws InvalidTransactionException
+     * @throws LowlevelLedgerException
+     * @throws TransactionExpiredException
+     */
+    public abstract PostedTransaction performCompleteHold(PostedHeldTransaction hold, Book origbook, Book newbook, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, TransactionExpiredException, UnknownTransactionException;
+
+    /**
      * Searches for a Transaction based on its Transaction ID
-     * 
+     *
      * @param id A valid ID
      * @return The Transaction object
      */
@@ -272,7 +292,7 @@ public abstract class LedgerController {
      *       ) d
      * <p/>
      * </pre>
-     * 
+     *
      * @return the balance as a double
      */
 
@@ -299,7 +319,7 @@ public abstract class LedgerController {
      *       ) d
      * <p/>
      * </pre>
-     * 
+     *
      * @return the balance as a double
      */
 
@@ -358,7 +378,7 @@ public abstract class LedgerController {
 
     /**
      * Searches for a Held Transaction based on its Transaction ID
-     * 
+     *
      * @param idstring A valid ID
      * @return The Transaction object
      */
@@ -441,6 +461,11 @@ public abstract class LedgerController {
     public final PostedTransaction complete(String id, double amount, String comment) throws LowlevelLedgerException, UnknownTransactionException, TransactionExpiredException, InvalidTransactionException {
         PostedHeldTransaction tran = findHeldTransaction(id);
         return performCompleteHold(tran, amount, comment);
+    }
+
+    public final PostedTransaction complete(String id, String origbook, String newbook, double amount, String comment) throws LowlevelLedgerException, UnknownTransactionException, TransactionExpiredException, InvalidTransactionException, UnknownBookException {
+        PostedHeldTransaction tran = findHeldTransaction(id);
+        return performCompleteHold(tran, getBook(origbook), getBook(newbook), amount, comment);
     }
 
 

@@ -26,7 +26,6 @@ import org.neuclear.commons.servlets.ServletTools;
 import org.neuclear.commons.time.TimeTools;
 import org.neuclear.id.Identity;
 import org.neuclear.id.resolver.Resolver;
-import org.neuclear.ledger.Book;
 import org.neuclear.ledger.LedgerController;
 import org.neuclear.ledger.LowlevelLedgerException;
 import org.neuclear.ledger.UnknownBookException;
@@ -80,15 +79,13 @@ public class PortfolioBrowserServlet extends HttpServlet {
         DateFormat dateformat = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.SHORT, request.getLocale());
         PrintWriter out = response.getWriter();
         Principal user = request.getUserPrincipal();
-        Book book = (Book) request.getSession(true).getAttribute("book");
-
-        ServletTools.printHeader(out, request, title, messages.getString("accountportfolio") + " " + Utility.denullString(book.getNickname()));
+        ServletTools.printHeader(out, request, title, messages.getString("accountportfolio") + " " + Utility.denullString(user.getName()));
         String url = ServletTools.getAbsoluteURL(request, request.getServletPath());
         try {
             String bookid = user.getName();
-            System.out.println("Browsing: " + book.getId());
+            System.out.println("Browsing: " + bookid);
 
-            PortfolioBrowser stmt = browse(book);
+            PortfolioBrowser stmt = browse(bookid);
             out.println("<table><tr><th>" + messages.getString("asset") + "</th><th>" + messages.getString("count") + "</th><th>" + messages.getString("balance") + "</th></tr>");
             int linecount = 0;
             while (stmt.next()) {
@@ -131,8 +128,8 @@ public class PortfolioBrowserServlet extends HttpServlet {
     }
 
 
-    private PortfolioBrowser browse(Book book) throws LowlevelLedgerException, UnknownBookException {
-        return browser.browsePortfolio(book);
+    private PortfolioBrowser browse(String book) throws LowlevelLedgerException, UnknownBookException {
+        return browser.browsePortfolio(ledger.getBook(book));
     }
 
     private Date parseDate(String fromStr) {
