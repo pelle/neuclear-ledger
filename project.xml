@@ -75,7 +75,7 @@
        </dependency>
        <dependency>
            <id>neuclear-commons</id>
-           <version>0.3-SNAPSHOT</version>
+           <version>0.3</version>
        </dependency>
        <!--    <dependency>
    	<id>neudistframework</id>
