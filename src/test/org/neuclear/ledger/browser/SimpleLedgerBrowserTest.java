@@ -5,8 +5,11 @@ import org.neuclear.ledger.simple.SimpleLedgerController;
 import org.neuclear.ledger.tests.AbstractLedgerBrowserTest;
 
 /*
-$Id: SimpleLedgerBrowserTest.java,v 1.2 2004/04/27 15:23:56 pelle Exp $
+$Id: SimpleLedgerBrowserTest.java,v 1.3 2004/05/04 17:39:06 pelle Exp $
 $Log: SimpleLedgerBrowserTest.java,v $
+Revision 1.3  2004/05/04 17:39:06  pelle
+Fixed some things with regards to getTestBalance.
+
 Revision 1.2  2004/04/27 15:23:56  pelle
 Due to a new API change in 0.5 I have changed the name of Ledger and it's implementers to LedgerController.
 
@@ -26,6 +29,6 @@ public class SimpleLedgerBrowserTest extends AbstractLedgerBrowserTest {
     }
 
     public LedgerController getLedger() {
-        return new SimpleLedgerController("test browser");
+        return new SimpleLedgerController("test");
     }
 }

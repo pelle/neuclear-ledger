@@ -1,26 +1,25 @@
 <project name="neuclear" repository="neuclear" href="http://neuclear.org">
 
-	<title>NeuClear - Distributed Clearing System</title>
+    <title>NeuClear - Distributed Clearing System</title>
 
-	<body>
-		<links>
+    <body>
+        <links>
             <item name="NeuClear.org" href="http://neuclear.org/index.html"/>
             <item name="Wiki" href="http://wiki.neuclear.org/"/>
-			<item name="Talk.org" href="http://talk.org"/>
-			<item name="SourceForge" href="http://sourceforge.net/projects/neuclear/"/>
-		</links>
-		<menu name="NeuClear - Ledger">
-			<item name="Front Page"            href="/index.html"/>
-            <item name="News"            href="/news.html"/>
-            <item name="Overview"            href="/overview.html"/>
-            <item name="Busy Developer's Guide"            href="/bdg.html"/>
+            <item name="Talk.org" href="http://talk.org"/>
+            <item name="SourceForge" href="http://sourceforge.net/projects/neuclear/"/>
+        </links>
+        <menu name="NeuClear - Ledger">
+            <item name="Front Page" href="/index.html"/>
+            <item name="Overview" href="/overview.html"/>
+            <item name="Busy Developer's Guide" href="/bdg.html"/>
             <item name="Installation" href="/installation.html"/>
             <item name="Credits and Dependencies" href="/credits.html"/>
 
             <item name="Downloads" href="http://sourceforge.net/project/showfiles.php?group_id=90470"/>
 
-			<item name="SourceForge" href="http://sourceforge.net/projects/neuclear/"/>
-		</menu>
-	</body>
+            <item name="SourceForge" href="http://sourceforge.net/projects/neuclear/"/>
+        </menu>
+    </body>
 
 </project>

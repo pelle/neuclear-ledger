@@ -1,8 +1,11 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: LedgerController.java,v 1.5 2004/05/03 23:54:19 pelle Exp $
+ * $Id: LedgerController.java,v 1.6 2004/05/04 17:39:06 pelle Exp $
  * $Log: LedgerController.java,v $
+ * Revision 1.6  2004/05/04 17:39:06  pelle
+ * Fixed some things with regards to getTestBalance.
+ *
  * Revision 1.5  2004/05/03 23:54:19  pelle
  * HibernateLedgerController now supports multiple ledgers.
  * Fixed many unit tests.
@@ -358,7 +361,11 @@ public abstract class LedgerController {
     }
 
     public final boolean isBalanced() throws LowlevelLedgerException {
-        return getTestBalance("ledgerid") == 0;
+        return isBalanced(id);
+    }
+
+    public final boolean isBalanced(final String id) throws LowlevelLedgerException {
+        return getTestBalance(id) == 0.0;
     }
 
     public final PostedTransaction transfer(String ledger, String req, String from, String to, double amount, String comment) throws InvalidTransactionException, LowlevelLedgerException, UnBalancedTransactionException, UnknownBookException {
