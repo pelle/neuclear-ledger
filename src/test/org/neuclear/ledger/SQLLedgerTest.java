@@ -1,12 +1,10 @@
 package org.neuclear.ledger;
 
-import org.neuclear.ledger.implementations.SQLLedger;
-import org.neuclear.commons.sql.SQLTools;
+import org.neuclear.commons.NeuClearException;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import javax.naming.NamingException;
 import java.io.IOException;
+import java.sql.SQLException;
 
 /**
  * Created by IntelliJ IDEA.
@@ -15,9 +13,10 @@ import java.io.IOException;
  * Time: 12:58:30 PM
  * To change this template use Options | File Templates.
  */
-public final class SQLLedgerTest extends LedgerTest{
-    public SQLLedgerTest(final String s) throws LowlevelLedgerException, UnknownLedgerException {
+public final class SQLLedgerTest extends LedgerTest {
+    public SQLLedgerTest(final String s) throws LowlevelLedgerException, UnknownLedgerException, SQLException, NamingException, IOException, NeuClearException {
         super(s);
+
     }
 
     public final Ledger createLedger() {

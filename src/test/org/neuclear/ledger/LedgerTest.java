@@ -1,41 +1,48 @@
 package org.neuclear.ledger;
 
 import junit.framework.TestCase;
+import org.neuclear.commons.NeuClearException;
+import org.neuclear.commons.sql.DefaultConnectionSource;
+import org.neuclear.ledger.implementations.SQLLedger;
 
+import javax.naming.NamingException;
+import javax.transaction.UserTransaction;
+import java.io.IOException;
 import java.math.BigInteger;
+import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Random;
-
-import org.neuclear.ledger.implementations.SQLLedger;
-import org.neuclear.commons.sql.DefaultConnectionSource;
 
 /**
  * (C) 2003 Antilles Software Ventures SA
  * User: pelleb
  * Date: Jan 22, 2003
  * Time: 4:18:35 PM
- * $Id: LedgerTest.java,v 1.5 2003/11/21 04:43:21 pelle Exp $
+ * $Id: LedgerTest.java,v 1.6 2003/12/03 23:21:43 pelle Exp $
  * $Log: LedgerTest.java,v $
+ * Revision 1.6  2003/12/03 23:21:43  pelle
+ * Got rid of ofbiz support. Way over the top for our use.
+ *
  * Revision 1.5  2003/11/21 04:43:21  pelle
  * EncryptedFileStore now works. It uses the PBECipher with DES3 afair.
  * Otherwise You will Finaliate.
  * Anything that can be final has been made final throughout everyting. We've used IDEA's Inspector tool to find all instance of variables that could be final.
  * This should hopefully make everything more stable (and secure).
- *
+ * <p/>
  * Revision 1.4  2003/11/11 21:17:32  pelle
  * Further vital reshuffling.
  * org.neudist.crypto.* and org.neudist.utils.* have been moved to respective areas under org.neuclear.commons
  * org.neuclear.signers.* as well as org.neuclear.passphraseagents have been moved under org.neuclear.commons.crypto as well.
  * Did a bit of work on the Canonicalizer and changed a few other minor bits.
- *
+ * <p/>
  * Revision 1.3  2003/10/29 21:15:13  pelle
  * Refactored the whole signing process. Now we have an interface called Signer which is the old SignerStore.
  * To use it you pass a byte array and an alias. The sign method then returns the signature.
  * If a Signer needs a passphrase it uses a PassPhraseAgent to present a dialogue box, read it from a command line etc.
  * This new Signer pattern allows us to use secure signing hardware such as N-Cipher in the future for server applications as well
  * as SmartCards for end user applications.
- *
+ * <p/>
  * Revision 1.2  2003/10/28 23:43:15  pelle
  * The GuiDialogAgent now works. It simply presents itself as a simple modal dialog box asking for a passphrase.
  * The two Signer implementations both use it for the passphrase.
@@ -104,7 +111,7 @@ public abstract class LedgerTest extends TestCase {
     protected final String account2 = "Alice";
 
 
-    public LedgerTest(final String s) throws LowlevelLedgerException, UnknownLedgerException {
+    public LedgerTest(final String s) throws LowlevelLedgerException, UnknownLedgerException, SQLException, NamingException, IOException, NeuClearException {
         super(s);
         ledger = new SQLLedger(new DefaultConnectionSource(), "neu://superbux/reserve");
 
@@ -116,7 +123,9 @@ public abstract class LedgerTest extends TestCase {
         final Book bob = getNewBobBook();
         final Book alice = getNewAliceBook();
         final Date t1 = new Date();
+        UserTransaction ut = ledger.beginUT();
         bob.transfer(alice, 100, "Loan", t1);
+        ledger.commitUT(ut);
     }
 
     private Book getNewBobBook() throws BookExistsException, LowlevelLedgerException {
@@ -135,9 +144,11 @@ public abstract class LedgerTest extends TestCase {
     }
 
     public final void testAccountCreate() throws LedgerException {
+        UserTransaction ut = ledger.beginUT();
         final Book bob = getNewBobBook();
         assertNotNull(bob);
         assertTrue(ledger.bookExists(bob.getBookID()));
+        ledger.commitUT(ut);
     }
 
     public final void testBalance() throws LedgerException {
@@ -147,9 +158,12 @@ public abstract class LedgerTest extends TestCase {
         final double bobBalance = bob.getBalance();
         final double amount = 105;
         final Date t1 = new Date();
+        UserTransaction ut = ledger.beginUT();
+
         alice.transfer(bob, amount, "Repayment", t1);
         assertEquals(aliceBalance - amount, alice.getBalance(), 0);
         assertEquals(bobBalance + amount, bob.getBalance(), 0);
+        ledger.commitUT(ut);
     }
 
     public final void testTimeBalance() throws LedgerException {
@@ -163,6 +177,7 @@ public abstract class LedgerTest extends TestCase {
         final Date t4 = cal.getTime();
         cal.add(Calendar.DAY_OF_YEAR, 1);
         final Date t5 = cal.getTime();
+        UserTransaction ut = ledger.beginUT();
 
         final Book alice = getNewAliceBook();
         final Book bob = getNewBobBook();
@@ -187,6 +202,8 @@ public abstract class LedgerTest extends TestCase {
 
         assertEquals(aliceBalance - amount, alice.getBalance(t5), 0);
         assertEquals(bobBalance + amount, bob.getBalance(t5), 0);
+        ledger.commitUT(ut);
+
     }
 
     public final void testHold() throws LedgerException {
@@ -200,6 +217,7 @@ public abstract class LedgerTest extends TestCase {
         final Date t4 = cal.getTime();
         cal.add(Calendar.DAY_OF_YEAR, 1);
         final Date t5 = cal.getTime();
+        UserTransaction ut = ledger.beginUT();
 
         final Book alice = getNewAliceBook();
         final Book bob = getNewBobBook();
@@ -242,10 +260,12 @@ public abstract class LedgerTest extends TestCase {
             assertEquals(bob.getBalance(t4), bob.getAvailableBalance(t4), 0);
             assertEquals(bob.getBalance(t5), bob.getAvailableBalance(t5), 0);
         }
+        ledger.commitUT(ut);
 
     }
 
     public final void testReversal() throws LedgerException {
+        UserTransaction ut = ledger.beginUT();
         final Book bob = getNewBobBook();
         final Book alice = getNewAliceBook();
 
@@ -258,6 +278,7 @@ public abstract class LedgerTest extends TestCase {
         final PostedTransaction reverse = tran.reverse("Reverse it");
         assertNotNull(reverse);
         assertEquals(bob.getBalance(), balance, 0);
+        ledger.commitUT(ut);
 
     }
 
@@ -273,6 +294,7 @@ public abstract class LedgerTest extends TestCase {
         cal.add(Calendar.DAY_OF_YEAR, 1);
         final Date t5 = cal.getTime();
 
+        UserTransaction ut = ledger.beginUT();
 
         final Book ignacio = createNewBook("neu://verax/testusers/Ignacio");
         final Book palacio = createNewBook("neu://verax/testusers/Palacio");
@@ -317,10 +339,12 @@ public abstract class LedgerTest extends TestCase {
         } catch (TransactionExpiredException e) {
             assertTrue("Did throw exception here", true);
         }
+        ledger.commitUT(ut);
 
     }
 
     public final void testFindTransaction() throws LowlevelLedgerException, BookExistsException, UnBalancedTransactionException, InvalidTransactionException, UnknownTransactionException, UnknownBookException {
+        UserTransaction ut = ledger.beginUT();
         final Book bob = getNewBobBook();
         final Book alice = getNewAliceBook();
 
@@ -330,9 +354,11 @@ public abstract class LedgerTest extends TestCase {
         final PostedTransaction found = ledger.findTransaction(tran.getXid());
         assertNotNull(found);
         assertEquals(found.getXid(), tran.getXid());
+        ledger.commitUT(ut);
     }
 
     public final void testFindHeldTransaction() throws LowlevelLedgerException, BookExistsException, UnBalancedTransactionException, InvalidTransactionException, UnknownTransactionException, UnknownBookException {
+        UserTransaction ut = ledger.beginUT();
         final Book bob = getNewBobBook();
         final Book alice = getNewAliceBook();
 
@@ -342,9 +368,11 @@ public abstract class LedgerTest extends TestCase {
         final PostedHeldTransaction found = ledger.findHeldTransaction(tran.getXid());
         assertNotNull(found);
         assertEquals(found.getXid(), tran.getXid());
+        ledger.commitUT(ut);
     }
 
     public final void testCancelHeld() throws LedgerException {
+        UserTransaction ut = ledger.beginUT();
         final Calendar cal = Calendar.getInstance();
         final Date t1 = cal.getTime();
         cal.add(Calendar.DAY_OF_YEAR, 1);
@@ -375,6 +403,7 @@ public abstract class LedgerTest extends TestCase {
             ;// This should happen so we dont need to do anything
         }
 
+        ledger.commitUT(ut);
 
     }
 
