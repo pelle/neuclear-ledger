@@ -1,8 +1,11 @@
 package org.neuclear.ledger.simple;
 
 /**
- * $Id: SimpleLedger.java,v 1.7 2004/03/29 16:56:26 pelle Exp $
+ * $Id: SimpleLedger.java,v 1.8 2004/03/29 20:05:17 pelle Exp $
  * $Log: SimpleLedger.java,v $
+ * Revision 1.8  2004/03/29 20:05:17  pelle
+ * LedgerServlet works now at least for a straight non date restricted browse.
+ *
  * Revision 1.7  2004/03/29 16:56:26  pelle
  * AbstractLedgerBrowserTest has been extended to test date ranges
  * SimpleLedger now passes all tests.
@@ -99,7 +102,7 @@ import java.util.*;
  * This implementation is very simple and only is meant for testing. It uses the Java Collection for the implementation and is in no way
  * thread safe or supportive of transactions.
  */
-public final class SimpleLedger extends Ledger implements LedgerBrowser {
+public class SimpleLedger extends Ledger implements LedgerBrowser {
 
     public SimpleLedger(final String name) {
         super(name);

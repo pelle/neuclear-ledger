@@ -2,25 +2,21 @@ package org.neuclear.ledger.servlets;
 
 import org.neuclear.commons.Utility;
 import org.neuclear.commons.servlets.ServletTools;
-import org.neuclear.commons.sql.JNDIConnectionSource;
-import org.neuclear.commons.sql.statements.SimpleStatementFactory;
-import org.neuclear.commons.sql.statements.StatementFactory;
 import org.neuclear.commons.time.TimeTools;
 import org.neuclear.id.InvalidNamedObjectException;
 import org.neuclear.id.NSTools;
 import org.neuclear.ledger.LowlevelLedgerException;
 import org.neuclear.ledger.browser.BookBrowser;
 import org.neuclear.ledger.browser.LedgerBrowser;
+import org.neuclear.ledger.simple.PopulatedSimpleLedger;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.sql.DataSource;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.math.BigDecimal;
 import java.security.Principal;
 
 /*
@@ -41,8 +37,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerServlet.java,v 1.6 2004/03/26 23:36:34 pelle Exp $
+$Id: LedgerServlet.java,v 1.7 2004/03/29 20:05:16 pelle Exp $
 $Log: LedgerServlet.java,v $
+Revision 1.7  2004/03/29 20:05:16  pelle
+LedgerServlet works now at least for a straight non date restricted browse.
+
 Revision 1.6  2004/03/26 23:36:34  pelle
 The simple browse(book) now works on hibernate, I have implemented the other two, which currently don not constrain the query correctly.
 
@@ -71,16 +70,9 @@ Added LedgerServlet and friends
  */
 public class LedgerServlet extends HttpServlet {
     public void init(ServletConfig config) throws ServletException {
-        datasource = ServletTools.getInitParam("datasource", config);
         serviceid = ServletTools.getInitParam("serviceid", config);
         try {
-            fact = new SimpleStatementFactory(new JNDIConnectionSource(datasource));
-//            ledger= new SQLLedger(
-//                    fact,
-//                        serviceid
-//                );
-//            if (!ledger.bookExists("neu://alice@test"))
-//                PopulateLedger.main(null);
+            ledger = new PopulatedSimpleLedger(serviceid);
         } catch (Exception e) {
             throw new ServletException(e);
         }
@@ -98,7 +90,8 @@ public class LedgerServlet extends HttpServlet {
             if (Utility.isEmpty(book))
                 book = serviceid;
             else
-                book = "neu:/" + book;
+                book = book.substring(1);
+            System.out.println("Browsing: " + book);
             BookBrowser stmt = ledger.browse(book);
             out.println("<table><tr><th>Transaction ID</th><th>Time</th><th>Counterparty</th><th>Comment</th><th>Amount</th></tr>");
             while (stmt.next()) {
@@ -133,10 +126,6 @@ public class LedgerServlet extends HttpServlet {
         }
     }
 
-    private DataSource ds;
-    private String datasource;
     private String serviceid;
-    private static final BigDecimal ZERO = new BigDecimal(0);
     private LedgerBrowser ledger;
-    private StatementFactory fact;
 }

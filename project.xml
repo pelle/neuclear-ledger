@@ -77,6 +77,9 @@
         <dependency>
             <id>picocontainer</id>
             <version>1.0-beta-1</version>
+            <properties>
+                <war.bundle>true</war.bundle>
+            </properties>
         </dependency>
         <dependency>
             <id>neuclear-commons</id>
