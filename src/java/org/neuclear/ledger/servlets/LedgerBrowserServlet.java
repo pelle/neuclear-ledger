@@ -41,8 +41,12 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerBrowserServlet.java,v 1.10 2004/06/08 17:45:47 pelle Exp $
+$Id: LedgerBrowserServlet.java,v 1.11 2004/06/15 21:25:25 pelle Exp $
 $Log: LedgerBrowserServlet.java,v $
+Revision 1.11  2004/06/15 21:25:25  pelle
+Added PortfolioBrowserServlet
+LedgerBrowserServlet now can take an optional ledger id in its path info.
+
 Revision 1.10  2004/06/08 17:45:47  pelle
 Minor fixes and cleanups
 
@@ -122,7 +126,7 @@ Added LedgerServlet and friends
 public class LedgerBrowserServlet extends HttpServlet {
     public void init(ServletConfig config) throws ServletException {
         serviceid = ServletTools.getInitParam("serviceid", config);
-        ledgerid = ServletTools.getInitParam("ledgerid", config);
+        defaultledger = ServletTools.getInitParam("ledgerid", config);
         title = ServletTools.getInitParam("title", config);
         try {
 //            ConfigurableContainer pico=(ConfigurableContainer) getServletContext().getAttribute("pico");
@@ -152,15 +156,20 @@ public class LedgerBrowserServlet extends HttpServlet {
         String url = ServletTools.getAbsoluteURL(request, request.getServletPath());
         try {
             String bookid = user.getName();
-            System.out.println("Browsing: " + book);
+            System.out.println("Browsing: " + book.getId());
 
             String fromStr = request.getParameter("from");
             String toStr = request.getParameter("to");
 
             Date from = parseDate(fromStr);
             Date to = parseDate(toStr);
-
-            BookBrowser stmt = browse(bookid, from, to);
+            String ledgerid = request.getPathInfo();
+            if (ledgerid != null && ledgerid.length() > 32)
+                ledgerid = ledgerid.substring(1, 32);
+            else
+                ledgerid = defaultledger;
+            System.out.println("Using ledger: " + ledgerid);
+            BookBrowser stmt = browse(ledgerid, bookid, from, to);
             out.println("<table><tr><th>" + messages.getString("xid") + "</th><th>" + messages.getString("time") + "</th><th>" + messages.getString("who") + "</th><th>" + messages.getString("comments") + "</th><th>" + messages.getString("payments") + "</th><th>" + messages.getString("received") + "</th></tr>");
             int linecount = 0;
             while (stmt.next()) {
@@ -207,12 +216,13 @@ public class LedgerBrowserServlet extends HttpServlet {
             out.println("\">" + messages.getString("mainmenu") + "</a>");
             out.println("</body></html>");
         } catch (LowlevelLedgerException e) {
+            e.printStackTrace(out);
             e.printStackTrace();
         }
     }
 
 
-    private BookBrowser browse(String book, Date from, Date to) throws LowlevelLedgerException {
+    private BookBrowser browse(String ledgerid, String book, Date from, Date to) throws LowlevelLedgerException {
         if (from != null) {
             if (to != null)
                 return ledger.browseRange(ledgerid, book, from, to);
@@ -233,6 +243,6 @@ public class LedgerBrowserServlet extends HttpServlet {
 
     private String serviceid;
     private LedgerBrowser ledger;
-    private String ledgerid;
+    private String defaultledger;
     private String title;
 }
