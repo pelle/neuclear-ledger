@@ -1,6 +1,7 @@
 package org.neuclear.ledger.tests;
 
 import junit.framework.TestCase;
+import org.neuclear.commons.crypto.CryptoTools;
 import org.neuclear.ledger.InvalidTransactionException;
 import org.neuclear.ledger.Ledger;
 import org.neuclear.ledger.LowlevelLedgerException;
@@ -10,8 +11,11 @@ import org.neuclear.ledger.browser.LedgerBrowser;
 import java.util.Date;
 
 /*
-$Id: AbstractLedgerBrowserTest.java,v 1.5 2004/04/19 18:57:27 pelle Exp $
+$Id: AbstractLedgerBrowserTest.java,v 1.6 2004/04/20 00:15:32 pelle Exp $
 $Log: AbstractLedgerBrowserTest.java,v $
+Revision 1.6  2004/04/20 00:15:32  pelle
+Updated test to use books
+
 Revision 1.5  2004/04/19 18:57:27  pelle
 Updated Ledger to support more advanced book information.
 You can now create a book or fetch a book by doing getBook(String id) on the ledger.
@@ -214,7 +218,7 @@ public abstract class AbstractLedgerBrowserTest extends TestCase {
     }
 
     public String getNewBook(String root) {
-        return root + System.currentTimeMillis();
+        return (root + CryptoTools.createRandomID()).substring(0, 20);
     }
 
     public String getBobBook() {
