@@ -8,7 +8,7 @@
     </context-param>
     <context-param>
         <param-name>ledger</param-name>
-        <param-name>hibernate</param-name>
+        <param-value>hibernate</param-value>
     </context-param>
     <context-param>
         <param-name>title</param-name>
