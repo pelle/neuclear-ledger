@@ -1,8 +1,11 @@
 package org.neuclear.ledger.simple;
 
 /**
- * $Id: SimpleLedgerController.java,v 1.6 2004/05/14 16:23:58 pelle Exp $
+ * $Id: SimpleLedgerController.java,v 1.7 2004/06/11 22:42:32 pelle Exp $
  * $Log: SimpleLedgerController.java,v $
+ * Revision 1.7  2004/06/11 22:42:32  pelle
+ * Added a new type of BookBrowser which lists transactions beetween two Books.
+ *
  * Revision 1.6  2004/05/14 16:23:58  pelle
  * Added PortfolioBrowser to LedgerController and it's implementations.
  *
@@ -488,6 +491,18 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
         return new SimplePortfolioBrowser(book);
     }
 
+    public BookBrowser browseInteractions(String ledger, String book, String counterparty) throws LowlevelLedgerException {
+        return new SimpleBookBrowser(ledger, book, counterparty);
+    }
+
+    public BookBrowser browseInteractions(String book, String counterparty) throws LowlevelLedgerException {
+        return browseInteractions(getId(), book, counterparty);
+    }
+
+    public PortfolioBrowser browsePortfolioInteractions(Book book, Book counterparty) throws LowlevelLedgerException {
+        return new SimplePortfolioBrowser(book, counterparty);
+    }
+
     private final HashMap ledger;
     private final HashMap held;
     private final String id;
@@ -503,6 +518,10 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
             this(book, from, null);
         }
 
+        public SimpleBookBrowser(final String ledger, final String book, final String counterparty) {
+            this(ledger, book, null, null, counterparty);
+        }
+
         public SimpleBookBrowser(final String ledger, final String book) {
             this(ledger, book, null, null);
         }
@@ -516,10 +535,15 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
         }
 
         public SimpleBookBrowser(final String ledger, final String book, final Date from, final Date to) {
+            this(ledger, book, from, to, null);
+        }
+
+        public SimpleBookBrowser(final String ledger, final String book, final Date from, final Date to, final String counterparty) {
             super(book);
             this.ledger = ledger;
             this.from = from;
             this.to = to;
+            this.counterparty = counterparty;
             if (books.containsKey(book)) {
                 iter = ((SimpleBook) books.get(book)).iterator();
 //                System.out.println("book contains: " + ((List)books.get(book)).size());
@@ -555,6 +579,19 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
         private boolean isValid(final PostedTransaction posted) {
             if (!posted.getLedger().equals(ledger))
                 return false;
+            if (counterparty != null) {
+                Iterator iter = posted.getItems();
+                boolean iscounterparty = false;
+                while (iter.hasNext()) {
+                    TransactionItem item = (TransactionItem) iter.next();
+                    if (item.getBook().getId().equals(counterparty)) {
+                        iscounterparty = true;
+                        break;
+                    }
+                }
+                if (iscounterparty == false)
+                    return false;
+            }
             if (from == null)
                 return true;
             if (posted.getTransactionTime().after(from)) {
@@ -583,6 +620,7 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
         private final Date from;
         private final Date to;
         private final String ledger;
+        private final String counterparty;
 //        private int i=0;
     }
 
@@ -630,8 +668,13 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
 
     private class SimplePortfolioBrowser extends PortfolioBrowser {
         public SimplePortfolioBrowser(final Book book) {
+            this(book, null);
+        }
+
+        public SimplePortfolioBrowser(final Book book, final Book counterparty) {
             super(book);
             iter = ((SimpleBook) book).ledgerIterator();
+            this.counterparty = counterparty;
         }
 
         public boolean next() throws LowlevelLedgerException {
@@ -646,13 +689,33 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
             int count = 0;
             Iterator iter = ((SimpleBook) getBook()).iterator();
             while (iter.hasNext()) {
-                Transaction tran = (Transaction) iter.next();
-                if (tran.getLedger().equals(ledger))
+                PostedTransaction tran = (PostedTransaction) iter.next();
+                if (isValid(ledger, tran))
                     count++;
             }
             return count;
         }
 
+        private boolean isValid(final String ledger, final PostedTransaction posted) {
+            if (!posted.getLedger().equals(ledger))
+                return false;
+            if (counterparty != null) {
+                Iterator iter = posted.getItems();
+                boolean iscounterparty = false;
+                while (iter.hasNext()) {
+                    TransactionItem item = (TransactionItem) iter.next();
+                    if (item.getBook().getId().equals(counterparty.getId())) {
+                        iscounterparty = true;
+                        break;
+                    }
+                }
+                if (iscounterparty == false)
+                    return false;
+            }
+            return false;
+        }
+
         private final Iterator iter;
+        private final Book counterparty;
     }
 }

@@ -23,8 +23,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerBrowser.java,v 1.7 2004/05/14 16:23:49 pelle Exp $
+$Id: LedgerBrowser.java,v 1.8 2004/06/11 22:42:32 pelle Exp $
 $Log: LedgerBrowser.java,v $
+Revision 1.8  2004/06/11 22:42:32  pelle
+Added a new type of BookBrowser which lists transactions beetween two Books.
+
 Revision 1.7  2004/05/14 16:23:49  pelle
 Added PortfolioBrowser to LedgerController and it's implementations.
 
@@ -71,4 +74,10 @@ public interface LedgerBrowser {
     public BookListBrowser browseBooks(String ledger) throws LowlevelLedgerException;
 
     public PortfolioBrowser browsePortfolio(Book book) throws LowlevelLedgerException;
+
+    public BookBrowser browseInteractions(String ledger, String book, String counterparty) throws LowlevelLedgerException;
+
+    public BookBrowser browseInteractions(String book, String counterparty) throws LowlevelLedgerException;
+
+    public PortfolioBrowser browsePortfolioInteractions(Book book, Book counterparty) throws LowlevelLedgerException;
 }

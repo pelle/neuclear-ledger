@@ -9,8 +9,11 @@ import org.neuclear.ledger.browser.*;
 import java.util.Date;
 
 /*
-$Id: AbstractLedgerBrowserTest.java,v 1.12 2004/05/14 16:23:58 pelle Exp $
+$Id: AbstractLedgerBrowserTest.java,v 1.13 2004/06/11 22:42:32 pelle Exp $
 $Log: AbstractLedgerBrowserTest.java,v $
+Revision 1.13  2004/06/11 22:42:32  pelle
+Added a new type of BookBrowser which lists transactions beetween two Books.
+
 Revision 1.12  2004/05/14 16:23:58  pelle
 Added PortfolioBrowser to LedgerController and it's implementations.
 
@@ -279,6 +282,77 @@ public abstract class AbstractLedgerBrowserTest extends TestCase {
         assertFalse(portfolio.next());
 
     }
+
+    public void testBookInteraction() throws LowlevelLedgerException, InvalidTransactionException, UnknownBookException {
+        final String bob = getBobBook();
+        final String alice = getAliceBook();
+        final String carol = getCarolBook();
+
+        assertBrowserSize(bob, 0, browser.browse(bob));
+        assertBrowserSize(alice, 0, browser.browse(alice));
+        assertBrowserSize(alice, 0, browser.browse(carol));
+        assertBrowserSize(bob, 0, browser.browseInteractions(bob, alice));
+        assertBrowserSize(bob, 0, browser.browseInteractions(bob, carol));
+        assertBrowserSize(alice, 0, browser.browseInteractions(alice, bob));
+        assertBrowserSize(alice, 0, browser.browseInteractions(alice, carol));
+        assertBrowserSize(carol, 0, browser.browseInteractions(carol, bob));
+        assertBrowserSize(carol, 0, browser.browseInteractions(carol, alice));
+
+
+        ledger.transfer(bob, alice, 10, "test");
+        assertBrowserSize(bob, 1, browser.browseInteractions(bob, alice));
+        assertBrowserSize(alice, 1, browser.browseInteractions(alice, bob));
+        assertBrowserSize(bob, 0, browser.browseInteractions(bob, carol));
+        ledger.transfer(bob, alice, 10, "test");
+        assertBrowserSize(bob, 2, browser.browseInteractions(bob, alice));
+        assertBrowserSize(alice, 2, browser.browseInteractions(alice, bob));
+        assertBrowserSize(bob, 0, browser.browseInteractions(bob, carol));
+        ledger.transfer(alice, carol, 20, "test");
+        assertBrowserSize(bob, 2, browser.browseInteractions(bob, alice));
+        assertBrowserSize(alice, 1, browser.browseInteractions(alice, carol));
+        assertBrowserSize(carol, 1, browser.browseInteractions(carol, alice));
+        assertBrowserSize(bob, 0, browser.browseInteractions(bob, carol));
+        assertBrowserSize(bob, 2, browser.browse(bob));
+        assertBrowserSize(alice, 3, browser.browse(alice));
+        assertBrowserSize(alice, 1, browser.browse(carol));
+
+
+    }
+
+    public void testPortfolioInteraction() throws LowlevelLedgerException, InvalidTransactionException, UnknownBookException {
+        final Book bob = ledger.getBook(getBobBook());
+        final Book alice = ledger.getBook(getAliceBook());
+        final Book carol = ledger.getBook(getCarolBook());
+
+        assertBrowserSize(bob.toString(), 0, browser.browsePortfolio(bob));
+        assertBrowserSize(alice.toString(), 0, browser.browsePortfolio(alice));
+        assertBrowserSize(carol.toString(), 0, browser.browsePortfolio(carol));
+        assertBrowserSize(bob.toString(), 0, browser.browsePortfolioInteractions(bob, alice));
+        assertBrowserSize(bob.toString(), 0, browser.browsePortfolioInteractions(bob, carol));
+        assertBrowserSize(alice.toString(), 0, browser.browsePortfolioInteractions(alice, bob));
+        assertBrowserSize(alice.toString(), 0, browser.browsePortfolioInteractions(alice, carol));
+        assertBrowserSize(carol.toString(), 0, browser.browsePortfolioInteractions(carol, bob));
+        assertBrowserSize(carol.toString(), 0, browser.browsePortfolioInteractions(carol, alice));
+
+
+        ledger.transfer("a", bob.getId(), alice.getId(), 10, "test");
+        assertBrowserSize(bob.toString(), 1, browser.browsePortfolioInteractions(bob, alice));
+        assertBrowserSize(alice.toString(), 1, browser.browsePortfolioInteractions(alice, bob));
+        assertBrowserSize(bob.toString(), 0, browser.browsePortfolioInteractions(bob, carol));
+        ledger.transfer("b", bob.getId(), alice.getId(), 10, "test");
+        assertBrowserSize(bob.toString(), 2, browser.browsePortfolioInteractions(bob, alice));
+        assertBrowserSize(alice.toString(), 2, browser.browsePortfolioInteractions(alice, bob));
+        assertBrowserSize(bob.toString(), 0, browser.browsePortfolioInteractions(bob, carol));
+        ledger.transfer("b", alice.getId(), carol.getId(), 10, "test");
+        assertBrowserSize(alice.toString(), 1, browser.browsePortfolioInteractions(alice, carol));
+        assertBrowserSize(carol.toString(), 1, browser.browsePortfolioInteractions(carol, alice));
+        assertBrowserSize(bob.toString(), 2, browser.browsePortfolioInteractions(bob, alice));
+        assertBrowserSize(alice.toString(), 2, browser.browsePortfolioInteractions(alice, bob));
+        assertBrowserSize(bob.toString(), 0, browser.browsePortfolioInteractions(bob, carol));
+
+
+    }
+
 
     public void assertVerifyBookBrowserContent(final String book, final String counterparty, final double amount, final int count, final BookBrowser bb) throws LowlevelLedgerException {
         assertNotNull("null book browser for " + book, bb);
