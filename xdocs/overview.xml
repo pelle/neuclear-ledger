@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<document>
+
+	<properties>
+		<title>Overview</title>
+		<author email="pelle@neubia.com">Pelle Braendgaard</author>
+	</properties>
+
+	<body>
+		<section name="Introduction">
+            <p>
+                To understand it you need a basic understanding of ledgers. A ledger consists of a list of transactions.
+                Each transaction has a credit and a debit book (or account) as well as an amount. This means each transaction affects
+                one account negatively and one account positively.
+                To view the balance of a book you simply add up all the credit amounts and deduct all the debit amounts.
+            </p>
+
+
+        </section>
+        <section name="API Overview">
+            <p>
+                The API currently consists of 3 main classes:
+                <ul>
+                    <li><a href="apidocs/org/neuclear/ledger/Ledger.html">Ledger</a></li>
+                    <li><a href="apidocs/org/neuclear/ledger/Book.html">Book</a></li>
+                    <li><a href="apidocs/org/neuclear/ledger/Transaction.html">Transaction</a></li>
+                </ul>
+                Implementing classes extend the abstract class Ledger. Book and Transaction are final as are several items in the
+                Ledger class.
+            </p>
+        </section>
+        <section name="LedgerFactory">
+            <p>
+                The LedgerFactory is used to create new Ledgers.
+
+            </p>
+        </section>
+        <section name="Ledger">
+            <p>
+                The LedgerFactory is used to create new Ledgers.
+
+            </p>
+        </section>
+        <section name="Books">
+            <p>
+                The LedgerFactory is used to create new Ledgers.
+
+            </p>
+        </section>
+        <section name="Transactions">
+            <p>
+                The LedgerFactory is used to create new Ledgers.
+
+            </p>
+        </section>
+
+
+	</body>
+
+</document>

@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<document>
+
+	<properties>
+		<title>NeuClear Ledger API News</title>
+		<author email="pelle@neubia.com">Pelle Braendgaard</author>
+	</properties>
+
+	<body>
+        <section name="New Release of NeuClear Ledger API - Release 0.2">
+            <p>
+                [January 26th, 2003] New Release Available. New Release contains a working implementation using Java Collections API.
+                Several changes to the API including 2 distinct Transaction classes. Also much improved documentation.
+            </p>
+        </section>
+        <section name="New Busy Developer Guide to the NeuClear API" href="/bdg.html">
+            <p>
+                [January 26th, 2003] New improved documentation includes a Busy Developer Guide to get developers started quickly.
+            </p>
+        </section>
+
+        <section name="First Public Release of NeuClear Ledger API - Release 0.1">
+            <p>
+                [January 20th, 2003] First Public Release of the NeuClear Ledger API is available.
+            </p>
+        </section>
+	</body>
+
+</document>

@@ -1,0 +1,26 @@
+<project name="neudist" repository="neudist" href="http://neudist.org">
+
+	<title>NeuClear - Distributed Clearing System</title>
+
+	<body>
+		<links>
+            <item name="NeuClear.org" href="http://neuclear.org/index.html"/>
+			<item name="NeuDist.org" href="http://neudist.org/index.html"/>
+			<item name="NeuClear.com" href="http://neuclear.com"/>
+			<item name="Talk.org" href="http://talk.org"/>
+			<item name="SourceForge" href="http://sourceforge.net/projects/neudist/"/>
+		</links>
+		<menu name="NeuClear - Ledger">
+			<item name="Front Page"            href="/index.html"/>
+            <item name="News"            href="/news.html"/>
+            <item name="Overview"            href="/overview.html"/>
+            <item name="Busy Developer's Guide"            href="/bdg.html"/>
+            <item name="Installation" href="/installation.html"/>
+            <item name="Credits and Dependencies" href="/credits.html"/>
+
+			<item name="Downloads" href="http://sourceforge.net/project/showfiles.php?group_id=9652"/>
+			<item name="SourceForge" href="http://sourceforge.net/projects/neudist/"/>
+		</menu>
+	</body>
+
+</project>

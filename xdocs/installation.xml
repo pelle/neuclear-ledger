@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<document>
+
+	<properties>
+		<title>Installing and Building</title>
+		<author email="pelle@neubia.com">Pelle Braendgaard</author>
+	</properties>
+
+	<body>
+		<section name="Requirements">
+            <p>
+                To build the just about anything within the NeuClear framework you first need to install <a href="http://jakarta.apache.org/turbine/maven/">Maven</a>.
+                Follow their installation instructions and you should be ok. I haven't tried this under windows yet, but I'm guessing
+                it should work fine.
+            </p>
+        </section>
+        <section name="Building">
+            <p>
+                Unpack the source and binary distributions. Familiarise yourself a bit with maven. It's a bit different than ant, but
+                very easy to learn. To see the options available go to the type:
+            </p>
+            <source>~/projects/neuclear-ledger> maven -g</source>
+            <p>
+                Of these the most important one is to simply type:
+            </p>
+            <source>~/projects/neuclear-ledger> maven jar</source>
+            <p>
+                This should build everything and create a neuclear-ledger-0.X.jar file in <tt>target/</tt>.
+            </p>
+        </section>
+    </body>
+</document>

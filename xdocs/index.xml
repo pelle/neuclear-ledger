@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<document>
+
+	<properties>
+		<title>NeuClear Ledger API</title>
+		<author email="pelle@neubia.com">Pelle Braendgaard</author>
+	</properties>
+
+	<body>
+        <section name="Major upcoming release of NeuClear Ledger API - Release 0.3">
+            <p>
+                [August 4th, 2003]
+                Major new release is in the works. It is mostly workable in CVS at the moment, but needs
+                some cleaning up and improved documentation. Major new features:
+
+            </p>
+            <ul>
+                <li>SQL Database support</li>
+                <li>Improved model of HeldTransactions now seperated out from actual ledger.</li>
+            </ul>
+        </section>
+        <section name="New Release of NeuClear Ledger API - Release 0.2">
+            <p>
+                [January 26th, 2003] New Release Available. New Release contains a working implementation using Java Collections API.
+                Several changes to the API including 2 distinct Transaction classes. Also much improved documentation.
+            </p>
+        </section>
+        <section name="New Busy Developer Guide to the NeuClear API" href="/bdg.html">
+            <p>
+                [January 26th, 2003] New improved documentation includes a Busy Developer Guide to get developers started quickly.
+            </p>
+        </section>
+		<section name="Introduction">
+			<p>
+                Many applications in business need access to a double entry ledger. This could be a General Ledger for a company
+                or an account system in a bank. NeuClear as a framework for creating financial clearing system needed a standardized api
+                for integrating with existing ledgers or creating new ledgers.
+            </p>
+            <p>
+                The API is very simple and it should be very easy to implement it. Everything has been written with security in mind. This
+                is not to say that it is secure, as it hasn't been properly reviewed. Reviews should also take the underlying implementations into account.
+            </p>
+		</section>
+        <section name="Features">
+            <p>The following is what the main feature list is:</p>
+            <ul>
+                <li>Backend plugins to support legacy and new Ledgers
+                </li>
+                <li>Account Scheme plugins to support different account naming schemes, such as bank accounts, neudist, charts of accounts etc.</li>
+                <li>Small and secure</li>
+            </ul>
+        </section>
+	</body>
+
+</document>

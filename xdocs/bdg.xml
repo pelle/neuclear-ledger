@@ -1,0 +1,169 @@
+<?xml version="1.0"?>
+<document>
+
+	<properties>
+		<title>The Busy Developer's Guide to the NeuClear Ledger API</title>
+		<author email="pelle@neubia.com">Pelle Braendgaard</author>
+	</properties>
+
+	<body>
+		<section name="Introduction">
+
+            <h3>Scope</h3>
+            <p>
+                This document describes in Example form the usage of the NeuClear Ledger API. The Document is not intended as
+                an implemntation document or a strict API definition. The current final API Specifications can be found in the
+                <a href="apidocs/index.html">Project Java Docs</a>.
+            </p>
+            <h3>Purpose</h3>
+                <p>
+                    The main purpose of the NeuClear Ledger API is to provide a simple API for applications in need of Financial Ledger
+                    functionality. This could be Payment Systems, Sales Ledgers or General Ledger (accounting) systems. I'm sure there are
+                    many other applications. The main idea behind the API is to hide the implementation of such Ledgers from the front ends such as GUI's
+                    and web services.
+                </p>
+        </section>
+        <section name="Creating a Ledger">
+            <p>
+                The LedgerFactory is used to create new Ledgers. This handles the background implementations etc. You can have multiple
+                Ledger's at any given time. Each identified by a name.
+            </p>
+            <source> <![CDATA[
+            Ledger testLedger=LedgerFactory.getInstance().getLedger("test");
+            ]]></source>
+            <p>
+                The above simply gets an instance of the LedgerFactory and returns a Ledger called "test" from the default implementation.
+            </p>
+        </section>
+        <section name="Creating a Book">
+            <p>
+                Books are the main groupings with a ledger. You might now them as accounts, books or something completely different.
+                In the current implementation Books can be created on the fly. Different implementations might chose to change this
+                behaviour, so bear this in mind.
+            </p>
+            <source><![CDATA[
+            Ledger testLedger=LedgerFactory.getInstance().getLedger("test");
+            Book bob=testLedger.getBook("Bob");
+            ]]></source>
+        </section>
+        <section name="Viewing a Book's Balance">
+            <source><![CDATA[
+            Ledger testLedger=LedgerFactory.getInstance().getLedger("test");
+            Book bob=testLedger.getBook("Bob");
+            double bobsBalance=bob.getBalance();
+            ]]></source>
+        </section>
+        <section name="Creating a Simple Transfer">
+            <p>
+                A Transfer consists of a Debit (A subtraction) from one book and a Credit (an addition) to another book.
+            </p>
+            <source><![CDATA[
+            Ledger testLedger=LedgerFactory.getInstance().getLedger("test");
+            Book bob=testLedger.getBook("Bob");
+            Book alice=testLedger.getBook("Alice");
+            bob.transfer(alice,100,"Loan",new Date());
+            ]]></source>
+            <p>
+                For this example we had to create 2 Books. We transfered 100 from Bob's account to Alice's Account.
+                These were transfered at the current time and with the comment of "Loan".
+            </p>
+        </section>
+        <section name="Complex Transactions">
+            <p>
+                To create a complex Transaction you first need to create an UnPostedTransaction to work with. To this you can
+                add several items for multiple Books. Remember though the Transaction must balance. The API wont let you
+                post a Transaction that doesnt balance.
+            </p>
+            <source><![CDATA[
+            Ledger testLedger=LedgerFactory.getInstance().getLedger("test");
+            Book bob=testLedger.getBook("Bob");
+            Book alice=testLedger.getBook("Alice");
+            Book fees=testLedger.getBook("Fees");
+
+            UnPostedTransaction tran=new UnPostedTransaction(testLedger,"Thanks",new Date());
+
+            double amount=100;
+            double fee=100*.01; // Charge a 1% fee
+            if (alice.getBalance()<(amount+fee))
+                // throw error Insufficient Funds
+            tran.addItem(alice,-(amount+fee)); // Subtract amount+fee's from Alice's account
+            tran.additem(bob,amount); // Add amount to Bob's account
+            tran.additem(fees,fee);   // Add Fee's to Fee account
+            tran.post(); // Post Transaction to the Ledger
+            ]]></source>
+            <p>
+                You can add as many items to a transaction as you wish as long as they balance when it gets posted. Once a transaction
+                has been posted it cant be modified.
+            </p>
+
+        </section>
+        <section name="Working with Transactions">
+            <p>
+                Posted Transactions are stored in the PostedTransaction class. Any operation that creates a new Posted Transaction
+                returns the Transaction.
+            </p>
+            <p>
+                Posted Transactions also have an id which can be found using the getXid() method. If you have this id you can ask the
+                ledger for the Posted Transaction using the findTransaction() method.
+            </p>
+            <source><![CDATA[
+            PostedTransaction tran=bob.transfer(alice,100,"Loan",new Date());
+            PostedTransaction tran2=testLedger.findTransaction("0020021");
+            ]]></source>
+            <p>
+                Once you have a transaction you can do several things with it. Such as reversing, copying or revising.
+            </p>
+            <source><![CDATA[
+            PostedTransaction tran=bob.transfer(alice,100,"Loan",new Date());
+            PostedTransaction reverse=tran.reverse("Was a mistake.");
+
+            PostedTransaction copy=tran.copy(new Date(),null,"Was a mistake.");
+
+            tran=tran.revise(new Date(),null,"Lets not call it a loan, lets call it a gift");
+            ]]></source>
+            <p>
+                Since there is a full audit trail within the API. You dont delete Posted Transactions. You reverse them.
+                If you want to make a change to a transaction, you revise it.
+            </p>
+
+        </section>
+        <section name="Held Transactions">
+            <p>
+                Held Transactions are mainly useful in Payment Systems and not so much in Accounts. This means you can pretty much
+                ignore it if you're not working on payment systems.
+            </p>
+            <p>
+                Held Transactions are what happens when your credit card get's authorized at a hotel for example. A hotel might
+                authorize say $200 on check in. When you check out, they run up the actual bill and create a charge for
+                that amount releasing the authorization. The Authorization is normally valid for a certain amount of time.
+                During that time if it doesn't get charged, it affects the available balance of your credit card and not your
+                real balance.
+            </p>
+            <p>
+                Within the NeuClear Ledger API any transaction can have an expiry time. This Holds the Transaction amount from
+                the Transaction time to the Expiry time. This never affects the real balance but does affect the Available Balance
+                of the debit books. Important! It never affects the balance or available balance of the credit side.
+            </p>
+            <source><![CDATA[
+            Calendar cal=Calendar.getInstance();
+            Date t1=cal.getTime();
+            cal.add(Calendar.DAY_OF_YEAR,1);
+            Date t2=cal.getTime(); // Tomorrow
+
+            Book plaza=ledger.getBook("Plaza Hotel");
+            Book bob=ledger.getBook("Bob");
+
+            // We are holding 200 from today to tomorrow
+            PostedTransaction held=bob.hold(plaza,200,"Hold",t1,t2);
+            double available=bob.getAvailableBalance();
+
+            // Lets implement it
+            PostedTransaction revised=held.implementHeld(165.43,new Date(),"Thank you for your business");
+
+            ]]></source>
+        </section>
+
+
+	</body>
+
+</document>
