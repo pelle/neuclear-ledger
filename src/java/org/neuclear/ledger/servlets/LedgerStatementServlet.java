@@ -6,6 +6,7 @@ import org.neuclear.commons.time.TimeTools;
 import org.neuclear.id.InvalidNamedObjectException;
 import org.neuclear.id.NSTools;
 import org.neuclear.ledger.LowlevelLedgerException;
+import org.neuclear.ledger.Ledger;
 import org.neuclear.ledger.browser.BookBrowser;
 import org.neuclear.ledger.browser.LedgerBrowser;
 import org.neuclear.ledger.simple.PopulatedSimpleLedger;
@@ -18,6 +19,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.Principal;
+import java.util.Date;
+import java.sql.Timestamp;
+import java.text.ParseException;
 
 /*
 NeuClear Distributed Transaction Clearing Platform
@@ -37,8 +41,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-$Id: LedgerServlet.java,v 1.7 2004/03/29 20:05:16 pelle Exp $
-$Log: LedgerServlet.java,v $
+$Id: LedgerStatementServlet.java,v 1.1 2004/03/29 23:43:30 pelle Exp $
+$Log: LedgerStatementServlet.java,v $
+Revision 1.1  2004/03/29 23:43:30  pelle
+The servlets now work and display the ledger contents.
+
 Revision 1.7  2004/03/29 20:05:16  pelle
 LedgerServlet works now at least for a straight non date restricted browse.
 
@@ -68,7 +75,7 @@ Added LedgerServlet and friends
  * Date: Dec 26, 2003
  * Time: 5:54:05 PM
  */
-public class LedgerServlet extends HttpServlet {
+public class LedgerStatementServlet extends HttpServlet {
     public void init(ServletConfig config) throws ServletException {
         serviceid = ServletTools.getInitParam("serviceid", config);
         try {
@@ -82,50 +89,35 @@ public class LedgerServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType("text/html");
         PrintWriter out = response.getWriter();
-        ServletTools.printHeader(out, request, "Account Browser");
+        ServletTools.printHeader(out, request, "Account Statement");
         String url = ServletTools.getAbsoluteURL(request, request.getServletPath());
         try {
             Principal user = request.getUserPrincipal();
             String book = request.getPathInfo();
             if (Utility.isEmpty(book))
-                book = serviceid;
+                book = user.getName();
             else
                 book = book.substring(1);
-            System.out.println("Browsing: " + book);
-            BookBrowser stmt = ledger.browse(book);
-            out.println("<table><tr><th>Transaction ID</th><th>Time</th><th>Counterparty</th><th>Comment</th><th>Amount</th></tr>");
-            while (stmt.next()) {
-                final double amount = stmt.getAmount();
-                out.print("<tr");
-                if (amount < 0)
-                    out.print(" class=\"negative\"");
-                out.print("><td style=\"size:small\">");
-                out.print(stmt.getId());
-                out.print("</td><td>");
-                out.print(TimeTools.formatTimeStampShort(stmt.getValuetime()));
-                out.print("</td><td><a href=\"");
-                out.print(url);
-                if (NSTools.isValidName(stmt.getCounterparty()))
-                    out.print(NSTools.name2path(stmt.getCounterparty()));
-                else
-                    out.print("/" + stmt.getCounterparty());
-                out.println("\">");
-                out.print(stmt.getCounterparty());
-                out.print("</a></td><td>");
-                out.print(stmt.getComment());
-                out.print("</td><td>");
-                out.print(amount);
-                out.print("</td></tr>");
 
-            }
-            out.println("</table>");
-        } catch (InvalidNamedObjectException e) {
-            e.printStackTrace();
+            out.println("<h1>Statement</h1>");
+            out.print("<h3>");
+            out.print(book);
+            out.println("</h3><hr>");
+            out.println("Balance: ");
+            out.println(ledger.getBalance(book));
+            out.println("<br/>Available: ");
+            out.println(ledger.getAvailableBalance(book));
+            out.print("<hr><a href=\"../browse/");
+            out.print(book);
+            out.print("\">View Transactions</a>");
+
+
         } catch (LowlevelLedgerException e) {
             e.printStackTrace();
         }
     }
 
+
     private String serviceid;
-    private LedgerBrowser ledger;
+    private Ledger ledger;
 }

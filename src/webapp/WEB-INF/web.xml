@@ -14,7 +14,7 @@
         <param-name>datasource</param-name>
         <param-value>jdbc/AssetDS</param-value>
     </context-param>
-    <!--    <context-param>
+    <!--<context-param>
             <param-name>configurator</param-name>
             <param-value>org.neuclear.ledger.browser.LedgerConfiguration</param-value>
         </context-param>
@@ -23,11 +23,20 @@
         </listener>-->
     <servlet>
         <servlet-name>browser</servlet-name>
-        <servlet-class>org.neuclear.ledger.servlets.LedgerServlet</servlet-class>
+        <servlet-class>org.neuclear.ledger.servlets.LedgerBrowserServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet>
+        <servlet-name>statement</servlet-name>
+        <servlet-class>org.neuclear.ledger.servlets.LedgerStatementServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
     <servlet-mapping>
         <servlet-name>browser</servlet-name>
         <url-pattern>/browse/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>statement</servlet-name>
+        <url-pattern>/statements/*</url-pattern>
     </servlet-mapping>
 </web-app>
