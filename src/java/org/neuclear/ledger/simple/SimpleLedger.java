@@ -1,8 +1,11 @@
 package org.neuclear.ledger.simple;
 
 /**
- * $Id: SimpleLedger.java,v 1.4 2004/03/25 16:44:21 pelle Exp $
+ * $Id: SimpleLedger.java,v 1.5 2004/03/26 18:37:56 pelle Exp $
  * $Log: SimpleLedger.java,v $
+ * Revision 1.5  2004/03/26 18:37:56  pelle
+ * More work on browsers. Added an AbstractLedgerBrowserTest for unit testing LedgerBrowsers.
+ *
  * Revision 1.4  2004/03/25 16:44:21  pelle
  * Added getTestBalance() and isBalanced() to Ledger to see if ledger is balanced.
  * The hibernate implementation has changed the comment size to 255 to work with mysql and now
@@ -79,23 +82,25 @@ package org.neuclear.ledger.simple;
  */
 
 import org.neuclear.ledger.*;
+import org.neuclear.ledger.browser.BookBrowser;
+import org.neuclear.ledger.browser.LedgerBrowser;
 
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 
 /**
  * This implementation is very simple and only is meant for testing. It uses the Java Collection for the implementation and is in no way
  * thread safe or supportive of transactions.
  */
-public final class SimpleLedger extends Ledger {
+public final class SimpleLedger extends Ledger implements LedgerBrowser {
 
     public SimpleLedger(final String name) {
         super(name);
         id = name;
-        ledger = new LinkedHashMap();
-        held = new LinkedHashMap();
+        ledger = new HashMap();
+        held = new HashMap();
         balances = new HashMap();
 
     }
@@ -311,10 +316,38 @@ public final class SimpleLedger extends Ledger {
         //To change body of implemented methods use File | Settings | File Templates.
     }
 
-    private final LinkedHashMap ledger;
-    private final LinkedHashMap held;
+    public BookBrowser browse(String book) throws LowlevelLedgerException {
+        return new SimpleBookBrowser(book);
+    }
+
+    public BookBrowser browseFrom(String book, Timestamp from) throws LowlevelLedgerException {
+        return null;
+    }
+
+    public BookBrowser browseRange(String book, Timestamp from, Timestamp until) throws LowlevelLedgerException {
+        return null;
+    }
+
+    private final HashMap ledger;
+    private final HashMap held;
     private final String id;
     private final HashMap balances;
 
+    private class SimpleBookBrowser extends BookBrowser {
+        public SimpleBookBrowser(String book) {
+            super(book);
+            iter = ledger.keySet().iterator();
+            System.out.println("ledger contains: " + ledger.size());
+        }
 
+        public boolean next() throws LowlevelLedgerException {
+            if (!iter.hasNext())
+                return false;
+//            PostedTransaction tran=(PostedTransaction) ledger.get((iter.next()));
+            iter.next();
+            return true;
+        }
+
+        private final Iterator iter;
+    }
 }
