@@ -4,8 +4,11 @@ package org.neuclear.ledger;
  * User: pelleb
  * Date: Jan 25, 2003
  * Time: 12:48:26 PM
- * $Id: PostedTransaction.java,v 1.4 2003/11/21 04:43:20 pelle Exp $
+ * $Id: PostedTransaction.java,v 1.5 2003/12/01 17:11:01 pelle Exp $
  * $Log: PostedTransaction.java,v $
+ * Revision 1.5  2003/12/01 17:11:01  pelle
+ * Added initial Support for entityengine (OFBiz)
+ *
  * Revision 1.4  2003/11/21 04:43:20  pelle
  * EncryptedFileStore now works. It uses the PBECipher with DES3 afair.
  * Otherwise You will Finaliate.
@@ -48,6 +51,7 @@ package org.neuclear.ledger;
  *
  */
 
+import javax.transaction.UserTransaction;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -113,7 +117,6 @@ public class PostedTransaction extends Transaction {
      * @return New Version
      */
     final PostedTransaction revise(final Date transactionTime, final String comment) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
-        getLedger().beginLinkedTransaction();
         final PostedTransaction rev=reverse(comment);
         final UnPostedTransaction tran=new UnPostedTransaction(getLedger(),comment,transactionTime,false);
         final Iterator iter=getItems();
@@ -121,7 +124,6 @@ public class PostedTransaction extends Transaction {
             final TransactionItem item=(TransactionItem)iter.next();
             tran.addItem(item.getBook(),item.getAmount());
         }
-        getLedger().endLinkedTransactions();
         return tran.post();
     }
 
@@ -131,10 +133,8 @@ public class PostedTransaction extends Transaction {
      * @return New Version
      */
     final PostedTransaction revise(final UnPostedTransaction revised) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
-        getLedger().beginLinkedTransaction();
         reverse("REVERSE"+revised.getComment());
         final PostedTransaction tran=revised.post();
-        getLedger().endLinkedTransactions();
         return tran;
     }
 

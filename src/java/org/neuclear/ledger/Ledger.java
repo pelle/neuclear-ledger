@@ -1,8 +1,11 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: Ledger.java,v 1.7 2003/11/21 04:43:20 pelle Exp $
+ * $Id: Ledger.java,v 1.8 2003/12/01 17:11:01 pelle Exp $
  * $Log: Ledger.java,v $
+ * Revision 1.8  2003/12/01 17:11:01  pelle
+ * Added initial Support for entityengine (OFBiz)
+ *
  * Revision 1.7  2003/11/21 04:43:20  pelle
  * EncryptedFileStore now works. It uses the PBECipher with DES3 afair.
  * Otherwise You will Finaliate.
@@ -101,7 +104,10 @@ package org.neuclear.ledger;
 
 import org.neuclear.commons.configuration.Configuration;
 import org.neuclear.commons.configuration.ConfigurationException;
+import org.neuclear.commons.sql.SQLTools;
 
+import javax.transaction.*;
+import javax.naming.NamingException;
 import java.util.Date;
 import java.util.Iterator;
 
@@ -225,32 +231,6 @@ public abstract class Ledger {
     public abstract double getAvailableBalance(Book book) throws LowlevelLedgerException;
 
     /**
-     * Use this to indicate to the underlying system that we want to start a database transaction.
-     * If implementing ledger supports Transactions in the database layer this implements it.
-     */
-    public abstract void beginLinkedTransaction();
-
-    /**
-     * Use this to indicate to the underlying system that we want to end a database transaction.
-     * If implementing ledger supports Transactions in the database layer this implements it.
-     */
-    public abstract void endLinkedTransactions();
-
-    /**
-     * Ledger Implementations use this to create Transactions.
-     * The reason for this kind of round the way contructions is that we dont want dodgy Implementations to cause security problems for
-     * other implementations.
-     * @param comment
-     * @param transactionTime
-     * @param expiryTime
-     * @param xid
-     * @return PostedTransaction
-     */
-/*    protected final PostedTransaction createTransaction(String comment,Date transactionTime, Date expiryTime,String xid) throws TransactionException {
-        return new PostedTransaction(this,comment,transactionTime,expiryTime,xid);
-    }
- */
-    /**
      * Ledger Implementations use this to create Transactions.
      * The reason for this kind of round the way contructions is that we dont want dodgy Implementations to cause security problems for
      * other implementations.
@@ -284,7 +264,6 @@ public abstract class Ledger {
             throw new InvalidTransactionException(this, "The amount must be positive");
 
         try {
-            beginLinkedTransaction();
             //PostedTransaction rev=hold.reverse(comment); // We dont need to reverse this
             final UnPostedTransaction tran = new UnPostedTransaction(this, comment, time);
             final Iterator iter = hold.getItems();
@@ -295,9 +274,10 @@ public abstract class Ledger {
                 else
                     tran.addItem(item.getBook(), -amount);
             }
-            endLinkedTransactions();
-            return tran.post();
+            final PostedTransaction postedTransaction = tran.post();
+            return postedTransaction;
         } catch (UnBalancedTransactionException e) {
+            rollbackUT();
             throw new LowlevelLedgerException(this, e);
         }
     }
@@ -340,5 +320,70 @@ public abstract class Ledger {
 
     public static Ledger getInstance() throws ConfigurationException {
         return (Ledger) Configuration.getComponent(Ledger.class, "neuclear-ledger");
+    }
+
+    /**
+     * Begins a JTA UserTransaction on the ledger. Not to be confused with a Ledger Transaction.
+     *
+     * @throws LowlevelLedgerException
+     */
+
+    public UserTransaction beginUT() throws LowlevelLedgerException {
+        try {
+            UserTransaction ut=SQLTools.getUserTransaction();
+            if (ut.getStatus()==Status.STATUS_NO_TRANSACTION)
+                ut.begin();
+            return ut;
+        } catch (NamingException e) {
+            throw new LowlevelLedgerException(this, e);
+        } catch (SystemException e) {
+            throw new LowlevelLedgerException(this, e);
+        } catch (NotSupportedException e) {
+            throw new LowlevelLedgerException(this, e);
+        }
+    }
+
+    /**
+     * Commits a JTA UserTransaction on the ledger. Not to be confused with a Ledger Transaction.
+     *
+     * @param ut
+     * @throws LowlevelLedgerException
+     */
+    public void commitUT(UserTransaction ut) throws LowlevelLedgerException {
+        try {
+            ut.commit();
+        } catch (RollbackException e) {
+            throw new LowlevelLedgerException(this, e);
+        } catch (HeuristicMixedException e) {
+            throw new LowlevelLedgerException(this, e);
+        } catch (HeuristicRollbackException e) {
+            throw new LowlevelLedgerException(this, e);
+        } catch (SystemException e) {
+            throw new LowlevelLedgerException(this, e);
+        }
+    }
+
+    /**
+     * Rolls back a JTA UserTransaction on the ledger. Not to be confused with a Ledger Transaction.
+     *
+     * @param ut
+     * @throws LowlevelLedgerException
+     */
+    public void rollbackUT(UserTransaction ut) throws LowlevelLedgerException {
+        try {
+            ut.rollback();
+        } catch (SystemException e) {
+            throw new LowlevelLedgerException(this, e);
+        }
+    }
+
+    public void rollbackUT() throws LowlevelLedgerException {
+        try {
+            rollbackUT(SQLTools.getUserTransaction());
+        } catch (NamingException e) {
+            throw new LowlevelLedgerException(this, e);
+        } catch (SystemException e) {
+            throw new LowlevelLedgerException(this, e);
+        }
     }
 }

@@ -8,8 +8,13 @@ package org.neuclear.ledger.implementations;
 
 import org.neuclear.commons.sql.ConnectionSource;
 import org.neuclear.commons.sql.SQLTools;
+import org.neuclear.commons.sql.SQLContext;
+import org.neuclear.commons.NeuClearException;
 import org.neuclear.ledger.*;
+import org.neuclear.ledger.InvalidTransactionException;
 
+import javax.transaction.*;
+import javax.naming.NamingException;
 import java.io.IOException;
 import java.sql.*;
 import java.util.Date;
@@ -37,7 +42,7 @@ public final class SQLLedger extends Ledger {
 */
     public SQLLedger(final ConnectionSource con, final String id) throws LowlevelLedgerException, UnknownLedgerException {
         super(id, getLedgerName(con, id));
-        this.con = con;
+        this.con = new SQLContext(con);
     }
 
     private static String getLedgerName(final ConnectionSource con, final String id) throws UnknownLedgerException, LowlevelLedgerException {
@@ -79,18 +84,17 @@ public final class SQLLedger extends Ledger {
     public final Book createNewBook(final String bookID, final String title) throws BookExistsException, LowlevelLedgerException {
         if (bookExists(bookID))
             throw new BookExistsException(this, bookID);
-        try {
-            getConnection().setAutoCommit(false);
+       try {
             final PreparedStatement stmt = prepQuery("insert into account values (?,?,3)");
             stmt.setString(1, bookID);
             stmt.setString(2, title);
             stmt.execute();
-            getConnection().commit();
+            return createBookInstance(bookID, title);
         } catch (SQLException e) {
+            rollbackUT();
             throw new LowlevelLedgerException(this, e);
         }
 
-        return createBookInstance(bookID, title);
     }
 
     /* (non-Javadoc)
@@ -102,25 +106,17 @@ public final class SQLLedger extends Ledger {
             throw new UnBalancedTransactionException(this, transaction);
         }
         try {
-            getConnection().setAutoCommit(false);
-
             final long xid = insertTransaction(transaction);
             final Iterator items = transaction.getItems();
             while (items.hasNext()) {
                 final TransactionItem item = (TransactionItem) items.next();
                 insertTransactionItem(xid, item);
             }
-            getConnection().commit();
             newid = Long.toString(xid);
         } catch (SQLException e) {
-            try {
-                getConnection().rollback();
-            } catch (SQLException e1) {
-                throw new LowlevelLedgerException(this, e1);
-            }
+            rollbackUT();
             throw new LowlevelLedgerException(this, e);
         }
-
         return this.createTransaction(transaction, newid);
     }
 
@@ -138,27 +134,19 @@ public final class SQLLedger extends Ledger {
             throw new UnBalancedTransactionException(this, transaction);
         }
         try {
-            getConnection().setAutoCommit(false);
-
             final long xid = insertHeldTransaction(transaction);
             final Iterator items = transaction.getItems();
             while (items.hasNext()) {
                 final TransactionItem item = (TransactionItem) items.next();
                 insertHeldTransactionItem(xid, item);
             }
-            getConnection().commit();
             newid = Long.toString(xid);
         } catch (SQLException e) {
-            try {
-                getConnection().rollback();
-            } catch (SQLException e1) {
-                throw new LowlevelLedgerException(this, e1);
-            }
+            rollbackUT();
             System.err.println(e.getSQLState());
             e.printStackTrace(System.err);
             throw new LowlevelLedgerException(this, e);
         }
-
         return this.createHeldTransaction(transaction, newid);
     }
 
@@ -175,14 +163,16 @@ public final class SQLLedger extends Ledger {
             update.setString(1, hold.getXid());
             update.setString(2, getId());
             final int affected = update.executeUpdate();
-            if (affected == 0)
+            if (affected == 0)       {
+                rollbackUT();
                 throw new UnknownTransactionException(this, hold.getXid());
+            }
             if (affected > 1) {
-                getConnection().rollback();
+                rollbackUT();
                 throw new LowlevelLedgerException(this, "performCancelHold: For some reason multiple rows were updated. Transaction Rolled Back.");
             }
-            getConnection().commit();
         } catch (SQLException e) {
+            rollbackUT();
             throw new LowlevelLedgerException(this, e);
         }
     }
@@ -202,28 +192,28 @@ public final class SQLLedger extends Ledger {
             update.setString(2, hold.getXid());
             update.setString(3, getId());
             final int affected = update.executeUpdate();
-            if (affected == 0)
+            if (affected == 0)       {
+                rollbackUT();
                 throw new UnknownTransactionException(this, hold.getXid());
+            }
             if (affected > 1) {
-                getConnection().rollback();
+                rollbackUT();
                 throw new LowlevelLedgerException(this, "performCompleteHold: For some reason multiple rows were updated. Transaction Rolled Back.");
             }
-            getConnection().commit();
-
             return tran;
 
         } catch (SQLException e) {
+            rollbackUT();
             throw new LowlevelLedgerException(this, e);
         } catch (UnknownTransactionException e) {
+            rollbackUT();
             throw new LowlevelLedgerException(this, e);
         }
 
     }
 
     private long insertTransaction(final UnPostedTransaction transaction) throws SQLException, LowlevelLedgerException {
-
-        final PreparedStatement tranInsert;
-        tranInsert = prepQuery("insert into transaction (value_date,comment,ledgerid) values (?,?,?)");
+        final PreparedStatement tranInsert = prepQuery("insert into transaction (value_date,comment,ledgerid) values (?,?,?)");
         tranInsert.setTimestamp(1, SQLTools.toTimestamp(transaction.getTransactionTime()));
         tranInsert.setString(2, transaction.getComment());
         tranInsert.setString(3, getId());
@@ -232,16 +222,14 @@ public final class SQLLedger extends Ledger {
         final ResultSet rs = tranID.executeQuery();
         if (rs.next())
             return rs.getLong(1);
-        else {
-            getConnection().rollback();
+         else {
+            rollbackUT();
             throw new LowlevelLedgerException(this, "We couldnt get the id of the transaction. Safer to Rollback.");
         }
     }
 
     private long insertHeldTransaction(final UnPostedHeldTransaction transaction) throws SQLException, LowlevelLedgerException {
-
-        final PreparedStatement tranInsert;
-        tranInsert = prepQuery("insert into held_transaction (value_date,comment,held_until,ledgerid) values (?,?,?,?)");
+        final PreparedStatement tranInsert = prepQuery("insert into held_transaction (value_date,comment,held_until,ledgerid) values (?,?,?,?)");
         tranInsert.setTimestamp(3, SQLTools.toTimestamp(transaction.getExpiryTime()));
 
         tranInsert.setTimestamp(1, SQLTools.toTimestamp(transaction.getTransactionTime()));
@@ -252,8 +240,8 @@ public final class SQLLedger extends Ledger {
         final ResultSet rs = tranID.executeQuery();
         if (rs.next())
             return rs.getLong(1);
-        else {
-            getConnection().rollback();
+         else {
+            rollbackUT();
             throw new LowlevelLedgerException(this, "We couldnt get the id of the transaction. Safer to Rollback.");
         }
     }
@@ -425,21 +413,6 @@ public final class SQLLedger extends Ledger {
         return getAvailableBalance(book, new Date());
     }
 
-    /* (non-Javadoc)
-     * @see org.neuclear.ledger.Ledger#beginLinkedTransaction()
-     */
-    public final void beginLinkedTransaction() {
-        // TODO Auto-generated method stub
-
-    }
-
-    /* (non-Javadoc)
-     * @see org.neuclear.ledger.Ledger#endLinkedTransactions()
-     */
-    public final void endLinkedTransactions() {
-        // TODO Auto-generated method stub
-
-    }
 
     public final String toString() {
         return "SQL Ledger: " + getName();
@@ -455,7 +428,6 @@ public final class SQLLedger extends Ledger {
         }
     }
 
-    private final ConnectionSource con;
 
     public final Book getBook(final String bookID) throws UnknownBookException, LowlevelLedgerException {
         try {
@@ -469,4 +441,20 @@ public final class SQLLedger extends Ledger {
         }
         throw new UnknownBookException(this, bookID);
     }
+
+    /**
+     * Rolls back a JTA UserTransaction on the ledger. Not to be confused with a Ledger Transaction.
+     * @param ut
+     * @throws LowlevelLedgerException
+     */
+    public void rollbackUT(UserTransaction ut) throws LowlevelLedgerException {
+        super.rollbackUT(ut);
+        try {
+            con.close();
+        } catch (SQLException e) {
+            throw new LowlevelLedgerException(this,e);
+        }
+    }
+
+    private final SQLContext con;
 }

@@ -5,8 +5,11 @@ package org.neuclear.ledger;
  * User: pelleb
  * Date: Jan 25, 2003
  * Time: 12:54:28 PM
- * $Id: UnPostedTransaction.java,v 1.6 2003/11/21 04:43:20 pelle Exp $
+ * $Id: UnPostedTransaction.java,v 1.7 2003/12/01 17:11:01 pelle Exp $
  * $Log: UnPostedTransaction.java,v $
+ * Revision 1.7  2003/12/01 17:11:01  pelle
+ * Added initial Support for entityengine (OFBiz)
+ *
  * Revision 1.6  2003/11/21 04:43:20  pelle
  * EncryptedFileStore now works. It uses the PBECipher with DES3 afair.
  * Otherwise You will Finaliate.
@@ -105,9 +108,7 @@ public class UnPostedTransaction extends Transaction {
     public final synchronized PostedTransaction post() throws UnBalancedTransactionException, LowlevelLedgerException, InvalidTransactionException {
         PostedTransaction postTransaction = null;
         if (isBalanced()) {
-            getLedger().beginLinkedTransaction();
             postTransaction = postTransaction();
-            getLedger().endLinkedTransactions();
         } else
             throw new UnBalancedTransactionException(getLedger(), this);
         return postTransaction;
