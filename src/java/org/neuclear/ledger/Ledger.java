@@ -1,8 +1,12 @@
 package org.neuclear.ledger;
 
 /**
- * $Id: Ledger.java,v 1.3 2003/10/25 00:39:05 pelle Exp $
+ * $Id: Ledger.java,v 1.4 2003/10/28 23:43:14 pelle Exp $
  * $Log: Ledger.java,v $
+ * Revision 1.4  2003/10/28 23:43:14  pelle
+ * The PassPhraseDialogue now works. It simply presents itself as a simple modal dialog box asking for a passphrase.
+ * The two SignerStore implementations both use it for the passphrase.
+ *
  * Revision 1.3  2003/10/25 00:39:05  pelle
  * Fixed SmtpSender it now sends the messages.
  * Refactored CommandLineSigner. Now it simply signs files read from command line. However new class IdentityCreator
@@ -316,6 +320,6 @@ public abstract class Ledger {
     public abstract PostedTransaction performCompleteHold(PostedHeldTransaction hold, double amount, Date time, String comment) throws InvalidTransactionException, LowlevelLedgerException, TransactionExpiredException;
 
     public static Ledger getInstance() throws ConfigurationException {
-        return (Ledger) Configuration.getContainer(Ledger.class).getComponentInstance(Ledger.class);
+        return (Ledger) Configuration.getComponent(Ledger.class, "neuclear-ledger");
     }
 }

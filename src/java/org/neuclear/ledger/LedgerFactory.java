@@ -5,8 +5,12 @@ package org.neuclear.ledger;
  * User: pelleb
  * Date: Jan 18, 2003
  * Time: 11:38:33 AM
- * $Id: LedgerFactory.java,v 1.2 2003/10/25 00:39:05 pelle Exp $
+ * $Id: LedgerFactory.java,v 1.3 2003/10/28 23:43:15 pelle Exp $
  * $Log: LedgerFactory.java,v $
+ * Revision 1.3  2003/10/28 23:43:15  pelle
+ * The PassPhraseDialogue now works. It simply presents itself as a simple modal dialog box asking for a passphrase.
+ * The two SignerStore implementations both use it for the passphrase.
+ *
  * Revision 1.2  2003/10/25 00:39:05  pelle
  * Fixed SmtpSender it now sends the messages.
  * Refactored CommandLineSigner. Now it simply signs files read from command line. However new class IdentityCreator
@@ -68,7 +72,7 @@ public class LedgerFactory {
      */
     public final Ledger getLedger(String name) throws LedgerCreationException {
         try {
-            return (Ledger) Configuration.getContainer(Ledger.class).getComponentInstance(Ledger.class);
+            return (Ledger) Configuration.getComponent(Ledger.class, "neuclear-ledger");
         } catch (ConfigurationException e) {
             throw new LedgerCreationException(e);
         }

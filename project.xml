@@ -67,11 +67,11 @@
        </dependency>
        <dependency>
            <id>picocontainer</id>
-           <version>1.0-beta-2</version>
+           <version>1.0-beta-1</version>
        </dependency>
        <dependency>
            <id>nanocontainer</id>
-           <version>1.0-alpha-1-SNAPSHOT</version>
+           <version>1.0-alpha-PRESPLIT-1</version>
        </dependency>
        <dependency>
            <id>neuclear-commons</id>
