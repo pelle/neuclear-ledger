@@ -1,7 +1,12 @@
 package org.neuclear.ledger;
+
 /**
- * $Id: Book.java,v 1.2 2003/10/01 17:35:53 pelle Exp $
+ * $Id: Book.java,v 1.3 2003/11/06 20:01:24 pelle Exp $
  * $Log: Book.java,v $
+ * Revision 1.3  2003/11/06 20:01:24  pelle
+ * Implemented AuthenticationTicket and friends to comply with the newer model.
+ * Created SignatureRequest and friends to send unsigned NamedObjectBuilders to interactive signing services.
+ *
  * Revision 1.2  2003/10/01 17:35:53  pelle
  * Made as much as possible immutable for security and reliability reasons.
  * The only thing that isnt immutable are the items and balance of the
@@ -46,6 +51,7 @@ package org.neuclear.ledger;
  * We still need a Ledger Factory and to actually implement SimpleLedger with a database.
  *
  */
+
 import java.util.Date;
 
 /**
@@ -58,37 +64,43 @@ import java.util.Date;
  * <li>Temporary Transactions are used to implement temporary holds on accounts.
  * <li>Permanent Transactions are regular transactions.
  * </ul>
- *
+ * <p/>
  * Permanent Transaction types always affect balances. Temporary Transaction types only affect the Available Balance of the debit account, not the credit account.
- *
+ * <p/>
  * TODO For certain operations we require the current time. This is currently done using new Date(). We need a better way of doing this.
- *
- *
  */
 public final class Book {
-     Book(String book,String name, Ledger ledger) {
-        this.book=book;
-        this.name=name;
-        this.ledger=ledger;
+    Book(String book, String name, Ledger ledger) {
+        this.book = book;
+        this.name = name;
+        this.ledger = ledger;
     }
 
     /**
      * The Unique Identifier of the Book
+     * 
      * @return String containing the Identifier
      */
     public final String getBookID() {
         return book;
     }
+
     public final String getDisplayName() {
         return name;
     }
+
     public final Ledger getLedger() {
         return ledger;
     }
 
-    public boolean equals(Object o){
-        return (o instanceof Book)&&(((Book)o).getLedger().equals(getLedger()))&&(((Book)o).getBookID().equals(getBookID()));
+    public boolean equals(Object o) {
+        return (o instanceof Book) && (((Book) o).getLedger().equals(getLedger())) && (((Book) o).getBookID().equals(getBookID()));
     }
+
+    public int hashCode() {
+        return getBookID().hashCode();
+    }
+
     /**
      * Calculate the true accounting balance at a given time. This does not take into account any held transactions, thus may not necessarily
      * show the Available balance.<p>
@@ -104,14 +116,16 @@ public final class Book {
      *          from ledger
      *          where transactiondate <= sysdate and end_date is null and debit= 'neu://bob'
      *       ) d
-     *
+     * <p/>
      * </pre>
-     * @param balancedate
+     * 
+     * @param balancedate 
      * @return the balance as a double
      */
     public final double getBalance(Date balancedate) throws LowlevelLedgerException {
-        return getLedger().getBalance(this,balancedate);
+        return getLedger().getBalance(this, balancedate);
     }
+
     public final double getBalance() throws LowlevelLedgerException {
         return getLedger().getBalance(this);
     }
@@ -130,13 +144,14 @@ public final class Book {
      *          from ledger
      *          where transactiondate <= sysdate and end_date is null and debit= 'neu://bob'
      *       ) d
-     *
+     * <p/>
      * </pre>
-     * @param balancedate
+     * 
+     * @param balancedate 
      * @return the balance as a double
      */
     public final double getAvailableBalance(Date balancedate) throws LowlevelLedgerException {
-        return getLedger().getAvailableBalance(this,balancedate);
+        return getLedger().getAvailableBalance(this, balancedate);
     }
 
     public final double getAvailableBalance() throws LowlevelLedgerException {
@@ -166,29 +181,31 @@ public final class Book {
 
     /**
      * This is the main application level transaction creation method.
-     * @param destination Destination Account
-     * @param amount Positive Amount
+     * 
+     * @param destination     Destination Account
+     * @param amount          Positive Amount
      * @param transactionTime Transaction Date
      * @return Unique Transaction ID
      * @ If there was a problem with Transaction.
      */
-    public final PostedTransaction transfer(Book destination, double amount,String comment, Date transactionTime) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
-        return Transaction.createTransfer(getLedger(),this,destination,amount,comment,transactionTime);
+    public final PostedTransaction transfer(Book destination, double amount, String comment, Date transactionTime) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
+        return Transaction.createTransfer(getLedger(), this, destination, amount, comment, transactionTime);
 
     }
 
     /**
      * Creates a held transaction. This is a temporary transaction, that must be made permanent.
      * It only affects the available balance of the the debit account. This effect disappears after the expiry time.
-     * @param destination
-     * @param amount
+     * 
+     * @param destination     
+     * @param amount          
      * @param transactionTime Transaction Date
-     * @param expiryTime
+     * @param expiryTime      
      * @return Transaction ID
      * @
      */
     public final PostedHeldTransaction hold(Book destination, double amount, String comment, Date transactionTime, Date expiryTime) throws InvalidTransactionException, UnBalancedTransactionException, LowlevelLedgerException {
-        return Transaction.createHeldTransfer(getLedger(),this,destination,amount,comment,transactionTime,expiryTime);
+        return Transaction.createHeldTransfer(getLedger(), this, destination, amount, comment, transactionTime, expiryTime);
     }
 
 
