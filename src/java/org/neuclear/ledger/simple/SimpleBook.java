@@ -3,10 +3,7 @@ package org.neuclear.ledger.simple;
 import org.neuclear.ledger.Book;
 import org.neuclear.ledger.PostedTransaction;
 
-import java.util.Date;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /*
  *  The NeuClear Project and it's libraries are
@@ -38,29 +35,37 @@ public class SimpleBook extends Book {
     public SimpleBook(SimpleBook orig, String nickname, String type, Date updated, String source, String registrationid) {
         super(orig.getId(), nickname, type, source, orig.getRegistered(), updated, registrationid);
         transactions = orig.transactions;
-
+        balances = orig.balances;
     }
 
     public SimpleBook(String id, String nickname, String type, String source, Date registered, Date updated, String registrationid) {
         super(id, nickname, type, source, registered, updated, registrationid);
         transactions = new LinkedList();
+        balances = new HashMap();
     }
 
     public SimpleBook(String id, Date registered) {
         super(id, registered);
         transactions = new LinkedList();
+        balances = new HashMap();
     }
 
     void add(PostedTransaction tran) {
         transactions.add(tran);
     }
 
-    public synchronized void updateBalance(double amount) {
-        balance += amount;
+    public synchronized void updateBalance(final String ledger, final double amount) {
+        Double balance = (Double) balances.get(ledger);
+        if (balance == null)
+            balances.put(ledger, new Double(amount));
+        else
+            balances.put(ledger, new Double(amount + balance.doubleValue()));
     }
 
-    public double getBalance() {
-        return balance;
+    public double getBalance(final String ledger) {
+        if (balances.containsKey(ledger))
+            return ((Double) balances.get(ledger)).doubleValue();
+        return 0.0;
     }
 
     public Iterator iterator() {
@@ -68,6 +73,6 @@ public class SimpleBook extends Book {
     }
 
     private final List transactions;
-    private double balance = 0;
+    private final Map balances;
 //    private double held=0;
 }

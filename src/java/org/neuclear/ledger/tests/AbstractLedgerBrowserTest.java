@@ -12,8 +12,11 @@ import org.neuclear.ledger.browser.LedgerBrowser;
 import java.util.Date;
 
 /*
-$Id: AbstractLedgerBrowserTest.java,v 1.9 2004/05/03 23:54:18 pelle Exp $
+$Id: AbstractLedgerBrowserTest.java,v 1.10 2004/05/04 23:00:39 pelle Exp $
 $Log: AbstractLedgerBrowserTest.java,v $
+Revision 1.10  2004/05/04 23:00:39  pelle
+Updated SimpleLedgerController to support multiple ledgers as well.
+
 Revision 1.9  2004/05/03 23:54:18  pelle
 HibernateLedgerController now supports multiple ledgers.
 Fixed many unit tests.
@@ -77,13 +80,13 @@ public abstract class AbstractLedgerBrowserTest extends TestCase {
 
     public static Date getIsolatedTimeStamp() {
         try {
-            Thread.currentThread().sleep(5);
+            Thread.currentThread().sleep(1000);
         } catch (InterruptedException e) {
             ;
         }
         final Date t = new Date();
         try {
-            Thread.currentThread().sleep(5);
+            Thread.currentThread().sleep(1000);
         } catch (InterruptedException e) {
             ;
         }
@@ -140,12 +143,16 @@ public abstract class AbstractLedgerBrowserTest extends TestCase {
         for (i = 0; i < 10; i++) {
             ledger.transfer(bob, alice, 10, "test" + i);
         }
+        Date t3 = getIsolatedTimeStamp();
+        assertTrue(t3.after(t2));
         assertBookBrowserSize(bob, 20, browser.browse(bob));
         assertBookBrowserSize(alice, 20, browser.browse(alice));
 
         assertBookBrowserSize(bob, 20, browser.browseFrom(bob, t1));
         assertBookBrowserSize(alice, 20, browser.browseFrom(alice, t1));
 
+        assertBookBrowserSize(bob, 0, browser.browseFrom(bob, t3));
+        assertBookBrowserSize(alice, 0, browser.browseFrom(alice, t3));
 
         assertBookBrowserSize(bob, i, browser.browseFrom(bob, t2));
         assertBookBrowserSize(alice, i, browser.browseFrom(alice, t2));

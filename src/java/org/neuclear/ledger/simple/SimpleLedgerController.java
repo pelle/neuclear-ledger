@@ -1,8 +1,11 @@
 package org.neuclear.ledger.simple;
 
 /**
- * $Id: SimpleLedgerController.java,v 1.3 2004/05/03 23:54:18 pelle Exp $
+ * $Id: SimpleLedgerController.java,v 1.4 2004/05/04 23:00:39 pelle Exp $
  * $Log: SimpleLedgerController.java,v $
+ * Revision 1.4  2004/05/04 23:00:39  pelle
+ * Updated SimpleLedgerController to support multiple ledgers as well.
+ *
  * Revision 1.3  2004/05/03 23:54:18  pelle
  * HibernateLedgerController now supports multiple ledgers.
  * Fixed many unit tests.
@@ -193,13 +196,13 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
             Iterator iter = trans.getItems();
             while (iter.hasNext()) {
                 TransactionItem item = (TransactionItem) iter.next();
-                addTransactionItem(item);
+                addTransactionItem(trans.getLedger(), item);
             }
         }
     }
 
-    private void addTransactionItem(TransactionItem item) {
-        ((SimpleBook) books.get(item.getBook().getId())).updateBalance(item.getAmount());
+    private void addTransactionItem(String ledger, TransactionItem item) {
+        ((SimpleBook) books.get(item.getBook().getId())).updateBalance(ledger, item.getAmount());
     }
 
     /**
@@ -212,7 +215,7 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
         Iterator iter = trans.getItems();
         while (iter.hasNext()) {
             TransactionItem item = (TransactionItem) iter.next();
-            if (item.getAmount() < 0 && getAvailableBalance(null, item.getBook().getId()) + item.getAmount() < 0)
+            if (item.getAmount() < 0 && getAvailableBalance(trans.getLedger(), item.getBook().getId()) + item.getAmount() < 0)
                 throw new InsufficientFundsException(this, item.getBook().getId(), item.getAmount());
         }
         return performTransaction(trans);
@@ -230,7 +233,7 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
         Iterator iter = trans.getItems();
         while (iter.hasNext()) {
             TransactionItem item = (TransactionItem) iter.next();
-            if (item.getAmount() < 0 && getAvailableBalance(null, item.getBook().getId()) + item.getAmount() < 0)
+            if (item.getAmount() < 0 && getAvailableBalance(trans.getLedger(), item.getBook().getId()) + item.getAmount() < 0)
                 throw new InsufficientFundsException(this, item.getBook().getId(), item.getAmount());
         }
 
@@ -302,14 +305,14 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
      */
     public double getBalance(String ledger, final String book) {
         if (books.containsKey(book))
-            return ((SimpleBook) books.get(book)).getBalance();
+            return ((SimpleBook) books.get(book)).getBalance(ledger);
         return 0;
     }
 
     /**
      * @return the held balance as a double
      */
-    private double getHeldBalance(final String book) {
+    private double getHeldBalance(final String ledger, final String book) {
         double balance = 0;
         Date now = new Date();
         // Very silly slow and lazy implementation
@@ -320,7 +323,7 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
             if (now.after(tran.getExpiryTime())) {
                 iter.remove();
             } else {
-                if (tran.getReceiptId() != null) {
+                if (tran.getReceiptId() != null && ledger.equals(tran.getLedger())) {
                     final Iterator items = tran.getItems();
                     while (items.hasNext()) {
                         final TransactionItem item = (TransactionItem) items.next();
@@ -346,7 +349,7 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
      * @return the balance as a double
      */
     public double getAvailableBalance(String ledger, final String book) {
-        return getBalance(null, book) + getHeldBalance(book);
+        return getBalance(ledger, book) + getHeldBalance(ledger, book);
     }
 
     public long getBookCount(String ledger) throws LowlevelLedgerException {
@@ -435,7 +438,7 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
         double test = 0;
         while (iter.hasNext()) {
             String s = (String) iter.next();
-            test += ((SimpleBook) books.get(s)).getBalance();
+            test += ((SimpleBook) books.get(s)).getBalance(ledger);
         }
         return test;
     }
@@ -533,6 +536,8 @@ public class SimpleLedgerController extends LedgerController implements LedgerBr
         }
 
         private boolean isValid(final PostedTransaction posted) {
+            if (!posted.getLedger().equals(ledger))
+                return false;
             if (from == null)
                 return true;
             if (posted.getTransactionTime().after(from)) {
